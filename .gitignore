@@ -1,0 +1,14 @@
+# Node related gitignores
+node_modules
+
+# VSCode related gitignores
+.vscode
+
+# Certificates
+*.pem
+
+# Database data
+db_data
+
+# Environment
+.env

@@ -1,0 +1,19 @@
+{
+  "name": "auth",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "sh -c 'if [ \"$USE_NODEMON\" = \"true\" ]; then nodemon -L --exec bun run src/index.ts --ext ts,json; else bun run --watch src/index.ts; fi'"
+  },
+  "dependencies": {
+    "@elysiajs/bearer": "^1.2.0",
+    "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/jwt": "^1.2.0",
+    "@elysiajs/swagger": "^1.2.2",
+    "elysia": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}
