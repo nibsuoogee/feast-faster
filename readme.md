@@ -17,8 +17,22 @@ mkcert "*.localhost" traefik.localhost app.localhost backend.localhost postgres.
 Move the certificate and key to the correct place:
 
 ```
+cd traefik/
+mkdir certs
+cd ../
 mv _wildcard.localhost+9.pem traefik/certs/cert.pem
 mv _wildcard.localhost+9-key.pem traefik/certs/key.pem
+```
+
+Create .env file in the root directory, adding following variables
+```
+# .env
+
+# TODO
+```
+Build images
+```
+./build-docker-images.sh
 ```
 
 Start using docker-compose
