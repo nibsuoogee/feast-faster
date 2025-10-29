@@ -1,5 +1,6 @@
 # processor/app/config.py
 import os
+import logging
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -16,3 +17,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+logger = logging

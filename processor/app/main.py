@@ -3,8 +3,8 @@ from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt, JWTError
-from app.schemas import ProposalRequest, ProposalResponse
-from app.model import get_proposal_generator, ProposalGenerator
+# from app.schemas import ProposalRequest, ProposalResponse
+# from app.model import get_proposal_generator, ProposalGenerator
 from app.config import settings, logger
 
 # JWT Bearer token security scheme
