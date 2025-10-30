@@ -75,7 +75,7 @@ services:
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
   postgres:
-    image: postgres:17.2
+    image: postgis/postgis:17-3.5  # https://hub.docker.com/r/postgis/postgis/
     environment:
       - TZ=Europe/Helsinki
       - POSTGRES_USER=user
