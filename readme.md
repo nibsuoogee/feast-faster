@@ -1,3 +1,11 @@
+## Development
+
+Name branches feature-N or fix-N based on the issue number N. For example:
+
+```
+feature-1
+```
+
 ## Local development
 
 A certificate is required for your browser to trust the services so use the mkcert tool to create them. The installation instructions can be found from the [mkcert page](https://github.com/FiloSottile/mkcert).
@@ -25,12 +33,15 @@ mv _wildcard.localhost+9-key.pem traefik/certs/key.pem
 ```
 
 Create .env file in the root directory, adding following variables
+
 ```
 # .env
 
 # TODO
 ```
+
 Build images
+
 ```
 ./build-docker-images.sh
 ```
