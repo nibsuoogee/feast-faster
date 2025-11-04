@@ -24,7 +24,7 @@ export const loginRouter = new Elysia().use(jwtConfig).post(
       );
 
       // 4. If the password doesn't match, return an error.
-      if (!isPasswordCorrect) status(400, "Password is incorrect");
+      if (!isPasswordCorrect) return status(400, "Password is incorrect");
 
       // 5. Tokenize the results with JWT and return the token.
       const token = await jwt_auth.sign({
