@@ -1,10 +1,9 @@
 # processor/app/main.py
 from fastapi import FastAPI, Depends, HTTPException, Request, status
+from app.routers.agent import router as agent_router
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt, JWTError
-# from app.schemas import ProposalRequest, ProposalResponse
-# from app.model import get_proposal_generator, ProposalGenerator
 from app.config import settings, logger
 
 # JWT Bearer token security scheme
@@ -75,10 +74,13 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
+# Include your routers
+app.include_router(agent_router)
 
 if __name__ == "__main__":
     import uvicorn
