@@ -23,6 +23,28 @@ export const calendarRouter = new Elysia()
     },
     (app) =>
       app
+        .get(
+          "/settings",
+          async ({ user, status }) => {
+            const [settings, err] = await tryCatch(
+              SettingsDTO.findSettingsByCustomerId(user.id)
+            );
+            if (err) return status(500, err.message);
+            if (!settings) return status(500, "Failed to get settings");
+
+            return {
+              settings,
+            };
+          },
+          {
+            response: {
+              200: t.Object({
+                settings: settingsModel,
+              }),
+              500: t.String(),
+            },
+          }
+        )
         .post(
           "/settings",
           async ({ body, user, status }) => {
@@ -52,29 +74,20 @@ export const calendarRouter = new Elysia()
         .patch(
           "/settings",
           async ({ body, user, status }) => {
-            // 1) check if the user owns the calendar
-            // const [isCalendarOwner, errOwner] = await tryCatch(
-            //   CalendarDTO.isCalendarOwner(body.id, user.id)
-            // );
-            // if (errOwner) return status(500, errOwner.message);
-            // if (!isCalendarOwner)
-            //   return status(401, "No authorized access to calendar");
-            // // 2) Update the calendar
-            // const { id, ...calendarForUpdate } = body;
-            // const [calendar, errCalendar] = await tryCatch(
-            //   CalendarDTO.updateCalendar(id, calendarForUpdate)
-            // );
-            // if (errCalendar) return status(500, errCalendar.message);
-            // if (!calendar) return status(500, "Failed to update calendar");
-            // return calendar;
+            // 1) Update the user's settings
+            const [settings, errSettings] = await tryCatch(
+              SettingsDTO.updateSettings(user.id, body)
+            );
+            if (errSettings) return status(500, errSettings.message);
+            if (!settings) return status(500, "Failed to update settings");
+            return settings;
+          },
+          {
+            body: settingsCreateBody,
+            response: {
+              200: settingsModel,
+              500: t.String(),
+            },
           }
-          // {
-          //   body: calendarUpdateBody,
-          //   response: {
-          //     200: calendarModel,
-          //     401: t.String(),
-          //     500: t.String(),
-          //   },
-          // }
         )
   );

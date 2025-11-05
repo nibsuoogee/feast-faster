@@ -2,15 +2,31 @@ import { t } from "elysia";
 import { sql } from "bun";
 
 export const SettingsDTO = {
+  findSettingsByCustomerId: async (customer_id: number): Promise<Settings> => {
+    const result =
+      await sql`SELECT * FROM settings WHERE customer_id = ${customer_id}`;
+    return result[0];
+  },
   createSettings: async (
     settings: SettingsModelForCreation
-  ): Promise<SettingsModel> => {
+  ): Promise<Settings> => {
     const [newSettings] = await sql`
       INSERT INTO settings ${sql(settings)}
       RETURNING *
     `;
 
     return newSettings;
+  },
+  updateSettings: async (
+    customer_id: number,
+    settings: SettingsCreateBody
+  ): Promise<Settings> => {
+    const [newCalendar] = await sql`
+      UPDATE settings SET ${sql(settings)}
+      WHERE customer_id = ${customer_id}
+      RETURNING *
+    `;
+    return newCalendar;
   },
 };
 
@@ -23,7 +39,7 @@ export const settingsModel = t.Object({
   cuisines: t.Array(t.String()),
   created_at: t.Date(),
 });
-export type SettingsModel = typeof settingsModel.static;
+export type Settings = typeof settingsModel.static;
 
 export const settingsModelForCreation = t.Object({
   customer_id: t.Number(),
