@@ -21,12 +21,12 @@ export const SettingsDTO = {
     customer_id: number,
     settings: SettingsCreateBody
   ): Promise<Settings> => {
-    const [newCalendar] = await sql`
+    const [newSettings] = await sql`
       UPDATE settings SET ${sql(settings)}
       WHERE customer_id = ${customer_id}
       RETURNING *
     `;
-    return newCalendar;
+    return newSettings;
   },
 };
 

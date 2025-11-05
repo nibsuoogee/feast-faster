@@ -9,7 +9,7 @@ import {
 } from "@models/settingsModel";
 import { tryCatch } from "@utils/tryCatch";
 
-export const calendarRouter = new Elysia()
+export const settingsRouter = new Elysia()
   .use(jwtConfig)
   .derive(authorizationMiddleware)
   .guard(
