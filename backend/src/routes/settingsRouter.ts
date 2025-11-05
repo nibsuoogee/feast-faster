@@ -1,6 +1,13 @@
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
+import {
+  settingsCreateBody,
+  SettingsDTO,
+  settingsModel,
+  SettingsModelForCreation,
+} from "@models/settingsModel";
+import { tryCatch } from "@utils/tryCatch";
 
 export const calendarRouter = new Elysia()
   .use(jwtConfig)
@@ -19,40 +26,28 @@ export const calendarRouter = new Elysia()
         .post(
           "/settings",
           async ({ body, user, status }) => {
-            // 1) create a new calendar for the user
-            // const calendarForCreation: CalendarModelForCreation = {
-            //   owner_user_id: user.id,
-            //   ...body,
-            // };
-            // const [calendar, errCalendar] = await tryCatch(
-            //   CalendarDTO.createCalendar(calendarForCreation)
-            // );
-            // if (errCalendar) return status(500, errCalendar.message);
-            // if (!calendar) return status(500, "Failed to create calendar");
-            // // 2) use membershipModel to create a new membership
-            // const membershipForCreation: MembershipModelForCreation = {
-            //   calendar_id: calendar.id,
-            //   user_id: user.id,
-            //   role: "owner",
-            //   color: getRandomColor(),
-            // };
-            // const [membership, errMembership] = await tryCatch(
-            //   MembershipDTO.createMembership(membershipForCreation)
-            // );
-            // if (errMembership) return status(500, errMembership.message);
-            // if (!membership) return status(500, "Failed to create membership");
-            // return { calendar, membership };
+            // 1) create new settings for the user
+            const settingsForCreation: SettingsModelForCreation = {
+              customer_id: user.id,
+              ...body,
+            };
+            const [settings, errSettings] = await tryCatch(
+              SettingsDTO.createSettings(settingsForCreation)
+            );
+            if (errSettings) return status(500, errSettings.message);
+            if (!settings) return status(500, "Failed to create settings");
+
+            return { settings };
+          },
+          {
+            body: settingsCreateBody,
+            response: {
+              200: t.Object({
+                settings: settingsModel,
+              }),
+              500: t.String(),
+            },
           }
-          // {
-          //   body: calendarCreateBody,
-          //   response: {
-          //     200: t.Object({
-          //       calendar: calendarModel,
-          //       membership: membershipModel,
-          //     }),
-          //     500: t.String(),
-          //   },
-          // }
         )
         .patch(
           "/settings",
