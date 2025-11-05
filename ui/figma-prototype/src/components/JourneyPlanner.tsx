@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,c
+  SelectValue,
 } from "./ui/select";
 import { Slider } from "./ui/slider";
 import { Separator } from "./ui/separator";
