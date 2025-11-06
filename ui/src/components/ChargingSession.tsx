@@ -75,7 +75,6 @@ export function ChargingSession({
     }
   };
 
-  // Simulate restaurant order status progression
   useEffect(() => {
     const interval = setInterval(() => {
       restaurantOrders.forEach((order) => {

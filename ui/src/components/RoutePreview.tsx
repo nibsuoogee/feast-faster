@@ -41,21 +41,6 @@ export function RoutePreview({
 
   const [, setRefresh] = useState(0);
 
-  // const toggleStopSelection = (stopIndex: number) => {
-  //   // Deselect all stops first (single selection only)
-  //   journey.stops.forEach((stop, index) => {
-  //     if (index !== stopIndex) {
-  //       stop.isSelected = false;
-  //     }
-  //   });
-  //   // Toggle the selected stop
-  //   journey.stops[stopIndex].isSelected = !journey.stops[stopIndex].isSelected;
-  //   // Force re-render
-  //   setRefresh(prev => prev + 1);
-  // };
-
-  // const selectedStopsCount = journey.stops.filter(s => s.isSelected || s.selectedRestaurantId).length;
-
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -581,14 +566,12 @@ export function RoutePreview({
           onClose={() => setSelectedRestaurant(null)}
           onPlaceOrder={(order) => {
             onPlaceOrder(order);
-            // Update the journey stop to mark restaurant as selected and auto-select the stop
             const stopIndex = journey.stops.findIndex(
               (s) =>
                 s.station.id ===
                 selectedRestaurant.stop.station.id,
             );
             if (stopIndex !== -1) {
-              // Deselect all other stops (single selection)
               journey.stops.forEach((stop, index) => {
                 if (index !== stopIndex) {
                   stop.isSelected = false;
@@ -596,10 +579,9 @@ export function RoutePreview({
               });
               journey.stops[stopIndex].selectedRestaurantId =
                 selectedRestaurant.restaurant.id;
-              journey.stops[stopIndex].isSelected = true; // Auto-select stop when food is ordered
+              journey.stops[stopIndex].isSelected = true;
             }
             setSelectedRestaurant(null);
-            // Auto-start journey after pre-ordering
             setTimeout(() => {
               onStartJourney();
             }, 500);

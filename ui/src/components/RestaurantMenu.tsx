@@ -15,7 +15,16 @@ import {
   Check,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
-import { toast } from "sonner";
+
+const toast = {
+  success: (msg: string) => {
+    if (typeof window !== "undefined" && (window as any).toast) {
+      (window as any).toast(msg);
+    } else {
+      alert(msg);
+    }
+  },
+};
 
 type RestaurantMenuProps = {
   restaurant: Restaurant;
@@ -213,8 +222,6 @@ export function RestaurantMenu({
   }
 
   return (
-    // <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end md:items-center md:justify-center">
-    //   <div className="bg-white w-full md:max-w-2xl md:rounded-lg max-h-[90vh] overflow-hidden rounded-t-2xl flex flex-col">
     <div className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center">
       <div className="bg-white w-full md:max-w-2xl md:rounded-lg h-full overflow-y-auto rounded-t-2xl flex flex-col">
         {/* Header */}
