@@ -23,10 +23,10 @@ CREATE TYPE "food_status" AS ENUM (
   'picked_up'
 );
 
-CREATE TYPE "charger_type" AS ENUM (
-  'a',
-  'b',
-  'c'
+CREATE TYPE "connector_type" AS ENUM (
+  'CCS',
+  'CHAdeMO',
+  'Type 2'
 );
 
 CREATE TYPE "charging_payment_status" AS ENUM (
@@ -74,7 +74,7 @@ CREATE TABLE "chargers" (
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "location" geography NOT NULL,
   "status" charger_status NOT NULL,
-  "charger_type" charger_type NOT NULL,
+  "connector_type" connector_type NOT NULL,
   "power" int NOT NULL
 );
 
