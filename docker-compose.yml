@@ -76,6 +76,7 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
   postgres:
     image: postgis/postgis:17-3.5 # https://hub.docker.com/r/postgis/postgis/
+    platform: linux/amd64 # Force amd64 platform
     container_name: feast-faster-postgres-1
     environment:
       - TZ=Europe/Helsinki

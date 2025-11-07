@@ -51,7 +51,7 @@ CREATE TABLE "settings" (
   "vehicle_model" varchar(255) NOT NULL,
   "connector_type" connector_type NOT NULL,
   "desired_soc" int NOT NULL DEFAULT 0,
-  "cuisines" varchar(50)[] NOT NULL DEFAULT ({}),
+  "cuisines" varchar(50)[],
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
@@ -69,7 +69,7 @@ CREATE TABLE "restaurants" (
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "location" geography NOT NULL,
   "name" varchar(50) NOT NULL,
-  "cuisines" varchar(50)[] NOT NULL DEFAULT ({}),
+  "cuisines" varchar(50)[],
   "address" varchar(255) NOT NULL
 );
 
