@@ -1,0 +1,1 @@
+BUFFERED_ZONE = 3000  # m
