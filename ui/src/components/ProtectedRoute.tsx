@@ -1,5 +1,3 @@
-// ui/src/components/ProtectedRoute.tsx
-
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -10,7 +8,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, loading } = useAuth();
 
-  // Show a loading state while checking authentication
+  //Show a loading state while checking authentication
   if (loading) {
     return <div>Loading...</div>;
   }
