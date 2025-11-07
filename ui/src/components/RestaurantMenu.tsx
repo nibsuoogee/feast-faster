@@ -232,14 +232,7 @@ export function RestaurantMenu({
               {restaurant.cuisine.map((c) => (
                 <span>{c}</span>
               ))}
-              {/* <span>•</span> */}
-              {/* <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                {restaurant.rating}
-              </div>
-              <span>•</span>
-              <span>{restaurant.priceRange}</span>
-              <span>•</span> */}
+              
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 {restaurant.prepTime}
