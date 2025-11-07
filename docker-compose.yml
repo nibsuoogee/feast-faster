@@ -75,7 +75,8 @@ services:
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
   postgres:
-    image: postgres:17.2
+    image: postgis/postgis:17-3.5 # https://hub.docker.com/r/postgis/postgis/
+    container_name: feast-faster-postgres-1
     environment:
       - TZ=Europe/Helsinki
       - POSTGRES_USER=user
@@ -83,6 +84,7 @@ services:
       - POSTGRES_DB=projectdb
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/inserts.sql:/docker-entrypoint-initdb.d/inserts.sql
       - ./db_data:/var/lib/postgresql/data
     healthcheck: # Hey! We are checking that the postgres is up and running!
       test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
@@ -95,6 +97,8 @@ services:
       - "traefik.http.routers.postgres.entrypoints=websecure"
       - "traefik.http.routers.postgres.tls=true"
       - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+    ports:
+      - "5432:5432"
     networks:
       - cloud_project
   processor:
@@ -108,6 +112,7 @@ services:
       - "8000:8000" # Open port 8000 to the outside world
     environment:
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
+      - DATABASE_URL=postgresql://user:password@feast-faster-postgres-1:5432/projectdb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.processor.rule=Host(`processor.localhost`)" # This is the backend service URL
