@@ -1,3 +1,7 @@
+
+-- Enable PostGIS for geography types
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 -- Generated SQL
 CREATE TYPE "role" AS ENUM (
   'driver',

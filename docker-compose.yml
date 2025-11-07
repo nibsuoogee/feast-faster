@@ -74,6 +74,8 @@ services:
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.backend-http.rule=Host(`backend.localhost`)"  # T
+      - "traefik.http.routers.backend-http.entrypoints=web" # T
   postgres:
     image: postgres:17.2
     environment:
@@ -83,7 +85,10 @@ services:
       - POSTGRES_DB=projectdb
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db_data:/var/lib/postgresql/data
+      - /tmp/db_data:/var/lib/postgresql/data
+    command: bash -c "apt-get update && apt-get install -y postgis postgresql-17-postgis-3 && docker-entrypoint.sh postgres"
+
+
     healthcheck: # Hey! We are checking that the postgres is up and running!
       test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
       interval: 10s

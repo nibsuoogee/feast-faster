@@ -10,10 +10,13 @@
     "@elysiajs/cors": "^1.2.0",
     "@elysiajs/jwt": "^1.2.0",
     "@elysiajs/swagger": "^1.2.2",
-    "elysia": "latest"
+    "elysia": "latest",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@types/pg": "^8.15.6",
+    "bun-types": "latest",
+    "typescript": "^5.9.3"
   },
   "module": "src/index.js"
 }
