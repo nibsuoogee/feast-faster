@@ -32,6 +32,21 @@ Pull changes to your current branch
 git pull
 ```
 
+Make a commit to your local branch
+
+```
+git add .
+git commit -m "Your commit message"
+```
+
+Push your local commits to the remote
+
+```
+git push
+// Use the following if git push complains about the remote:
+git push origin -u branch_name
+```
+
 Delete your local changes (use with care!)
 
 ```
