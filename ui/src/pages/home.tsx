@@ -34,6 +34,7 @@ import {
   Battery,
   UtensilsCrossed,
 } from "lucide-react";
+import { getStationsRestaurantsMock } from "@/services/stations";
 
 const Toaster: FC<{ position?: string }> = () => null;
 const toast = {
@@ -138,6 +139,8 @@ export const Home = () => {
   const [currentSOC, setCurrentSOC] = useState([75]);
   const [currentRange, setCurrentRange] = useState([180]);
   const [desiredSOC, setDesiredSOC] = useState([80]);
+  const [demoStations, setDemoStations] = useState<any[] | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [connectorType, setConnectorType] = useState<string>("any");
   const [cuisinePreference, setCuisinePreference] = useState<string>("any");
   const [showFilters, setShowFilters] = useState(false);
@@ -592,6 +595,32 @@ export const Home = () => {
     }, 1500);
   };
 
+  const callDemoApi = async () => {
+    setDemoLoading(true);
+    try {
+      const body = {
+        current_location: [60.984, 25.663] as [number, number],
+        destination: endLocation || "Tampere",
+        ev_model: "Nissan Leaf",
+        current_car_range: 120,
+        current_soc: currentSOC[0] || 50,
+        desired_soc: desiredSOC[0] || 80,
+      };
+
+      const data = await getStationsRestaurantsMock(body);
+      if (data) {
+        setDemoStations(data as any[]);
+      } else {
+        toast.error("Failed to fetch demo stations");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error calling processor API");
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
   const startChargingSession = (station: ChargingStation) => {
     const session: ChargingSessionType = {
       id: Date.now().toString(),
@@ -822,12 +851,29 @@ export const Home = () => {
                     </div>
                   </div>
 
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 mt-4"
-                    size="lg"
-                    onClick={handlePlanRoute}
-                    disabled={!endLocation || isPlanning}
-                  >
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      size="sm"
+                      onClick={callDemoApi}
+                      disabled={demoLoading}
+                    >
+                      {demoLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2 inline-block" />
+                          Fetching demo stations...
+                        </>
+                      ) : (
+                        "Fetch demo stations (processor)"
+                      )}
+                    </Button>
+
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700 mt-0"
+                      size="lg"
+                      onClick={handlePlanRoute}
+                      disabled={!endLocation || isPlanning}
+                    >
                     {isPlanning ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -840,6 +886,14 @@ export const Home = () => {
                       </>
                     )}
                   </Button>
+
+                    {demoStations && (
+                      <div className="mt-4 p-2 bg-gray-50 rounded">
+                        <h3 className="font-medium mb-2">Demo Stations (processor)</h3>
+                        <pre className="text-sm overflow-auto max-h-48">{JSON.stringify(demoStations, null, 2)}</pre>
+                      </div>
+                    )}
+                    </div>
                 </Card>
               </div>
             </TabsContent>
