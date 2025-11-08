@@ -2,13 +2,15 @@ import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { settingsRouter } from "./routes/settingsRouter";
+import { menuItemsRouter } from "./routes/menuItemsRouter"; //  Added this line
 
 const app = new Elysia()
   .use(swagger())
   .use(cors())
   .get("/", () => "Hello Elysia")
   .use(settingsRouter)
-  .listen(3000);
+  .use(menuItemsRouter) // Added this line
+  .listen({ port: 3000, hostname: "0.0.0.0" }); // Updated hostname to "
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
