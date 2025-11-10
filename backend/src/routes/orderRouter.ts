@@ -10,13 +10,10 @@ export const orderRouter = new Elysia()
     {
       beforeHandle: async ({ headers, jwt_auth, status }) => {
         const { user } = await authorizationMiddleware({ headers, jwt_auth });
-        console.log("in here");
         if (!user) {
           console.log("Unauthorized access attempt");
           return status(401, "Not Authorized");
         }
-        //return { user };
-
       },
     },
     (app) =>
@@ -26,15 +23,14 @@ export const orderRouter = new Elysia()
           console.log("POST /orders body received:", body);
 
           try {
-            const { restaurantId, items } = body;
+            const { restaurantId, stationId, items, isPaid } = body;
 
-            // Convert restaurantId like "r1" → 1
             const restaurant_id = Number(restaurantId.replace(/\D/g, ""));
-            if (!restaurant_id) {
-              return status(400, "Invalid restaurantId");
+            const charger_id = Number(stationId.replace(/\D/g, ""));
+            if (!restaurant_id || !charger_id) {
+              return status(400, "Invalid restaurantId or stationId");
             }
 
-            // Compute total price
             const total_price = items.reduce(
               (sum: number, i: any) =>
                 sum + (Number(i.menuItem.price) || 0) * (i.quantity || 1),
@@ -57,7 +53,6 @@ export const orderRouter = new Elysia()
 
             // 2 Insert order items
             for (const item of items) {
-              // Convert menu_item_id if it comes as "m123"
               const menu_item_id = Number(item.menuItem.id.replace(/\D/g, "")) || 0;
 
               await sql`
@@ -75,7 +70,31 @@ export const orderRouter = new Elysia()
               );
             }
 
-            return { message: "Order created successfully", order: newOrder };
+            // 3 Insert reservation AFTER order and items
+            // reservation_start is mocked to current time
+            // reservation_end is mocked to 30 mins after reservation_start time
+            // time_of_payment is defaulted to current_time if isPaid is true.
+            const now = new Date();
+            const reservation_end = new Date(now.getTime() + 30 * 60 * 1000); // +30 mins
+
+            const [newReservation] = await sql`
+              INSERT INTO reservations 
+                (order_id, charger_id, reservation_start, reservation_end, time_of_payment, final_price_of_charge)
+              VALUES 
+                (
+                  ${newOrder.order_id},
+                  ${charger_id},
+                  ${now},
+                  ${reservation_end},
+                  ${isPaid ? now : null},
+                  ${isPaid ? total_price : null}
+                )
+              RETURNING *
+            `;
+
+            console.log("Reservation created:", newReservation);
+
+            return { message: "Order and reservation created successfully", order: newOrder, reservation: newReservation };
           } catch (err: any) {
             console.error("Error creating order:", err);
             return status(500, "Internal server error");
@@ -84,6 +103,7 @@ export const orderRouter = new Elysia()
         {
           body: t.Object({
             restaurantId: t.String(),
+            stationId: t.String(),
             items: t.Array(
               t.Object({
                 menuItem: t.Object({
@@ -92,14 +112,16 @@ export const orderRouter = new Elysia()
                   description: t.Optional(t.String()),
                   price: t.Any(),
                 }),
-                quantity: t.Optional(t.Any()),
+                quantity: t.Optional(t.Any()), //  fixed parenthesis
               })
             ),
+            isPaid: t.Boolean(),
           }),
           response: {
             200: t.Object({
               message: t.String(),
               order: t.Any(),
+              reservation: t.Any(),
             }),
             400: t.String(),
             401: t.String(),
