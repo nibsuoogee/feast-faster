@@ -4,6 +4,8 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
+import { orderService } from "@/services/order";
+
 import {
   X,
   Plus,
@@ -87,7 +89,7 @@ export function RestaurantMenu({
     ...new Set(restaurant.menu.map((item) => item.category)),
   ];
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
 
     const order: RestaurantOrder = {
@@ -103,11 +105,22 @@ export function RestaurantMenu({
       isPaid: true, // Payment taken in advance
     };
 
-    onPlaceOrder(order);
-    toast.success(
-      "Order placed successfully! Payment processed.",
-    );
-    onClose();
+    try {
+      const response = await orderService.createOrder(order);
+
+      if (response) {
+        toast.success("Order placed successfully! Payment processed.");
+        console.log("Order response:", response);
+        //onPlaceOrder(response.order); // update UI state if needed
+        onClose();
+      } else {
+        toast.success("Failed to place order.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.success("Error placing order. Please try again.");
+    }
+
   };
 
   if (showCheckout) {

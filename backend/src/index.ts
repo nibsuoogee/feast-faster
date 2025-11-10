@@ -9,6 +9,7 @@ import { stationsRouter } from "./routes/stationsRouter";
 import { orderRouter } from "./routes/orderRouter";
 
 export const userNotifications = new Map<number, any[]>();
+import { orderRouter } from "./routes/orderRouter";
 
 const app = new Elysia()
   .use(swagger())
