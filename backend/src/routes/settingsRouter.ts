@@ -27,7 +27,7 @@ export const settingsRouter = new Elysia()
           "/settings",
           async ({ user, status }) => {
             const [settings, err] = await tryCatch(
-              SettingsDTO.findSettingsByCustomerId(user.id)
+              SettingsDTO.findSettingsByCustomerId(user.user_id)
             );
             if (err) return status(500, err.message);
             if (!settings) return status(500, "Failed to get settings");
@@ -50,7 +50,7 @@ export const settingsRouter = new Elysia()
           async ({ body, user, status }) => {
             // 1) create new settings for the user
             const settingsForCreation: SettingsModelForCreation = {
-              customer_id: user.id,
+              customer_id: user.user_id,
               ...body,
             };
             const [settings, errSettings] = await tryCatch(
@@ -76,7 +76,7 @@ export const settingsRouter = new Elysia()
           async ({ body, user, status }) => {
             // 1) Update the user's settings
             const [settings, errSettings] = await tryCatch(
-              SettingsDTO.updateSettings(user.id, body)
+              SettingsDTO.updateSettings(user.user_id, body)
             );
             if (errSettings) return status(500, errSettings.message);
             if (!settings) return status(500, "Failed to update settings");
