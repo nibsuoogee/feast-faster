@@ -58,7 +58,7 @@ services:
       - "traefik.http.services.ui.loadbalancer.server.port=5173"
   backend:
     image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
-    container_name: feast-faster-backend-1 # Traefik is failing to detect it (disappears when i rebuild).By setting a fixed container name, yTraefik always see it
+    # container_name: feast-faster-backend-1 # Traefik is failing to detect it (disappears when i rebuild).By setting a fixed container name, yTraefik always see it
     volumes:
       - ./backend:/usr/src/app # We want to mount our local backend folder to the container
     networks:
