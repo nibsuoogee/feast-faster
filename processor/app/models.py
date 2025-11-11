@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import String
@@ -21,6 +21,7 @@ class Station(SQLModel, table=True):
     address: str = Field(nullable=False)
     # Relationship to restaurants
     restaurants: List["Restaurant"] = Relationship(back_populates="station")
+    chargers: List["Charger"] = Relationship(back_populates="station")
 
 
 class Restaurant(SQLModel, table=True):
@@ -40,6 +41,19 @@ class Restaurant(SQLModel, table=True):
     address: str = Field(nullable=False)
     # Relationship to station
     station: Station = Relationship(back_populates="restaurants")
+
+
+class Charger(SQLModel, table=True):
+    __tablename__ = "chargers"
+
+    charger_id: int = Field(primary_key=True)
+    station_id: int = Field(foreign_key="stations.station_id", nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    status: str
+    connector_type: str
+    power: int
+    # Relationship to station
+    station: Station = Relationship(back_populates="chargers")
 
 
 # Request model
