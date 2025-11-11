@@ -36,7 +36,7 @@ export const userModelForLogin = t.Object({
 export type UserModelForLogin = typeof userModelForLogin.static;
 
 export const userModel = t.Object({
-  id: t.Number(),
+  user_id: t.Number(),
   username: t.String(),
   email: t.String(),
   password: t.String(),
