@@ -8,6 +8,8 @@ import { Landing } from "./pages/landing";
 import { Register } from "./pages/register";
 import { Login } from "./pages/login";
 import { Home } from "./pages/home";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
+import { BACKEND_URL } from "./lib/urls";
 
 function App() {
   useEffect(() => {
@@ -35,6 +37,26 @@ function App() {
         return Promise.reject(error);
       }
     );
+  }, []);
+
+  async function subscribeToNotifications() {
+    const token = localStorage.getItem("access_token");
+
+    fetchEventSource(`${BACKEND_URL}/notifications`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      onmessage(ev) {
+        console.log("New event:", ev.data);
+      },
+      onerror(err) {
+        console.error("SSE error:", err);
+      },
+    });
+  }
+
+  useEffect(() => {
+    subscribeToNotifications();
   }, []);
 
   return (
