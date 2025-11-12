@@ -1,13 +1,12 @@
 from app.dependencies.database import get_session
 from app.services.open_route import get_location_range, get_driving_etas
 from app.services.charging_estimation import get_estimate_charging_time
+from app.services.database import get_stations_from_db
 from app.models import Station, StationRequest, StationRequestMock
-from app.constants import MINIMUM_SOC_AT_ARRIVAL
+from app.config import logger
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 from fastapi import APIRouter, Depends, HTTPException
-from geoalchemy2 import functions as func
-from geoalchemy2.shape import to_shape
 
 
 router = APIRouter(
@@ -69,103 +68,27 @@ async def get_stations_restaurants_(
 
 
 @router.post("/get-filtered-stations")
-def get_stations(
+def get_filtered_stations(
     body: StationRequest,
     session: Session = Depends(get_session)
 ):
-    # Get location range - client
+    # Get location range - by OpenRouteService
     current_location = body.current_location
     buffer_geojson = get_location_range(body.current_location, body.destination)
+    logger.info("Received buffer_geojson from OpenRouteService")
 
     # Get stations from database within a route
-    polygon = buffer_geojson.geometry.unary_union
-    buffer_wkt = polygon.wkt
+    stations = get_stations_from_db(session, buffer_geojson, body.cuisines, body.connector_type)
 
-    # Pre-filter by bounding box to make the query faster
-    minx, miny, maxx, maxy = polygon.bounds
+    # Get ETAs - by OpenRouteService
+    stations_with_eta = get_driving_etas(current_location, stations)
+    logger.info("Received driving ETAa from OpenRouteService")
 
-    stmt = (
-        select(Station)
-        .options(
-            selectinload(Station.restaurants),
-            selectinload(Station.chargers)
-        )
-        .where(
-            func.ST_Intersects(
-                Station.location,
-                func.ST_GeogFromText(buffer_wkt)
-            )
-        )
-        .where(
-            func.ST_MakeEnvelope(minx, miny, maxx, maxy, 4326).op("&&")(Station.location)
-        )
-    )
-
-    stations = session.exec(stmt).all()
-
-    # Post-filter restaurants and chargers for each station in python memory
-    filtered_stations = []
-    for st in stations:
-        filtered_restaurants = [
-            {
-                "restaurant_id": r.restaurant_id,
-                "name": r.name,
-                "address": r.address,
-                "cuisines": r.cuisines
-            } for r in st.restaurants
-            if any(cuisine in body.cuisines for cuisine in r.cuisines)
-        ]
-
-        if len(filtered_restaurants) == 0:
-            continue
-
-        filtered_chargers = [
-            {
-                "charger_id": c.charger_id,
-                "status": c.status,
-                "type": c.connector_type,
-                "max_power": c.power
-            } for c in st.chargers
-            if c.connector_type == body.connector_type and c.status == "available"
-        ]
-
-        if len(filtered_chargers) == 0:
-            continue
-
-        filtered_stations.append({
-            "station_id": st.station_id,
-            "name": st.name,
-            "address": st.address,
-            "location": (to_shape(st.location).x, to_shape(st.location).y),
-            "restaurants": filtered_restaurants,
-            "chargers": filtered_chargers
-        })
-
-    # Get ETAs - by open route
-    stations_with_eta = get_driving_etas(current_location, filtered_stations)
-
-    available_stations = []
-
-    # Filter out stations that are too far
-    # Calculate SoC decrease rate
-    soc_rate = body.current_soc / body.current_car_range  # % decrease by 1 km
-
-    for st in stations_with_eta:
-        st.pop("location", None)  # Remove location as we no longer need it
-        # Calculate SoC at arrival
-        soc_at_arrival = round(body.current_soc - soc_rate * st['distance_km'], 2)
-
-        # If soc_at_arrival is less than minimum, continue MINIMUM_SOC_AT_ARRIVAL
-        if soc_at_arrival < MINIMUM_SOC_AT_ARRIVAL:
-            continue
-
-        st['soc_at_arrival'] = soc_at_arrival
-        available_stations.append(st)
-
-    # Calculate how long will the charge take
-    available_stations = get_estimate_charging_time(body.ev_model, body.desired_soc, available_stations)
+    # Calculate the charging time
+    stations_with_charging_time = get_estimate_charging_time(body.ev_model, body.current_soc, body.current_car_range,
+                                                             body.desired_soc, stations_with_eta)
 
     # Sort by distance
-    stations_sorted = sorted(available_stations, key=lambda x: x["distance_km"])
+    stations_sorted = sorted(stations_with_charging_time, key=lambda x: x["distance_km"])
 
     return stations_sorted

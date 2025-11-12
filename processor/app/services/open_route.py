@@ -56,7 +56,7 @@ def get_driving_etas(current_location, stations):
     distances = matrix['distances'][0]
 
     for i, r in enumerate(stations):
-        r['travel_time_min'] = round(durations[i] / 60, 1)
+        r['travel_time_min'] = round(durations[i] / 60)
         r['distance_km'] = round(distances[i], 2)
 
     return stations
