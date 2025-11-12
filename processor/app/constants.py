@@ -1,1 +1,3 @@
 BUFFERED_ZONE = 3000  # m
+MINIMUM_SOC_AT_ARRIVAL = 2
+TEMPERATURE = 5  # Average annual in Lahti

@@ -16,5 +16,9 @@ dependencies = [
     "geoalchemy2",
     "openrouteservice",
     "shapely",
-    "geopandas"
+    "geopandas",
+    "lightgbm",
+    "scikit-learn",
+    "joblib",
+    "warnings"
 ]

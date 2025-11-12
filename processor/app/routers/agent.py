@@ -1,10 +1,13 @@
 from app.dependencies.database import get_session
-from app.services.open_route import get_location_range
-from app.models import Station, Restaurant, StationRequest, StationRequestMock
+from app.services.open_route import get_location_range, get_driving_etas
+from app.services.charging_estimation import get_estimate_charging_time
+from app.models import Station, StationRequest, StationRequestMock
+from app.constants import MINIMUM_SOC_AT_ARRIVAL
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 from fastapi import APIRouter, Depends, HTTPException
 from geoalchemy2 import functions as func
+from geoalchemy2.shape import to_shape
 
 
 router = APIRouter(
@@ -70,11 +73,11 @@ def get_stations(
     body: StationRequest,
     session: Session = Depends(get_session)
 ):
-
     # Get location range - client
+    current_location = body.current_location
     buffer_geojson = get_location_range(body.current_location, body.destination)
 
-    # Get stations from database + restaurants + chargers
+    # Get stations from database within a route
     polygon = buffer_geojson.geometry.unary_union
     buffer_wkt = polygon.wkt
 
@@ -133,14 +136,36 @@ def get_stations(
             "station_id": st.station_id,
             "name": st.name,
             "address": st.address,
-            "location": st.location,
+            "location": (to_shape(st.location).x, to_shape(st.location).y),
             "restaurants": filtered_restaurants,
             "chargers": filtered_chargers
         })
 
     # Get ETAs - by open route
-    # Filter out stations that are too far
-    # Calculate how long will the charge take
-    # add only necessary data to the response
+    stations_with_eta = get_driving_etas(current_location, filtered_stations)
 
-    return []
+    available_stations = []
+
+    # Filter out stations that are too far
+    # Calculate SoC decrease rate
+    soc_rate = body.current_soc / body.current_car_range  # % decrease by 1 km
+
+    for st in stations_with_eta:
+        st.pop("location", None)  # Remove location as we no longer need it
+        # Calculate SoC at arrival
+        soc_at_arrival = round(body.current_soc - soc_rate * st['distance_km'], 2)
+
+        # If soc_at_arrival is less than minimum, continue MINIMUM_SOC_AT_ARRIVAL
+        if soc_at_arrival < MINIMUM_SOC_AT_ARRIVAL:
+            continue
+
+        st['soc_at_arrival'] = soc_at_arrival
+        available_stations.append(st)
+
+    # Calculate how long will the charge take
+    available_stations = get_estimate_charging_time(body.ev_model, body.desired_soc, available_stations)
+
+    # Sort by distance
+    stations_sorted = sorted(available_stations, key=lambda x: x["distance_km"])
+
+    return stations_sorted

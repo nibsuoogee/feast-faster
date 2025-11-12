@@ -37,3 +37,26 @@ def get_location_range(current_location, destination):
     buffered = gpd.GeoDataFrame(geometry=buffered, crs="EPSG:3857").to_crs(epsg=4326)
 
     return buffered  # min_lon, min_lat, max_lon, max_lat
+
+
+def get_driving_etas(current_location, stations):
+    locations = [current_location] + [tuple(st['location']) for st in stations]
+
+    # Call ORS Matrix API (driving duration in seconds)
+    matrix = client.distance_matrix(
+        locations=locations,
+        profile='driving-car',
+        metrics=['duration', 'distance'],
+        units='km',
+        sources=[0],  # only from current_location
+        destinations=list(range(1, len(stations) + 1))
+    )
+
+    durations = matrix['durations'][0]
+    distances = matrix['distances'][0]
+
+    for i, r in enumerate(stations):
+        r['travel_time_min'] = round(durations[i] / 60, 1)
+        r['distance_km'] = round(distances[i], 2)
+
+    return stations
