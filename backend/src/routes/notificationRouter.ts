@@ -16,6 +16,7 @@ export const notificationRouter = new Elysia()
   .use(jwtConfig)
   .derive(authorizationMiddleware)
   .get("/notifications", async function* ({ headers, jwt_auth, status }) {
+    // Authentication in route because SSE doesn't work with guards
     const { user } = await authorizationMiddleware({ headers, jwt_auth });
     if (!user) return status(401, "Not Authorized");
 
@@ -23,8 +24,6 @@ export const notificationRouter = new Elysia()
 
     // Initialize queue for this user
     userNotifications.set(userId, []);
-
-    console.log(`✅ ${userId} connected (${userNotifications.size} total)`);
 
     // Send welcome message
     yield sse({ event: "connected", data: { message: `Welcome ${userId}!` } });
@@ -49,14 +48,13 @@ export const notificationRouter = new Elysia()
     "/notify",
     async ({ query, body, status }) => {
       const userId = query.user_id;
+      const { message } = body;
       const messages = userNotifications.get(userId);
-
-      console.log("trying to reach user " + userId);
 
       if (!messages) return status(404, `User ${userId} not connected`);
 
       sendToUser(userId, "notification", {
-        message: `Hello user ${userId}!`,
+        message,
         time: new Date().toISOString(),
       });
 
