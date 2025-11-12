@@ -1,5 +1,5 @@
 from app.dependencies.database import get_session
-from app.services.open_route import get_location_range, get_driving_etas
+from app.services.open_route import get_location_range, get_driving_etas, RoutingServiceError
 from app.services.charging_estimation import get_estimate_charging_time
 from app.services.database import get_stations_from_db
 from app.models import Station, StationRequest, StationRequestMock
@@ -74,14 +74,20 @@ def get_filtered_stations(
 ):
     # Get location range - by OpenRouteService
     current_location = body.current_location
-    buffer_geojson = get_location_range(body.current_location, body.destination)
+    try:
+        buffer_geojson = get_location_range(body.current_location, body.destination)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     logger.info("Received buffer_geojson from OpenRouteService")
 
     # Get stations from database within a route
     stations = get_stations_from_db(session, buffer_geojson, body.cuisines, body.connector_type)
 
     # Get ETAs - by OpenRouteService
-    stations_with_eta = get_driving_etas(current_location, stations)
+    try:
+        stations_with_eta = get_driving_etas(current_location, stations)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     logger.info("Received driving ETAa from OpenRouteService")
 
     # Calculate the charging time

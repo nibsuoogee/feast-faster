@@ -2,11 +2,17 @@ from shapely.geometry import LineString
 from app.config import settings
 from app.constants import BUFFERED_ZONE
 import openrouteservice
+from openrouteservice import exceptions
 import geopandas as gpd
 
 
 client = openrouteservice.Client(key=settings.OPEN_ROUTE_SERVICE_API_KEY)
 # Current limits https://account.heigit.org/manage/key
+
+
+class RoutingServiceError(Exception):
+    """Custom exception for routing errors."""
+    pass
 
 
 def get_location_range(current_location, destination):
@@ -15,11 +21,16 @@ def get_location_range(current_location, destination):
     coords = [current_location, destination]
 
     # Request the route geometry
-    route = client.directions(
-        coordinates=coords,
-        profile='driving-car',
-        format='geojson'
-    )
+    try:
+        route = client.directions(
+            coordinates=coords,
+            profile='driving-car',
+            format='geojson'
+        )
+    except exceptions.ApiError as e:
+        raise RoutingServiceError(f"OpenRouteService API error: {str(e)}")
+    except Exception as e:
+        raise RoutingServiceError(f"Unexpected error: {str(e)}")
 
     # Extract coordinates of the route (as (lon, lat))
     route_coords = route['features'][0]['geometry']['coordinates']
@@ -43,14 +54,19 @@ def get_driving_etas(current_location, stations):
     locations = [current_location] + [tuple(st['location']) for st in stations]
 
     # Call ORS Matrix API (driving duration in seconds)
-    matrix = client.distance_matrix(
-        locations=locations,
-        profile='driving-car',
-        metrics=['duration', 'distance'],
-        units='km',
-        sources=[0],  # only from current_location
-        destinations=list(range(1, len(stations) + 1))
-    )
+    try:
+        matrix = client.distance_matrix(
+            locations=locations,
+            profile='driving-car',
+            metrics=['duration', 'distance'],
+            units='km',
+            sources=[0],  # only from current_location
+            destinations=list(range(1, len(stations) + 1))
+        )
+    except exceptions.ApiError as e:
+        raise RoutingServiceError(f"OpenRouteService API error: {str(e)}")
+    except Exception as e:
+        raise RoutingServiceError(f"Unexpected error: {str(e)}")
 
     durations = matrix['durations'][0]
     distances = matrix['distances'][0]
