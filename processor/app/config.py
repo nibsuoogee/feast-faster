@@ -26,4 +26,9 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-logger = logging
+
+logger = logging.getLogger("app_logger")
+logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
