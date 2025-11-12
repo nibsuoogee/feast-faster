@@ -28,7 +28,7 @@ export const registerRouter = new Elysia().use(jwtConfig).post(
 
     // 5. Tokenize the results with JWT.
     const token = await jwt_auth.sign({
-      id: newUser.id,
+      user_id: newUser.user_id,
       //permissions: newUser.permissions?.join(",") ?? "",
     });
 
