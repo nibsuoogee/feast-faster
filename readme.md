@@ -90,7 +90,7 @@ Create .env.local file in the root directory, adding following variables.
 `OPEN_ROUTE_SERVICE_API_KEY` is an API key received from [Open Route Service](https://openrouteservice.org/).
 To get an API key, sign up https://openrouteservice.org/dev/#/signup
 ```
-# .env
+# .env.local
 
 OPEN_ROUTE_SERVICE_API_KEY=''
 ```
