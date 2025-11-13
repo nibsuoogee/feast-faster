@@ -20,8 +20,8 @@ export function OrderColumn({
   const filteredOrders = orders.filter((order) => order.status === status);
 
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-gray-50">
-      <div className={`${colorClass} text-white p-4 rounded-t-lg`}>
+    <div className="flex flex-col h-full border rounded-lg bg-gray-50 overflow-hidden">
+      <div className={`${colorClass} text-white p-4 rounded-t-lg shrink-0`}>
         <div className="flex items-center justify-between">
           <span>{title}</span>
           <span className="bg-white/20 rounded-full px-3 py-1">
@@ -30,8 +30,8 @@ export function OrderColumn({
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="space-y-4 p-4">
           {filteredOrders.map((order) => (
             <OrderCard
               key={order.id}
