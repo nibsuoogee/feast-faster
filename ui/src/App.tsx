@@ -3,13 +3,12 @@ import axios from "axios";
 import { useEffect } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/AuthContext";
-import { StateProvider } from "./contexts/StateContext";
 import { Home } from "./pages/home";
 import { Landing } from "./pages/landing";
 import { Login } from "./pages/login";
 import { Register } from "./pages/register";
+import RestaurantDashboard from "./pages/restaurant-dashboard";
 
 function App() {
   useEffect(() => {
@@ -40,33 +39,37 @@ function App() {
   }, []);
 
   return (
-    <>
-      <Toaster />
-      <Router>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes — no context */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes — no context */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
 
-            {/* Protected route group */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  {/* State provider */}
-                  <StateProvider>
-                    <ProtectedLayout />
-                  </StateProvider>
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/home" element={<Home />} />
-            </Route>
-          </Routes>
-        </AuthProvider>
-      </Router>
-    </>
+          {/* Protected route group */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/home" element={<Home />} />
+          </Route>
+
+          {/* Restaurant Dashboard - Protected route (standalone, no layout) */}
+          <Route
+            path="/restaurant"
+            element={
+              <ProtectedRoute>
+                <RestaurantDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 
