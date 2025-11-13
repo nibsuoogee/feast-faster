@@ -13,4 +13,5 @@ venv/
 db_data
 
 # Environment
+.env
 .env.local

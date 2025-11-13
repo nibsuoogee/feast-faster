@@ -111,6 +111,9 @@ services:
     command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # This is the command we want to run. We are now overriding the default command.
     ports:
       - "8000:8000" # Open port 8000 to the outside world
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://user:password@feast-faster-postgres-1:5432/projectdb # This is the database URL
+      - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
     env_file:
       - .env
       - .env.local
