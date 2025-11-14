@@ -4,6 +4,29 @@ import { BACKEND_URL } from "@/lib/urls";
 import { Order, Restaurant } from "@/types/restaurant";
 import { orders as mockOrders, restaurants as mockRestaurants } from "@/data/restaurantMockData";
 
+export type OrderServiceResponse = {
+  orders: Order[];
+  usingMockData: boolean;
+};
+
+// Cache mock data to prevent timestamp regeneration on every call
+let cachedMockOrders: Order[] | null = null;
+let cachedMockRestaurants: Restaurant[] | null = null;
+
+const getCachedMockOrders = (): Order[] => {
+  if (!cachedMockOrders) {
+    cachedMockOrders = mockOrders;
+  }
+  return cachedMockOrders;
+};
+
+const getCachedMockRestaurants = (): Restaurant[] => {
+  if (!cachedMockRestaurants) {
+    cachedMockRestaurants = mockRestaurants;
+  }
+  return cachedMockRestaurants;
+};
+
 export const orderService = {
   /**
    * Get all restaurants
@@ -14,10 +37,10 @@ export const orderService = {
       const data = await handleApiRequest<Restaurant[]>(() =>
         axios.get(`${BACKEND_URL}/restaurants`)
       );
-      return data || mockRestaurants;
+      return data || getCachedMockRestaurants();
     } catch (error) {
-      console.warn("Failed to fetch restaurants from API, using mock data", error);
-      return mockRestaurants;
+      console.warn("Failed to fetch restaurants from API, using cached mock data", error);
+      return getCachedMockRestaurants();
     }
   },
 
@@ -25,7 +48,7 @@ export const orderService = {
    * Get orders for a specific restaurant
    * Falls back to mock data if API is unavailable
    */
-  getOrdersByRestaurant: async (restaurantId: string): Promise<Order[]> => {
+  getOrdersByRestaurant: async (restaurantId: string): Promise<OrderServiceResponse> => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await handleApiRequest<any[]>(() =>
@@ -37,7 +60,7 @@ export const orderService = {
       if (data && Array.isArray(data)) {
         // Map API response to Order type
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return data.map((order: any) => ({
+        const orders = data.map((order: any) => ({
           id: order.order_id?.toString() || order.id,
           orderNumber: order.order_number || `ORD-${order.order_id}`,
           restaurantId: order.restaurant_id?.toString() || order.restaurantId,
@@ -46,19 +69,27 @@ export const orderService = {
           items: order.items || [],
           chargePercentage: order.charge_percentage || order.chargePercentage,
         }));
+        return { orders, usingMockData: false };
       }
       
-      // Fallback to mock data
-      return mockOrders.filter(order => order.restaurantId === restaurantId);
+      // Fallback to mock data (use cached version to prevent timestamp regeneration)
+      console.warn("API returned invalid data, using cached mock data");
+      return {
+        orders: getCachedMockOrders().filter(order => order.restaurantId === restaurantId),
+        usingMockData: true
+      };
     } catch (error) {
-      console.warn("Failed to fetch orders from API, using mock data", error);
-      return mockOrders.filter(order => order.restaurantId === restaurantId);
+      console.warn("Failed to fetch orders from API, using cached mock data", error);
+      return {
+        orders: getCachedMockOrders().filter(order => order.restaurantId === restaurantId),
+        usingMockData: true
+      };
     }
   },
 
   /**
    * Update order status
-   * Falls back to local state update if API is unavailable
+   * Falls back to updating cached mock data if API is unavailable
    */
   updateOrderStatus: async (
     orderId: string,
@@ -72,11 +103,35 @@ export const orderService = {
         })
       );
       
-      return !!data;
+      if (data) {
+        return true;
+      }
+      
+      // API failed, update cached mock data directly
+      if (cachedMockOrders) {
+        const order = cachedMockOrders.find(o => o.id === orderId);
+        if (order) {
+          order.status = newStatus;
+          console.log(`Updated cached mock order ${orderId} to status ${newStatus}`);
+          return true;
+        }
+      }
+      
+      return false;
     } catch (error) {
-      console.warn("Failed to update order status via API", error);
-      // Return true to allow local state update as fallback
-      return true;
+      console.warn("Failed to update order status via API, updating cached mock data", error);
+      
+      // Update cached mock data directly
+      if (cachedMockOrders) {
+        const order = cachedMockOrders.find(o => o.id === orderId);
+        if (order) {
+          order.status = newStatus;
+          console.log(`Updated cached mock order ${orderId} to status ${newStatus}`);
+          return true;
+        }
+      }
+      
+      return false;
     }
   },
 

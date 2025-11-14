@@ -24,15 +24,27 @@ export default function RestaurantDashboard() {
   // Load orders when restaurant is selected
   useEffect(() => {
     if (selectedRestaurant) {
+      let intervalId: NodeJS.Timeout | null = null;
+      
       const loadOrders = async () => {
-        const data = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
+        const { orders: data, usingMockData } = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
         setOrders(data);
+        
+        // Only set up refresh interval if using real API (not mock data)
+        // This prevents mock data from resetting user changes every 30 seconds
+        if (!usingMockData && !intervalId) {
+          intervalId = setInterval(async () => {
+            const { orders: freshData } = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
+            setOrders(freshData);
+          }, 30000);
+        }
       };
+      
       loadOrders();
       
-      // Refresh orders every 30 seconds
-      const interval = setInterval(loadOrders, 30000);
-      return () => clearInterval(interval);
+      return () => {
+        if (intervalId) clearInterval(intervalId);
+      };
     } else {
       setOrders([]);
     }
@@ -57,17 +69,17 @@ export default function RestaurantDashboard() {
       )
     );
 
-    // Call API
+    // Call API (will update cached mock data if API unavailable)
     const success = await orderService.updateOrderStatus(orderId, newStatus);
     
     if (!success) {
-      // Revert on failure (optional: show error message)
-      console.error('Failed to update order status');
-      // Reload orders to get correct state
-      if (selectedRestaurant) {
-        const data = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
-        setOrders(data);
-      }
+      // Revert on failure
+      console.error('Failed to update order status, reverting');
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, status: order.status } : order
+        )
+      );
     }
   };
 
