@@ -13,17 +13,22 @@ class Settings(BaseSettings):
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     DATABASE_URL: str = os.getenv("DATABASE_URL")
-    # CORS settings - allow the local UI origin explicitly to ensure the
-    # Access-Control-Allow-Origin header is present for browser requests.
-    # Using '*' with allow_credentials=True can cause the header to be omitted
-    # by some middleware; prefer an explicit origin for local development.
-    CORS_ORIGINS: list[str] = ["https://app.localhost"]
+    OPEN_ROUTE_SERVICE_API_KEY: str = os.getenv("OPEN_ROUTE_SERVICE_API_KEY")
+    # CORS settings
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:5173", "https://app.localhost", "http://localhost:3000", "https://backend.localhost"
+    ]
     CORS_HEADERS: list[str] = ["*"]
-    CORS_METHODS: list[str] = ["*"]
+    CORS_METHODS: list[str] = ["POST", "GET", "OPTIONS", "PATCH", "PUT"]
 
     class Config:
         env_file = ".env"
 
 
 settings = Settings()
-logger = logging
+
+logger = logging.getLogger("app_logger")
+logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)

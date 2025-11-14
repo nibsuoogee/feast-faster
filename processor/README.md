@@ -17,3 +17,5 @@ curl --location 'http://localhost:8000/api/stations-restaurants-MOCK' \
 Uses POST request. You can write any data to body, all the fields are required.
 Currently, it returns 2 first stations from the database and their respective restaurants.
 `chargers`, `travel_time_min`, `distance_km`, `soc_at_arrival`, and `estimate_charging_time_min` are dummy data.
+
+Put `OPEN_ROUTE_SERVICE_API_KEY` to .env.local

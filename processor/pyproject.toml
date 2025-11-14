@@ -13,5 +13,11 @@ dependencies = [
     "psycopg2-binary",
     "sqlmodel",
     "sqlalchemy",
-    "geoalchemy2"
+    "geoalchemy2",
+    "openrouteservice",
+    "shapely",
+    "geopandas",
+    "lightgbm",
+    "scikit-learn",
+    "joblib"
 ]

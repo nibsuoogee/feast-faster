@@ -86,12 +86,15 @@ mv _wildcard.localhost+9.pem traefik/certs/cert.pem
 mv _wildcard.localhost+9-key.pem traefik/certs/key.pem
 ```
 
-Create .env file in the root directory, adding following variables
+Create .env file in the root directory.
 
+Create .env.local file in the root directory, adding following variables.
+`OPEN_ROUTE_SERVICE_API_KEY` is an API key received from [Open Route Service](https://openrouteservice.org/).
+To get an API key, sign up https://openrouteservice.org/dev/#/signup
 ```
-# .env
+# .env.local
 
-# TODO
+OPEN_ROUTE_SERVICE_API_KEY=''
 ```
 
 Build images

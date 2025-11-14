@@ -31,7 +31,7 @@ services:
     environment:
       - PORT=3001 # We want to set the port in the environment variables
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
-      - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb
+      - POSTGRES_URL=postgres://user:password@feast-faster-postgres-1:5432/projectdb
     env_file:
       - .env
     labels:
@@ -64,7 +64,7 @@ services:
       - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
     command: bun run dev # This is the command we want to run. We are now overriding the default command.
     environment:
-      - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+      - POSTGRES_URL=postgres://user:password@feast-faster-postgres-1:5432/projectdb # This is the database URL
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
     env_file:
       - .env
@@ -112,8 +112,11 @@ services:
     ports:
       - "8000:8000" # Open port 8000 to the outside world
     environment:
+      - DATABASE_URL=postgresql+psycopg2://user:password@feast-faster-postgres-1:5432/projectdb # This is the database URL
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
-      - DATABASE_URL=postgresql://user:password@feast-faster-postgres-1:5432/projectdb
+    env_file:
+      - .env
+      - .env.local
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.processor.rule=Host(`processor.localhost`)" # This is the backend service URL
