@@ -39,8 +39,8 @@ export function OrderColumn({
   const progress = statusProgress[status];
 
   return (
-    <div className="flex flex-col h-full rounded-lg bg-white overflow-hidden border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-lg">
-      <div className={`${colorClass} text-white px-6 py-4 rounded-t-xl shadow-lg relative overflow-hidden`}>
+    <div className="flex flex-col h-full rounded-xl bg-white overflow-hidden border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-lg">
+      <div className={`${colorClass} text-white px-6 py-4 shadow-lg relative overflow-hidden`}>
         <div className="relative z-10 flex items-center justify-between">
           <span className="font-medium text-lg">{title}</span>
           <span className="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">

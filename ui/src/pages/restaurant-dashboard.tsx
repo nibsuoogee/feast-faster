@@ -85,7 +85,7 @@ export default function RestaurantDashboard() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-100">
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 mx-auto border-4 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
           <div className="text-gray-600 font-medium">Loading restaurants...</div>
@@ -95,7 +95,7 @@ export default function RestaurantDashboard() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <DashboardHeader
         restaurants={restaurants}
         selectedRestaurant={selectedRestaurant}
@@ -106,7 +106,7 @@ export default function RestaurantDashboard() {
 
       <main className="flex-1 p-6 overflow-hidden">
         {selectedRestaurant ? (
-          <div className="grid grid-cols-4 gap-4 h-full">
+          <div className="grid grid-cols-4 gap-5 h-full">
             <OrderColumn
               title="Pending"
               status="pending"

@@ -115,9 +115,19 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
 
         {/* Customer ETA - Enhanced Visual Display */}
         {order.status === 'picked_up' ? (
-          <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-            <Battery className="h-5 w-5 text-gray-600" />
-            <span className="text-sm text-gray-700 font-medium">Current charge: {order.chargePercentage ?? 0}%</span>
+          <div className="relative p-4 rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 overflow-hidden">
+            <div className="relative z-10 flex items-start gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shrink-0">
+                <Battery className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-blue-600 font-medium mb-1">Charging Status</div>
+                <div className="text-sm text-gray-700 font-medium">
+                  Current charge: <span className="text-blue-700 font-semibold">{order.chargePercentage ?? 0}%</span>
+                </div>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/30 rounded-full -mr-8 -mt-8"></div>
           </div>
         ) : (
           <div className={`relative p-4 rounded-xl border-2 ${urgencyStyles.bg} ${urgencyStyles.border} ${urgencyStyles.animate}`}>
