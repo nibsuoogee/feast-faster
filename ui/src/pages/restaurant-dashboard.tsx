@@ -109,27 +109,27 @@ export default function RestaurantDashboard() {
               status="pending"
               orders={filteredOrders}
               onStatusChange={handleStatusChange}
-              colorClass="bg-gray-600"
+              colorClass="bg-gradient-to-r from-gray-500 to-gray-600"
             />
             <OrderColumn
               title="Cooking"
               status="cooking"
               orders={filteredOrders}
               onStatusChange={handleStatusChange}
-              colorClass="bg-orange-600"
+              colorClass="bg-gradient-to-r from-emerald-400 to-teal-500"
             />
             <OrderColumn
               title="Ready"
               status="ready"
               orders={filteredOrders}
               onStatusChange={handleStatusChange}
-              colorClass="bg-green-600"
+              colorClass="bg-gradient-to-r from-blue-500 to-indigo-600"
             />
             <OrderColumn
               title="Picked Up"
               status="picked_up"
               orders={filteredOrders}
-              colorClass="bg-purple-600"
+              colorClass="bg-gradient-to-r from-purple-500 to-pink-600"
             />
           </div>
         ) : (

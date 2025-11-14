@@ -40,18 +40,14 @@ export function OrderColumn({
 
   return (
     <div className="flex flex-col h-full rounded-lg bg-white overflow-hidden border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-lg">
-      <div className={`${colorClass} text-white p-4 shrink-0`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-              <Icon className="h-4 w-4" />
-            </div>
-            <span className="font-semibold text-base">{title}</span>
-          </div>
-          <div className="bg-white/90 text-gray-900 rounded-lg px-3 py-1 text-sm font-bold shadow-sm">
+      <div className={`${colorClass} text-white px-6 py-4 rounded-t-xl shadow-lg relative overflow-hidden`}>
+        <div className="relative z-10 flex items-center justify-between">
+          <span className="font-medium text-lg">{title}</span>
+          <span className="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
             {filteredOrders.length}
-          </div>
+          </span>
         </div>
+        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div>
       </div>
 
       <ScrollArea className="flex-1 min-h-0">
