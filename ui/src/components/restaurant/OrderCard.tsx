@@ -7,7 +7,7 @@ import { Order } from '@/types/restaurant';
 
 interface OrderCardProps {
   order: Order;
-  onStatusChange?: (orderId: string, newStatus: 'ready' | 'picked_up') => void;
+  onStatusChange?: (orderId: string, newStatus: 'cooking' | 'ready' | 'picked_up') => void;
 }
 
 export function OrderCard({ order, onStatusChange }: OrderCardProps) {
@@ -81,6 +81,15 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         )}
 
         {/* Action Buttons */}
+        {order.status === 'pending' && onStatusChange && (
+          <Button
+            onClick={() => onStatusChange(order.id, 'cooking')}
+            className="w-full bg-orange-600 hover:bg-orange-700"
+          >
+            Start Cooking
+          </Button>
+        )}
+
         {order.status === 'cooking' && onStatusChange && (
           <Button
             onClick={() => onStatusChange(order.id, 'ready')}

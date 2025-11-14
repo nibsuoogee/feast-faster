@@ -93,7 +93,7 @@ export const orderService = {
    */
   updateOrderStatus: async (
     orderId: string,
-    newStatus: 'ready' | 'picked_up'
+    newStatus: 'cooking' | 'ready' | 'picked_up'
   ): Promise<boolean> => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

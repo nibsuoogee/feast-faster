@@ -61,7 +61,7 @@ export default function RestaurantDashboard() {
       order.status === 'ready'
   ).length;
 
-  const handleStatusChange = async (orderId: string, newStatus: 'ready' | 'picked_up') => {
+  const handleStatusChange = async (orderId: string, newStatus: 'cooking' | 'ready' | 'picked_up') => {
     // Optimistic update
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
@@ -108,6 +108,7 @@ export default function RestaurantDashboard() {
               title="Pending"
               status="pending"
               orders={filteredOrders}
+              onStatusChange={handleStatusChange}
               colorClass="bg-gray-600"
             />
             <OrderColumn
