@@ -61,8 +61,10 @@ export function OrderColumn({
           ))}
           {filteredOrders.length === 0 && (
             <div className="text-center text-gray-400 py-12">
-              <Icon className="h-12 w-12 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">No {title.toLowerCase()} orders</p>
+              <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 rounded-2xl flex items-center justify-center">
+                <Icon className="h-8 w-8 text-gray-300" />
+              </div>
+              <p className="text-sm text-gray-500">No {title.toLowerCase()} orders</p>
             </div>
           )}
         </div>
