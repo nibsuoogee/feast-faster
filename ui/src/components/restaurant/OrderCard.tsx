@@ -1,8 +1,10 @@
-import { Clock, Battery } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, Battery, Timer, AlertCircle, TrendingDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { Order } from '@/types/restaurant';
 
 interface OrderCardProps {
@@ -11,6 +13,16 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onStatusChange }: OrderCardProps) {
+  // Force re-render every minute to update countdown
+  const [, setTick] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick(prev => prev + 1);
+    }, 60000); // Update every 60 seconds
+    
+    return () => clearInterval(timer);
+  }, []);
   const formatTime = (date: Date): string => {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -29,6 +41,67 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
 
   const etaMinutes = getMinutesFromNow(order.customerETA);
   const etaText = etaMinutes >= 0 ? `in ${etaMinutes} min` : `${Math.abs(etaMinutes)} min ago`;
+  
+  // Determine urgency level for visual styling
+  const getUrgencyLevel = () => {
+    if (etaMinutes < 0) return 'overdue'; // Past ETA
+    if (etaMinutes <= 5) return 'urgent'; // 5 minutes or less
+    if (etaMinutes <= 15) return 'soon'; // 15 minutes or less
+    return 'normal'; // More than 15 minutes
+  };
+  
+  const urgencyLevel = getUrgencyLevel();
+  
+  // Get color scheme based on urgency
+  const getUrgencyStyles = () => {
+    switch (urgencyLevel) {
+      case 'overdue':
+        return {
+          bg: 'bg-red-50',
+          border: 'border-red-300',
+          text: 'text-red-700',
+          icon: 'text-red-600',
+          badge: 'bg-red-100 text-red-700 border-red-300',
+          animate: 'animate-pulse'
+        };
+      case 'urgent':
+        return {
+          bg: 'bg-orange-50',
+          border: 'border-orange-300',
+          text: 'text-orange-700',
+          icon: 'text-orange-600',
+          badge: 'bg-orange-100 text-orange-700 border-orange-300',
+          animate: 'animate-pulse'
+        };
+      case 'soon':
+        return {
+          bg: 'bg-yellow-50',
+          border: 'border-yellow-300',
+          text: 'text-yellow-700',
+          icon: 'text-yellow-600',
+          badge: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+          animate: ''
+        };
+      default:
+        return {
+          bg: 'bg-green-50',
+          border: 'border-green-300',
+          text: 'text-green-700',
+          icon: 'text-green-600',
+          badge: 'bg-green-100 text-green-700 border-green-300',
+          animate: ''
+        };
+    }
+  };
+  
+  const urgencyStyles = getUrgencyStyles();
+  
+  // Calculate progress percentage (time until arrival)
+  const getProgressPercentage = () => {
+    const totalMinutes = 30; // Assume 30 min window for visualization
+    const remaining = Math.max(0, Math.min(etaMinutes, totalMinutes));
+    return ((totalMinutes - remaining) / totalMinutes) * 100;
+  };
 
   return (
     <Card className="p-4 shadow-md hover:shadow-lg transition-shadow">
@@ -38,16 +111,69 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
           <span>Order #<strong>{order.orderNumber}</strong></span>
         </div>
 
-        {/* Customer ETA or Current Charge */}
+        {/* Customer ETA - Enhanced Visual Display */}
         {order.status === 'picked_up' ? (
-          <div className="flex items-center gap-2 text-gray-600">
-            <Battery className="h-4 w-4" />
-            <span>Current charge: {order.chargePercentage ?? 0}%</span>
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <Battery className="h-5 w-5 text-gray-600" />
+            <span className="text-gray-700 font-medium">Current charge: {order.chargePercentage ?? 0}%</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="h-4 w-4" />
-            <span>Customer arrives: {etaText} ({formatTime(order.customerETA)})</span>
+          <div className={`relative p-4 rounded-lg border-2 ${urgencyStyles.bg} ${urgencyStyles.border} ${urgencyStyles.animate}`}>
+            {/* Urgency Badge */}
+            {urgencyLevel === 'overdue' && (
+              <Badge variant="outline" className={`absolute -top-2 -right-2 ${urgencyStyles.badge} font-semibold`}>
+                OVERDUE
+              </Badge>
+            )}
+            {urgencyLevel === 'urgent' && (
+              <Badge variant="outline" className={`absolute -top-2 -right-2 ${urgencyStyles.badge} font-semibold`}>
+                URGENT
+              </Badge>
+            )}
+            
+            {/* Main ETA Display */}
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${urgencyStyles.bg}`}>
+                <Clock className={`h-6 w-6 ${urgencyStyles.icon}`} />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-gray-600 mb-1">Customer Arrives</div>
+                <div className={`text-2xl font-bold ${urgencyStyles.text}`}>
+                  {etaText}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  at {formatTime(order.customerETA)}
+                </div>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-3">
+              <Progress 
+                value={getProgressPercentage()} 
+                className={`h-2 ${urgencyStyles.bg}`}
+              />
+            </div>
+            
+            {/* Time-based message */}
+            {urgencyLevel === 'overdue' && (
+              <div className="mt-2 text-xs text-red-600 font-medium flex items-center gap-1">
+                <TrendingDown className="h-3 w-3" />
+                Customer is late - food may be getting cold
+              </div>
+            )}
+            {urgencyLevel === 'urgent' && (
+              <div className="mt-2 text-xs text-orange-600 font-medium flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Customer arriving very soon!
+              </div>
+            )}
+            {urgencyLevel === 'soon' && (
+              <div className="mt-2 text-xs text-yellow-700 font-medium flex items-center gap-1">
+                <Timer className="h-3 w-3" />
+                Ensure order is ready soon
+              </div>
+            )}
           </div>
         )}
 
