@@ -123,6 +123,23 @@ services:
       - "traefik.http.routers.processor.entrypoints=websecure"
       - "traefik.http.routers.processor.tls=true"
       - "traefik.http.services.processor.loadbalancer.server.port=8000"
+  charger:
+    image: project-charger:dev # This is the image we have built. If missing, check build_images.sh
+    volumes:
+      - ./charger:/usr/src/app # We want to mount our local charger folder to the container
+    networks:
+      - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+    command: bun dev # This is the command we want to run. We are now overriding the default command.
+    environment:
+      - PORT=3002 # We want to set the port in the environment variables
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.charger.rule=Host(`charger.localhost`)"
+      - "traefik.http.routers.charger.entrypoints=websecure"
+      - "traefik.http.routers.charger.tls=true"
+      - "traefik.http.services.charger.loadbalancer.server.port=3002"
 
 networks:
   cloud_project:
