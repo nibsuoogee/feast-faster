@@ -104,21 +104,23 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
   };
 
   return (
-    <Card className="p-4 shadow-md hover:shadow-lg transition-shadow">
+    <Card className="p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300 bg-white">
       <div className="space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <span>Order #<strong>{order.orderNumber}</strong></span>
+          <span className="text-sm text-gray-600">
+            Order #<strong className="text-gray-900 font-semibold">{order.orderNumber}</strong>
+          </span>
         </div>
 
         {/* Customer ETA - Enhanced Visual Display */}
         {order.status === 'picked_up' ? (
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
             <Battery className="h-5 w-5 text-gray-600" />
-            <span className="text-gray-700 font-medium">Current charge: {order.chargePercentage ?? 0}%</span>
+            <span className="text-sm text-gray-700 font-medium">Current charge: {order.chargePercentage ?? 0}%</span>
           </div>
         ) : (
-          <div className={`relative p-4 rounded-lg border-2 ${urgencyStyles.bg} ${urgencyStyles.border} ${urgencyStyles.animate}`}>
+          <div className={`relative p-4 rounded-xl border-2 ${urgencyStyles.bg} ${urgencyStyles.border} ${urgencyStyles.animate}`}>
             {/* Urgency Badge */}
             {urgencyLevel === 'overdue' && (
               <Badge variant="outline" className={`absolute -top-2 -right-2 ${urgencyStyles.badge} font-semibold`}>
@@ -182,24 +184,24 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         {/* Items */}
         <div className="space-y-2">
           {order.items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between">
+            <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div className="flex items-center gap-2">
-                <span className="text-base">{item.name}</span>
-                <Badge variant="secondary" className="text-xs">
+                <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
                   x{item.quantity}
                 </Badge>
               </div>
-              <span className="text-gray-500 text-sm">{item.preparationTime} min</span>
+              <span className="text-xs text-gray-500 font-medium">{item.preparationTime} min</span>
             </div>
           ))}
         </div>
 
         {/* Start Cooking Time - only show for pending and cooking orders */}
         {(order.status === 'pending' || order.status === 'cooking') && (
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between text-sm">
+          <div className="pt-2 border-t border-gray-200">
+            <div className="flex items-center justify-between text-sm px-2">
               <span className="text-gray-600">Start cooking at:</span>
-              <span className="text-orange-600">
+              <span className="text-orange-600 font-semibold">
                 {formatTime(startCookingTime)}
               </span>
             </div>
@@ -210,7 +212,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         {order.status === 'pending' && onStatusChange && (
           <Button
             onClick={() => onStatusChange(order.id, 'cooking')}
-            className="w-full bg-orange-600 hover:bg-orange-700"
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium shadow-md hover:shadow-lg transition-all"
           >
             Start Cooking
           </Button>
@@ -219,7 +221,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         {order.status === 'cooking' && onStatusChange && (
           <Button
             onClick={() => onStatusChange(order.id, 'ready')}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium shadow-md hover:shadow-lg transition-all"
           >
             Mark as Ready
           </Button>
@@ -228,7 +230,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         {order.status === 'ready' && onStatusChange && (
           <Button
             onClick={() => onStatusChange(order.id, 'picked_up')}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium shadow-md hover:shadow-lg transition-all"
           >
             Mark as Picked Up
           </Button>
