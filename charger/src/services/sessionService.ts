@@ -1,8 +1,8 @@
-import { fetch } from "elysia/dist/universal/types";
-import { ChargingUpdateModel, SessionStartModel } from "../models/sessionModel";
+import { ChargingUpdateModel } from "../models/sessionModel";
+import { sessions } from "../routes/sessionRouter";
 
 async function sendChargingUpdate(body: ChargingUpdateModel) {
-  return await fetch("https://backend.localhost/reservations/charging", {
+  return await fetch("http://backend:3000/charging", {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -11,10 +11,7 @@ async function sendChargingUpdate(body: ChargingUpdateModel) {
   });
 }
 
-export async function startSession(
-  charger_id: number,
-  sessions: Map<number, SessionStartModel>
-) {
+export async function startSession(charger_id: number) {
   const session = sessions.get(charger_id);
 
   if (!session) {
@@ -35,11 +32,11 @@ export async function startSession(
     const sessionStillExists = sessions.has(charger_id);
     if (!sessionStillExists) return;
 
-    current_soc = current_soc + rate_of_charge;
-
-    // Simple mock cumulative values for now
+    update.current_soc += rate_of_charge;
     update.cumulative_power += 10;
     update.cumulative_price_of_charge += 1;
+
+    console.log("Sending charge update: ", { update });
 
     const response = await sendChargingUpdate(update);
 
@@ -50,4 +47,6 @@ export async function startSession(
 
     await Bun.sleep(1000);
   }
+
+  // After reaching desired_soc, post a message to backend saying the charging has finished?
 }

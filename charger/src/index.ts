@@ -1,6 +1,7 @@
 import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
+import { sessionRouter } from "./routes/sessionRouter";
 
 const app = new Elysia()
   .use(swagger())

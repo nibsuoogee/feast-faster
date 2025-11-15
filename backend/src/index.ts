@@ -3,6 +3,7 @@ import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { settingsRouter } from "./routes/settingsRouter";
 import { notificationRouter } from "./routes/notificationRouter";
+import { chargerRouter } from "./routes/chargerRouter";
 
 const app = new Elysia()
   .use(swagger())
@@ -10,6 +11,7 @@ const app = new Elysia()
   .get("/", () => "Hello Elysia")
   .use(settingsRouter)
   .use(notificationRouter)
+  .use(chargerRouter)
   .listen(3000);
 
 console.log(
