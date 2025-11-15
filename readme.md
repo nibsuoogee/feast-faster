@@ -73,7 +73,7 @@ mkcert -install
 Then create certificates for the required services:
 
 ```
-mkcert "*.localhost" traefik.localhost app.localhost backend.localhost postgres.localhost auth.localhost processor.localhost localhost 127.0.0.1 ::1
+mkcert "*.localhost" traefik.localhost app.localhost backend.localhost postgres.localhost auth.localhost processor.localhost charger.localhost localhost 127.0.0.1 ::1
 ```
 
 Move the certificate and key to the correct place:
@@ -82,8 +82,8 @@ Move the certificate and key to the correct place:
 cd traefik/
 mkdir certs
 cd ../
-mv _wildcard.localhost+9.pem traefik/certs/cert.pem
-mv _wildcard.localhost+9-key.pem traefik/certs/key.pem
+mv _wildcard.localhost+10.pem traefik/certs/cert.pem
+mv _wildcard.localhost+10-key.pem traefik/certs/key.pem
 ```
 
 Create .env file in the root directory.
@@ -91,6 +91,7 @@ Create .env file in the root directory.
 Create .env.local file in the root directory, adding following variables.
 `OPEN_ROUTE_SERVICE_API_KEY` is an API key received from [Open Route Service](https://openrouteservice.org/).
 To get an API key, sign up https://openrouteservice.org/dev/#/signup
+
 ```
 # .env.local
 

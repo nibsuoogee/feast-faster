@@ -20,3 +20,7 @@ echo "project-ui:dev DONE"
 echo "building project-processor:dev..."
 DOCKER_BUILDKIT=1 docker build -f processor/Dockerfile -t project-processor:dev processor/
 echo "project-processor:dev DONE"
+
+echo "building project-charger:dev..."
+docker build -f charger/Dockerfile -t project-charger:dev charger/
+echo "project-charger:dev DONE"

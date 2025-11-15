@@ -8,6 +8,8 @@ import { Landing } from "./pages/landing";
 import { Register } from "./pages/register";
 import { Login } from "./pages/login";
 import { Home } from "./pages/home";
+import { notificationService } from "./services/notifications";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
   useEffect(() => {
@@ -37,28 +39,35 @@ function App() {
     );
   }, []);
 
-  return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes — no context */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+  useEffect(() => {
+    notificationService.subscribe();
+  });
 
-          {/* Protected route group */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <ProtectedLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/home" element={<Home />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </Router>
+  return (
+    <>
+      <Toaster />
+      <Router>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes — no context */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+
+            {/* Protected route group */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/home" element={<Home />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </>
   );
 }
 
