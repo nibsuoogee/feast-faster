@@ -5,6 +5,8 @@ import { settingsRouter } from "./routes/settingsRouter";
 import { notificationRouter } from "./routes/notificationRouter";
 import { chargerRouter } from "./routes/chargerRouter";
 
+export const userNotifications = new Map<number, any[]>();
+
 const app = new Elysia()
   .use(swagger())
   .use(cors())

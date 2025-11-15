@@ -6,7 +6,7 @@ export const ReservationDTO = {
   updateCharging: async (
     charger_id: number,
     chargingData: ChargingUpdateModel
-  ): Promise<Reservation> => {
+  ): Promise<Reservation | null> => {
     const [updatedReservation] = await sql`
       UPDATE reservations
       SET ${sql(chargingData)}
@@ -16,8 +16,20 @@ export const ReservationDTO = {
       RETURNING *
     `;
 
-    // If nothing was updated (no active reservation), return null
     return updatedReservation ?? null;
+  },
+  getUserIdByChargerId: async (charger_id: number): Promise<number | null> => {
+    const [reservation] = await sql`
+    SELECT o.customer_id
+    FROM reservations r
+    JOIN orders o ON r.order_id = o.order_id
+    WHERE r.charger_id = ${charger_id}
+      AND r.reservation_start <= NOW()
+      AND r.reservation_end >= NOW()
+    LIMIT 1
+  `;
+
+    return reservation?.customer_id ?? null;
   },
 };
 

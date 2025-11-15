@@ -1,10 +1,9 @@
 import Elysia, { sse, t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
+import { userNotifications } from "../index";
 
-const userNotifications = new Map<string, any[]>();
-
-export function sendToUser(userId: string, event: string, data: any) {
+export function sendToUser(userId: number, event: string, data: any) {
   const queue = userNotifications.get(userId);
   if (!queue) return false;
 
@@ -20,7 +19,7 @@ export const notificationRouter = new Elysia()
     const { user } = await authorizationMiddleware({ headers, jwt_auth });
     if (!user) return status(401, "Not Authorized");
 
-    const userId = String(user.user_id);
+    const userId = user.user_id;
 
     // Initialize queue for this user
     userNotifications.set(userId, []);
@@ -47,7 +46,7 @@ export const notificationRouter = new Elysia()
   .post(
     "/notify",
     async ({ query, body, status }) => {
-      const userId = query.user_id;
+      const userId = Number(query.user_id);
       const { message } = body;
       const messages = userNotifications.get(userId);
 
