@@ -1,5 +1,9 @@
 INSERT INTO stations (name, location, address)
-VALUES ('Feast-faster 1 Pakila Helsinki', ST_GeogFromText('SRID=4326;POINT(24.9291792 60.2397157)'), 'Pakilantie 61, Helsinki'),
+VALUES ('Feast-faster 1 Pakila Helsinki', ST_GeogFromText('SRID=4326;POINT(24.932 60.241)'), 'Pakilantie 45, Helsinki'),
+('Feast-faster 2 Highway Stop', ST_GeogFromText('SRID=4326;POINT(25.661 60.982)'), 'E75 Highway, 45km marker'),
+('Feast-faster 3 Hämeenlinna', ST_GeogFromText('SRID=4326;POINT(24.4608 60.9959)'), 'Parolantie 52, Hämeenlinna'),
+('Feast-faster 4 Tampere', ST_GeogFromText('SRID=4326;POINT(23.761 61.4978)'), 'Keskuskatu 15, Tampere'),
+('Feast-faster 1 Pakila Helsinkii', ST_GeogFromText('SRID=4326;POINT(24.9291792 60.2397157)'), 'Pakilantie 61, Helsinki'),
 ('Feast-faster 2 Pikkupekka Oulunkylä', ST_GeogFromText('SRID=4326;POINT(24.9577109 60.2326535)'), 'Kisällinkuja 2, Helsinki'),
 ('Feast-faster 3 Malmi Helsinki', ST_GeogFromText('SRID=4326;POINT(24.998606 60.2563077)'), 'Kirkonkyläntie 34, Helsinki'),
 ('Feast-faster 4 Alepa Backas Vantaa', ST_GeogFromText('SRID=4326;POINT(24.9526783 60.2850047)'), 'Ylästöntie 28, Vantaa'),
@@ -139,7 +143,14 @@ INSERT INTO restaurants (station_id, name, location, cuisines, address)
 SELECT s.station_id, d.name, d.location, d.cuisines, d.address
 FROM (
   VALUES
-    ('Feast-faster 1 Pakila Helsinki', 'House of Sandwiches', ST_GeogFromText('SRID=4326;POINT(24.9278122 60.2383083)'), ARRAY['turkish'], 'Pakilantie 56, Helsinki'),
+   ('Feast-faster 1 Pakila Helsinki', 'Green Leaf Bistro', ST_GeogFromText('SRID=4326;POINT(0 0)'), ARRAY['Vegetarian'], 'N/A'),
+('Feast-faster 1 Pakila Helsinki', 'Urban Coffee House', ST_GeogFromText('SRID=4326;POINT(0 0)'), ARRAY['European'], 'N/A'),
+('Feast-faster 2 Highway Stop', 'Burger Junction', ST_GeogFromText('SRID=4326;POINT(61.2827 25.8612)'), ARRAY['American'], 'E75 Highway, 45km marker'),
+('Feast-faster 2 Highway Stop', 'Pizza Express', ST_GeogFromText('SRID=4326;POINT(61.2827 25.8612)'), ARRAY['Italian'], 'E75 Highway, 45km marker'),
+('Feast-faster 3 Hämeenlinna', 'Sushi Express', ST_GeogFromText('SRID=4326;POINT(60.9959 24.4608)'), ARRAY['Asian'], 'Parolantie 52, Hämeenlinna'),
+('Feast-faster 4 Tampere', 'Nordic Grill',  ST_GeogFromText('SRID=4326;POINT(61.4978 23.7610)'), ARRAY['European'], 'Keskuskatu 15, Tampere'),
+('Feast-faster 4 Tampere', 'Coffee & Pastries', ST_GeogFromText('SRID=4326;POINT(61.4978 23.7610)'), ARRAY['European'], 'Keskuskatu 15, Tampere'),
+('Feast-faster 1 Pakila Helsinki', 'House of Sandwiches', ST_GeogFromText('SRID=4326;POINT(24.9278122 60.2383083)'), ARRAY['turkish'], 'Pakilantie 56, Helsinki'),
 ('Feast-faster 2 Pikkupekka Oulunkylä', 'Oulunkylän Kebab-Pizzeria', ST_GeogFromText('SRID=4326;POINT(24.9651506 60.2301165)'), ARRAY['turkish'], 'Kisällinkuja 2, Helsinki'),
 ('Feast-faster 3 Malmi Helsinki', 'Kahvila-ravintola Pinetto', ST_GeogFromText('SRID=4326;POINT(24.9944181 60.2587165)'), ARRAY['regional'], 'Kirkonkyläntie 47'),
 ('Feast-faster 3 Malmi Helsinki', 'China Wall', ST_GeogFromText('SRID=4326;POINT(24.9983117 60.2565483)'), ARRAY['asian'], 'Kirkonkyläntie 34, Helsinki'),
@@ -488,7 +499,15 @@ SELECT
     c.power
 FROM (
   VALUES
-    ('Feast-faster 1 Pakila Helsinki', 'available', 'CCS', 80),
+    ('Feast-faster 1 Pakila Helsinki', 'available', 'CCS', 150),
+('Feast-faster 1 Pakila Helsinki', 'available', 'Type 2', 50),
+('Feast-faster 2 Highway Stop', 'reserved_not_in_use', 'CHAdeMO', 150),
+('Feast-faster 2 Highway Stop', 'available', 'CCS', 50),
+('Feast-faster 3 Hämeenlinna', 'available', 'CCS', 300),
+('Feast-faster 3 Hämeenlinna', 'charging_stopped', 'Type 2', 50),
+('Feast-faster 4 Tampere', 'available', 'CHAdeMO', 150),
+('Feast-faster 4 Tampere', 'available', 'CCS', 50),
+('Feast-faster 1 Pakila Helsinki', 'available', 'CCS', 80),
 ('Feast-faster 1 Pakila Helsinki', 'available', 'CCS', 80),
 ('Feast-faster 1 Pakila Helsinki', 'available', 'CHAdeMO', 80),
 ('Feast-faster 1 Pakila Helsinki', 'available', 'Type 2', 22),
@@ -896,3 +915,109 @@ FROM (
 ) AS c(station_name, status, connector_type, power)
 JOIN stations AS s
 ON s.name = c.station_name;
+
+
+-- Green Leaf Bistro
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Quinoa Power Bowl', 'Mixed quinoa, roasted vegetables, avocado, tahini dressing', 12.99, 15, 'available'),
+    ('Green Goddess Smoothie', 'Spinach, banana, mango, almond milk, chia seeds', 7.99, 5, 'available'),
+    ('Grilled Chicken Wrap', 'Herb-marinated chicken, mixed greens, hummus, whole wheat wrap', 10.99, 12, 'available'),
+    ('Mediterranean Salad', 'Fresh tomatoes, cucumber, olives, feta cheese, olive oil', 9.99, 10, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Green Leaf Bistro';
+
+-- Urban Coffee House
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Cappuccino', 'Double shot espresso with steamed milk', 4.50, 5, 'available'),
+    ('Croissant', 'Freshly baked butter croissant', 3.99, 2, 'available'),
+    ('Avocado Toast', 'Smashed avocado on sourdough, cherry tomatoes, feta', 8.99, 8, 'available'),
+    ('Latte', 'Espresso with steamed milk and foam', 4.99, 5, 'available'),
+    ('Chocolate Muffin', 'Rich chocolate muffin with chocolate chips', 4.50, 2, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Urban Coffee House';
+
+-- Burger Junction
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Classic Cheeseburger', 'Angus beef patty, cheddar, lettuce, tomato, special sauce', 11.99, 15, 'available'),
+    ('Sweet Potato Fries', 'Crispy sweet potato fries with chipotle mayo', 5.99, 10, 'available'),
+    ('BBQ Bacon Burger', 'Double beef patty, bacon, BBQ sauce, onion rings', 13.99, 18, 'available'),
+    ('Chicken Wings', '8 pieces with choice of sauce', 9.99, 12, 'available'),
+    ('Milkshake', 'Vanilla, chocolate, or strawberry', 5.50, 5, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Burger Junction';
+
+-- Pizza Express
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Margherita Pizza Slice', 'Fresh mozzarella, basil, San Marzano tomatoes', 4.99, 8, 'available'),
+    ('Pepperoni Pizza Slice', 'Classic pepperoni with mozzarella', 5.99, 8, 'available'),
+    ('Garlic Knots', 'Warm garlic knots with marinara sauce', 5.99, 10, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Pizza Express';
+
+-- Sushi Express
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('California Roll', 'Crab, avocado, cucumber', 8.99, 10, 'available'),
+    ('Spicy Tuna Roll', 'Fresh tuna, spicy mayo, cucumber', 9.99, 10, 'available'),
+    ('Miso Soup', 'Traditional Japanese soup with tofu and seaweed', 3.99, 5, 'available'),
+    ('Salmon Nigiri', 'Fresh salmon on seasoned rice (2 pieces)', 6.99, 8, 'available'),
+    ('Edamame', 'Steamed soybeans with sea salt', 4.99, 5, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Sushi Express';
+
+-- Thai Kitchen
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Pad Thai', 'Stir-fried rice noodles with shrimp, peanuts, lime', 12.99, 15, 'available'),
+    ('Green Curry', 'Coconut green curry with vegetables and chicken', 11.99, 18, 'available'),
+    ('Tom Yum Soup', 'Spicy and sour Thai soup with shrimp', 8.99, 12, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Thai Kitchen';
+
+-- Nordic Grill
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Grilled Salmon', 'Fresh salmon with dill sauce and vegetables', 16.99, 20, 'available'),
+    ('Caesar Salad', 'Romaine, parmesan, croutons, Caesar dressing', 9.99, 10, 'available'),
+    ('Mushroom Soup', 'Creamy forest mushroom soup with bread', 7.99, 8, 'available'),
+    ('Reindeer Steak', 'Traditional Finnish reindeer with mashed potatoes', 18.99, 25, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Nordic Grill';
+
+-- Coffee & Pastries
+INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability)
+SELECT r.restaurant_id, d.name, d.details, d.price, d.minutes_to_prepare, d.availability::menu_item_availability
+FROM (
+  VALUES
+    ('Cinnamon Bun', 'Traditional Finnish korvapuusti', 3.50, 2, 'available'),
+    ('Espresso', 'Strong Italian espresso', 2.99, 3, 'available'),
+    ('Blueberry Pie', 'Fresh Finnish blueberry pie slice', 4.99, 5, 'available')
+) AS d(name, details, price, minutes_to_prepare, availability)
+JOIN restaurants AS r
+ON r.name = 'Coffee & Pastries';
+
