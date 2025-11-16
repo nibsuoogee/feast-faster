@@ -3,7 +3,6 @@ import { t } from "elysia";
 export const sessionModel = t.Object({
   charger_id: t.Number(),
   current_soc: t.Number(),
-  desired_soc: t.Number(),
   rate_of_charge: t.Number(),
 });
 export type SessionModel = typeof sessionModel.static;

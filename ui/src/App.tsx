@@ -1,15 +1,15 @@
+import ProtectedLayout from "@/components/ProtectedLayout";
 import axios from "axios";
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedLayout from "@/components/ProtectedLayout";
-import { Landing } from "./pages/landing";
-import { Register } from "./pages/register";
-import { Login } from "./pages/login";
-import { Home } from "./pages/home";
-import { notificationService } from "./services/notifications";
 import { Toaster } from "./components/ui/sonner";
+import { AuthProvider } from "./contexts/AuthContext";
+import { StateProvider } from "./contexts/StateContext";
+import { Home } from "./pages/home";
+import { Landing } from "./pages/landing";
+import { Login } from "./pages/login";
+import { Register } from "./pages/register";
 
 function App() {
   useEffect(() => {
@@ -39,10 +39,6 @@ function App() {
     );
   }, []);
 
-  useEffect(() => {
-    notificationService.subscribe();
-  });
-
   return (
     <>
       <Toaster />
@@ -58,7 +54,10 @@ function App() {
             <Route
               element={
                 <ProtectedRoute>
-                  <ProtectedLayout />
+                  {/* State provider */}
+                  <StateProvider>
+                    <ProtectedLayout />
+                  </StateProvider>
                 </ProtectedRoute>
               }
             >

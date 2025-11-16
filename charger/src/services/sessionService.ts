@@ -11,7 +11,16 @@ async function sendChargingUpdate(body: ChargingUpdateModel) {
   });
 }
 
-export async function startSession(charger_id: number) {
+export async function getDesiredSocWithChargerId(charger_id: number) {
+  return await fetch(`http://backend:3000/desired-soc/${charger_id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+export async function startSession(charger_id: number, desired_soc: number) {
   const session = sessions.get(charger_id);
 
   if (!session) {
@@ -19,7 +28,7 @@ export async function startSession(charger_id: number) {
     return;
   }
 
-  const { desired_soc, rate_of_charge } = session;
+  const { rate_of_charge } = session;
   let current_soc = session.current_soc;
   const update: ChargingUpdateModel = {
     charger_id,
@@ -28,7 +37,7 @@ export async function startSession(charger_id: number) {
     cumulative_power: 0,
   };
 
-  while (current_soc < desired_soc) {
+  while (update.current_soc < desired_soc) {
     const sessionStillExists = sessions.has(charger_id);
     if (!sessionStillExists) return;
 
@@ -47,6 +56,4 @@ export async function startSession(charger_id: number) {
 
     await Bun.sleep(1000);
   }
-
-  // After reaching desired_soc, post a message to backend saying the charging has finished?
 }
