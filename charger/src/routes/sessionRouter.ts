@@ -1,16 +1,29 @@
 import Elysia, { t } from "elysia";
 import { SessionModel, sessionModel } from "../models/sessionModel";
-import { startSession } from "../services/sessionService";
+import {
+  getDesiredSocWithChargerId,
+  startSession,
+} from "../services/sessionService";
 
 export const sessions: Map<number, SessionModel> = new Map();
 
 export const sessionRouter = new Elysia()
   .post(
     "/start-charging",
-    async ({ body }) => {
+    async ({ body, status }) => {
       sessions.set(body.charger_id, body);
 
-      startSession(body.charger_id);
+      // Get the driver's desired SoC
+      const socResponse = await getDesiredSocWithChargerId(body.charger_id);
+
+      if (!socResponse.ok) {
+        console.error(`Remote service error: ${await socResponse.text()}`);
+        return status(500, "Failed to get desired soc from backend");
+      }
+
+      const socData = await socResponse.json();
+
+      startSession(body.charger_id, socData.desired_soc);
 
       return "Charging started";
     },
@@ -18,6 +31,7 @@ export const sessionRouter = new Elysia()
       body: sessionModel,
       response: {
         200: t.String(),
+        500: t.String(),
       },
     }
   )
