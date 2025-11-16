@@ -9,6 +9,7 @@ export default function ProtectedLayout() {
   useEffect(() => {
     notificationService.subscribe(setContextReservation);
   });
+
   return (
     <div>
       {/* Add shared layout if needed */}
