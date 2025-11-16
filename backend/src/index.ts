@@ -13,8 +13,10 @@ import { orderRouter } from "./routes/orderRouter";
 
 const app = new Elysia()
   .use(swagger())
-  .use(cors())
-  .get("/", () => "Hello Elysia")
+  .use(cors({
+    origin: /^https?:\/\/(.*\.)?localhost(:\d+)?$/, // matches all your localhost subdomains and ports
+    credentials: true, // needed for Authorization header or cookies
+  }))  .get("/", () => "Hello Elysia")
   .use(settingsRouter)
   .use(menuItemsRouter)
   .use(notificationRouter)

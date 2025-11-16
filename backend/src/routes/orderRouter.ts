@@ -17,6 +17,61 @@ const foodStatusMessage: Record<FoodStatus, string> = {
   picked_up: "Your meal was successfully picked up.",
 };
 
+import {
+  OrderDTO,
+  OrderModelForCreation,
+  orderModel,
+} from "@models/orderModel";
+
+import {
+  OrderItemDTO,
+  OrderItemForCreation,
+  orderItemModel,
+} from "@models/orderItemModel";
+
+import {
+  ReservationDTO,
+  ReservationForCreation,
+  reservationModel,
+} from "@models/reservationModel";
+
+import { tryCatch } from "@utils/tryCatch";
+
+//
+// ------------------------------
+// BODY SCHEMA (runtime validation)
+// ------------------------------
+//
+const createOrderBody = t.Object({
+  restaurantId: t.String(), // keep string from frontend, will convert to number before updating db
+  stationId: t.String(), // keep string from frontend, will convert to number before updating db
+  items: t.Array(
+    t.Object({
+      menuItem: t.Object({
+        id: t.String(), // keep string from frontend, will convert to number before updating db
+        name: t.String(),
+        description: t.Optional(t.String()),
+        price: t.Number(),
+      }),
+      quantity: t.Number(),
+    })
+  ),
+  isPaid: t.Boolean(),
+});
+
+//
+// ------------------------------
+// RESPONSE SCHEMA
+// ------------------------------
+//
+const createOrderResponse = t.Object({
+  message: t.String(),
+  order: orderModel,
+  items: t.Array(orderItemModel),
+  reservation: reservationModel,
+});
+
+
 export const orderRouter = new Elysia()
   .use(jwtConfig)
   .derive(authorizationMiddleware)
