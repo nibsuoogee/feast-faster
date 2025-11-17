@@ -17,8 +17,6 @@ export const settingsRouter = new Elysia()
       beforeHandle: async ({ headers, jwt_auth, status }) => {
         const { user } = await authorizationMiddleware({ headers, jwt_auth });
         if (!user) return status(401, "Not Authorized");
-
-        return { user };
       },
     },
     (app) =>
