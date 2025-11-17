@@ -47,3 +47,11 @@ export const chargingUpdateModel = t.Object({
   cumulative_power: t.Number(),
 });
 export type ChargingUpdateModel = typeof chargingUpdateModel.static;
+
+export const chargerModel = t.Object({
+  charger_id: t.Number(),
+  status: t.String(),
+  type: t.String(),
+  max_power: t.Number(),
+});
+export type ChargerModel = typeof chargerModel.static;
