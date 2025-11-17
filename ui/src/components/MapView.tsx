@@ -14,8 +14,14 @@ type ChargingStation = {
   address: string;
   availableChargers: number;
   totalChargers: number;
+  chargerTypes: string[];
+  pricePerKwh: number;
+  rating?: number;
+  distance: number;
   lat: number;
   lng: number;
+  restaurants?: Array<{ id: string; name: string; cuisine: string[] }>;
+  amenities?: string[];
 };
 
 type MapViewProps = {
@@ -23,6 +29,7 @@ type MapViewProps = {
   zoom?: number;
   active?: boolean;
   stations?: ChargingStation[];
+  onStationClick?: (station: ChargingStation) => void;
 };
 
 // Create custom charging station icon
@@ -81,7 +88,8 @@ export const MapView: React.FC<MapViewProps> = ({
   center = [60.984, 25.663], 
   zoom = 9, 
   active = false,
-  stations = []
+  stations = [],
+  onStationClick
 }) => {
   const mapRef = React.useRef<L.Map | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -156,21 +164,16 @@ export const MapView: React.FC<MapViewProps> = ({
       
       const marker = L.marker([station.lat, station.lng], { icon });
       
-      marker.bindPopup(`
-        <div style="min-width: 200px;">
-          <h3 style="font-weight: bold; margin-bottom: 4px;">${station.name}</h3>
-          <p style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">${station.address}</p>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="color: ${isAvailable ? '#16a34a' : '#9ca3af'}; font-weight: 600;">
-              ${station.availableChargers}/${station.totalChargers} Available
-            </span>
-          </div>
-        </div>
-      `);
+      // Add click event to open dialog instead of popup
+      marker.on('click', () => {
+        if (onStationClick) {
+          onStationClick(station);
+        }
+      });
       
       clusterGroupRef.current.addLayer(marker);
     });
-  }, [stations]);
+  }, [stations, onStationClick]);
 
   React.useEffect(() => {
     if (active && mapRef.current) {

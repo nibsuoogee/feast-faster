@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import MapView from "@/components/MapView";
 import { getStationsRestaurantsMock } from "@/services/stations";
+import { StationDialog } from "@/components/StationDialog";
 
 const Toaster: FC<{ position?: string }> = () => null;
 const toast = {
@@ -80,9 +81,11 @@ export type ChargingStation = {
   totalChargers: number;
   chargerTypes: ("Type 2" | "CCS" | "ChaDeMo")[];
   pricePerKwh: number;
+  rating?: number;
   lat: number;
   lng: number;
   restaurants: Restaurant[];
+  amenities?: string[];
 };
 
 export type JourneyStop = {
@@ -150,6 +153,8 @@ export const Home = () => {
   const [isPlanning, setIsPlanning] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [mapSearchQuery, setMapSearchQuery] = useState("");
+  const [selectedStation, setSelectedStation] = useState<ChargingStation | null>(null);
+  const [showStationDialog, setShowStationDialog] = useState(false);
 
   // When the Map tab becomes active, trigger a resize event so Leaflet can recalculate size
   // and increment mapKey to force a fresh mount of MapView (avoid "already initialized" error)
@@ -171,8 +176,10 @@ export const Home = () => {
       totalChargers: 8,
       chargerTypes: ["CCS", "Type 2"],
       pricePerKwh: 0.35,
+      rating: 4.5,
       lat: 60.9827,
       lng: 25.6612,
+      amenities: ["WiFi", "Cafe", "Restaurant"],
       restaurants: [
         {
           id: "r1",
@@ -275,8 +282,10 @@ export const Home = () => {
       totalChargers: 10,
       chargerTypes: ["CCS", "ChaDeMo"],
       pricePerKwh: 0.42,
+      rating: 4.2,
       lat: 61.2827,
       lng: 25.8612,
+      amenities: ["Shop", "Cafe"],
       restaurants: [
         {
           id: "r3",
@@ -371,8 +380,10 @@ export const Home = () => {
       totalChargers: 12,
       chargerTypes: ["CCS", "Type 2"],
       pricePerKwh: 0.38,
+      rating: 4.8,
       lat: 60.9959,
       lng: 24.4608,
+      amenities: ["WiFi", "Restaurant"],
       restaurants: [
         {
           id: "r5",
@@ -467,8 +478,10 @@ export const Home = () => {
       totalChargers: 6,
       chargerTypes: ["Type 2", "CCS"],
       pricePerKwh: 0.40,
+      rating: 4.3,
       lat: 61.4978,
       lng: 23.7610,
+      amenities: ["Cafe", "Shop"],
       restaurants: [
         {
           id: "r7",
@@ -561,9 +574,45 @@ export const Home = () => {
       totalChargers: 4,
       chargerTypes: ["CCS", "Type 2"],
       pricePerKwh: 0.39,
+      rating: 4.1,
       lat: 60.2107,
       lng: 25.0791,
-      restaurants: [],
+      amenities: ["Shop"],
+      restaurants: [
+        {
+          id: "r9",
+          name: "Market Cafe",
+          cuisine: ["European", "Fast Food"],
+          prepTime: "10-15 min",
+          image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m22",
+              name: "Chicken Sandwich",
+              description: "Grilled chicken, lettuce, tomato, mayo",
+              price: 7.99,
+              category: "Sandwiches",
+              prepTime: 10,
+            },
+            {
+              id: "m23",
+              name: "Hot Dog",
+              description: "Classic hot dog with mustard and ketchup",
+              price: 4.99,
+              category: "Fast Food",
+              prepTime: 5,
+            },
+            {
+              id: "m24",
+              name: "Coffee",
+              description: "Fresh brewed coffee",
+              price: 2.50,
+              category: "Beverages",
+              prepTime: 3,
+            },
+          ],
+        },
+      ],
     },
     {
       id: "6",
@@ -576,7 +625,41 @@ export const Home = () => {
       pricePerKwh: 0.42,
       lat: 60.2109,
       lng: 25.0821,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r10",
+          name: "Hesburger",
+          cuisine: ["Fast Food"],
+          prepTime: "8-12 min",
+          image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m25",
+              name: "Classic Burger",
+              description: "Beef patty, pickles, onions, special sauce",
+              price: 8.50,
+              category: "Burgers",
+              prepTime: 10,
+            },
+            {
+              id: "m26",
+              name: "French Fries",
+              description: "Crispy golden fries",
+              price: 3.99,
+              category: "Sides",
+              prepTime: 5,
+            },
+            {
+              id: "m27",
+              name: "Soft Drink",
+              description: "Choice of cola, sprite, or fanta",
+              price: 2.50,
+              category: "Beverages",
+              prepTime: 2,
+            },
+          ],
+        },
+      ],
     },
     // Vantaa
     {
@@ -588,9 +671,70 @@ export const Home = () => {
       totalChargers: 12,
       chargerTypes: ["CCS", "Type 2", "ChaDeMo"],
       pricePerKwh: 0.45,
+      rating: 4.7,
       lat: 60.3172,
       lng: 24.9633,
-      restaurants: [],
+      amenities: ["WiFi", "Restaurant", "Shop"],
+      restaurants: [
+        {
+          id: "r11",
+          name: "Airport Lounge",
+          cuisine: ["International"],
+          prepTime: "15-20 min",
+          image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m28",
+              name: "Club Sandwich",
+              description: "Triple-decker with chicken, bacon, lettuce, tomato",
+              price: 11.99,
+              category: "Sandwiches",
+              prepTime: 15,
+            },
+            {
+              id: "m29",
+              name: "Greek Salad",
+              description: "Fresh vegetables, feta, olives, olive oil",
+              price: 10.50,
+              category: "Salads",
+              prepTime: 10,
+            },
+            {
+              id: "m30",
+              name: "Latte Macchiato",
+              description: "Espresso with steamed milk layers",
+              price: 4.50,
+              category: "Beverages",
+              prepTime: 5,
+            },
+          ],
+        },
+        {
+          id: "r12",
+          name: "Traveler's Noodles",
+          cuisine: ["Asian"],
+          prepTime: "12-18 min",
+          image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m31",
+              name: "Teriyaki Chicken Bowl",
+              description: "Rice bowl with teriyaki chicken and vegetables",
+              price: 12.50,
+              category: "Bowls",
+              prepTime: 15,
+            },
+            {
+              id: "m32",
+              name: "Ramen",
+              description: "Japanese noodle soup with pork and egg",
+              price: 13.99,
+              category: "Noodles",
+              prepTime: 18,
+            },
+          ],
+        },
+      ],
     },
     {
       id: "8",
@@ -603,7 +747,41 @@ export const Home = () => {
       pricePerKwh: 0.40,
       lat: 60.2925,
       lng: 25.0424,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r13",
+          name: "Food Court Express",
+          cuisine: ["International", "Fast Food"],
+          prepTime: "10-15 min",
+          image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m33",
+              name: "Chicken Wrap",
+              description: "Grilled chicken, vegetables, garlic sauce",
+              price: 8.99,
+              category: "Wraps",
+              prepTime: 12,
+            },
+            {
+              id: "m34",
+              name: "Poke Bowl",
+              description: "Salmon, rice, edamame, avocado, sesame",
+              price: 11.99,
+              category: "Bowls",
+              prepTime: 10,
+            },
+            {
+              id: "m35",
+              name: "Smoothie",
+              description: "Mixed berries with yogurt",
+              price: 5.50,
+              category: "Beverages",
+              prepTime: 5,
+            },
+          ],
+        },
+      ],
     },
     // Espoo
     {
@@ -617,7 +795,41 @@ export const Home = () => {
       pricePerKwh: 0.41,
       lat: 60.2177,
       lng: 24.8095,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r14",
+          name: "Bistro Sello",
+          cuisine: ["European", "Mediterranean"],
+          prepTime: "15-20 min",
+          image: "https://images.unsplash.com/photo-1551218808-94e220e084d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m36",
+              name: "Pasta Carbonara",
+              description: "Creamy pasta with bacon and parmesan",
+              price: 10.99,
+              category: "Pasta",
+              prepTime: 15,
+            },
+            {
+              id: "m37",
+              name: "Bruschetta",
+              description: "Toasted bread with tomatoes, basil, olive oil",
+              price: 6.99,
+              category: "Appetizers",
+              prepTime: 8,
+            },
+            {
+              id: "m38",
+              name: "Tiramisu",
+              description: "Classic Italian dessert with coffee",
+              price: 5.99,
+              category: "Desserts",
+              prepTime: 5,
+            },
+          ],
+        },
+      ],
     },
     {
       id: "10",
@@ -630,7 +842,41 @@ export const Home = () => {
       pricePerKwh: 0.38,
       lat: 60.1616,
       lng: 24.7373,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r15",
+          name: "Taco Bell",
+          cuisine: ["Mexican"],
+          prepTime: "10-15 min",
+          image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m39",
+              name: "Crunchy Taco Supreme",
+              description: "Seasoned beef, lettuce, cheese, tomatoes, sour cream",
+              price: 4.99,
+              category: "Tacos",
+              prepTime: 10,
+            },
+            {
+              id: "m40",
+              name: "Burrito Bowl",
+              description: "Rice, beans, meat, cheese, salsa, guacamole",
+              price: 9.99,
+              category: "Bowls",
+              prepTime: 12,
+            },
+            {
+              id: "m41",
+              name: "Nachos Supreme",
+              description: "Tortilla chips with cheese, jalapeños, sour cream",
+              price: 7.99,
+              category: "Appetizers",
+              prepTime: 8,
+            },
+          ],
+        },
+      ],
     },
     // Between Lahti and Helsinki
     {
@@ -644,7 +890,41 @@ export const Home = () => {
       pricePerKwh: 0.40,
       lat: 60.6349,
       lng: 25.3173,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r16",
+          name: "ABC Restaurant",
+          cuisine: ["Finnish"],
+          prepTime: "15-20 min",
+          image: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m42",
+              name: "Karelian Pasty",
+              description: "Traditional Finnish rice pasty with egg butter",
+              price: 3.50,
+              category: "Finnish Specialties",
+              prepTime: 5,
+            },
+            {
+              id: "m43",
+              name: "Meat Soup",
+              description: "Hearty Finnish soup with vegetables",
+              price: 8.50,
+              category: "Soups",
+              prepTime: 15,
+            },
+            {
+              id: "m44",
+              name: "Coffee & Pulla",
+              description: "Finnish coffee with sweet cardamom bread",
+              price: 4.99,
+              category: "Coffee & Pastries",
+              prepTime: 3,
+            },
+          ],
+        },
+      ],
     },
     {
       id: "12",
@@ -657,7 +937,41 @@ export const Home = () => {
       pricePerKwh: 0.42,
       lat: 60.8046,
       lng: 25.7296,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r17",
+          name: "Roadside Grill",
+          cuisine: ["Grill", "Fast Food"],
+          prepTime: "12-18 min",
+          image: "https://images.unsplash.com/photo-1558030006-450675393462?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m45",
+              name: "BBQ Ribs",
+              description: "Slow-cooked ribs with BBQ sauce and fries",
+              price: 14.99,
+              category: "Grill",
+              prepTime: 18,
+            },
+            {
+              id: "m46",
+              name: "Grilled Sausage",
+              description: "Finnish grilled sausage with mustard",
+              price: 5.50,
+              category: "Grill",
+              prepTime: 10,
+            },
+            {
+              id: "m47",
+              name: "Onion Rings",
+              description: "Crispy battered onion rings",
+              price: 4.50,
+              category: "Sides",
+              prepTime: 8,
+            },
+          ],
+        },
+      ],
     },
     // Lahti area
     {
@@ -671,7 +985,41 @@ export const Home = () => {
       pricePerKwh: 0.37,
       lat: 60.9826,
       lng: 25.6559,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r18",
+          name: "Station Cafe",
+          cuisine: ["European", "Cafe"],
+          prepTime: "5-10 min",
+          image: "https://images.unsplash.com/photo-1511920170033-f8396924c348?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m48",
+              name: "Ham & Cheese Croissant",
+              description: "Flaky croissant with ham and cheese",
+              price: 5.50,
+              category: "Pastries",
+              prepTime: 5,
+            },
+            {
+              id: "m49",
+              name: "Cappuccino",
+              description: "Classic Italian cappuccino",
+              price: 3.99,
+              category: "Coffee",
+              prepTime: 5,
+            },
+            {
+              id: "m50",
+              name: "Danish Pastry",
+              description: "Sweet pastry with fruit filling",
+              price: 3.50,
+              category: "Pastries",
+              prepTime: 2,
+            },
+          ],
+        },
+      ],
     },
     {
       id: "14",
@@ -684,7 +1032,41 @@ export const Home = () => {
       pricePerKwh: 0.39,
       lat: 60.9833,
       lng: 25.6552,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r19",
+          name: "Subway",
+          cuisine: ["Sandwiches", "Fast Food"],
+          prepTime: "8-12 min",
+          image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m51",
+              name: "Italian BMT",
+              description: "Salami, pepperoni, ham with vegetables",
+              price: 7.99,
+              category: "Subs",
+              prepTime: 10,
+            },
+            {
+              id: "m52",
+              name: "Veggie Delite",
+              description: "Fresh vegetables and cheese",
+              price: 6.50,
+              category: "Subs",
+              prepTime: 8,
+            },
+            {
+              id: "m53",
+              name: "Cookies",
+              description: "Freshly baked chocolate chip cookies",
+              price: 2.99,
+              category: "Desserts",
+              prepTime: 2,
+            },
+          ],
+        },
+      ],
     },
     // Towards Tampere
     {
@@ -698,7 +1080,41 @@ export const Home = () => {
       pricePerKwh: 0.41,
       lat: 61.0538,
       lng: 25.4373,
-      restaurants: [],
+      restaurants: [
+        {
+          id: "r20",
+          name: "Highway Diner",
+          cuisine: ["American", "Diner"],
+          prepTime: "12-20 min",
+          image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+          menu: [
+            {
+              id: "m54",
+              name: "Pancakes with Syrup",
+              description: "Stack of fluffy pancakes with maple syrup",
+              price: 7.99,
+              category: "Breakfast",
+              prepTime: 12,
+            },
+            {
+              id: "m55",
+              name: "Bacon & Eggs",
+              description: "Crispy bacon with fried eggs and toast",
+              price: 9.50,
+              category: "Breakfast",
+              prepTime: 15,
+            },
+            {
+              id: "m56",
+              name: "Apple Pie",
+              description: "Warm apple pie with vanilla ice cream",
+              price: 5.99,
+              category: "Desserts",
+              prepTime: 8,
+            },
+          ],
+        },
+      ],
     },
   ];
 
@@ -1118,7 +1534,17 @@ export const Home = () => {
 
                 {/* Map */}
                 <div className="w-full h-full relative z-0">
-                  {currentTab === "map" && <MapView key={mapKey} active stations={mapStations} />}
+                  {currentTab === "map" && (
+                    <MapView 
+                      key={mapKey} 
+                      active 
+                      stations={mapStations}
+                      onStationClick={(station) => {
+                        setSelectedStation(station as any);
+                        setShowStationDialog(true);
+                      }}
+                    />
+                  )}
                 </div>
 
                 {/* Legend */}
@@ -1133,6 +1559,23 @@ export const Home = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Station Dialog */}
+              <StationDialog
+                station={selectedStation}
+                open={showStationDialog}
+                onClose={() => setShowStationDialog(false)}
+                onNavigate={(station) => {
+                  console.log('Navigate to station:', station);
+                  setShowStationDialog(false);
+                  // TODO: Implement navigation
+                }}
+                onStartCharging={(station) => {
+                  console.log('Start charging at:', station);
+                  startChargingSession(station as any);
+                  setShowStationDialog(false);
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="session" className="m-0">
