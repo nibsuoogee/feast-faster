@@ -6,6 +6,14 @@ Name branches feature-N or fix-N based on the issue number N. For example:
 feature-1
 ```
 
+## Windows
+
+To enable hot reloading on Windows, add the following to your .env file:
+
+```
+USE_NODEMON=true
+```
+
 ## Git version control help
 
 View branches
@@ -56,6 +64,9 @@ git stash
 Copy (rebase) the new commits from the main branch and push them to your branch
 
 ```
+git checkout main
+git pull
+git checkout branch_name
 git rebase main
 git push origin branch_name --force-with-lease
 ```
