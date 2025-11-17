@@ -58,7 +58,7 @@ function App() {
             <Route path="/home" element={<Home />} />
           </Route>
 
-          {/* Restaurant Dashboard - Protected route (standalone, no layout) */}
+          {/* Restaurant Dashboard - Protected route */}
           <Route
             path="/restaurant"
             element={

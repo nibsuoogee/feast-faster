@@ -5,6 +5,30 @@ import { Restaurant, Order } from '@/types/restaurant';
 import { Package } from 'lucide-react';
 import { orderService } from '@/services/orders';
 
+// Column configuration
+const ORDER_COLUMNS = [
+  {
+    title: 'Pending',
+    status: 'pending' as const,
+    colorClass: 'bg-gradient-to-r from-gray-500 to-gray-600',
+  },
+  {
+    title: 'Cooking',
+    status: 'cooking' as const,
+    colorClass: 'bg-gradient-to-r from-emerald-400 to-teal-500',
+  },
+  {
+    title: 'Ready',
+    status: 'ready' as const,
+    colorClass: 'bg-gradient-to-r from-blue-500 to-indigo-600',
+  },
+  {
+    title: 'Picked Up',
+    status: 'picked_up' as const,
+    colorClass: 'bg-gradient-to-r from-purple-500 to-pink-600',
+  },
+];
+
 export default function RestaurantDashboard() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -24,37 +48,17 @@ export default function RestaurantDashboard() {
   // Load orders when restaurant is selected
   useEffect(() => {
     if (selectedRestaurant) {
-      let intervalId: NodeJS.Timeout | null = null;
-      
       const loadOrders = async () => {
-        const { orders: data, usingMockData } = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
+        const data = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
         setOrders(data);
-        
-        // Only set up refresh interval if using real API (not mock data)
-        // This prevents mock data from resetting user changes every 30 seconds
-        if (!usingMockData && !intervalId) {
-          intervalId = setInterval(async () => {
-            const { orders: freshData } = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
-            setOrders(freshData);
-          }, 30000);
-        }
       };
-      
       loadOrders();
-      
-      return () => {
-        if (intervalId) clearInterval(intervalId);
-      };
     } else {
       setOrders([]);
     }
   }, [selectedRestaurant]);
 
-  const filteredOrders = selectedRestaurant
-    ? orders.filter((order) => order.restaurantId === selectedRestaurant.id)
-    : [];
-
-  const activeOrdersCount = filteredOrders.filter(
+  const activeOrdersCount = orders.filter(
     (order) =>
       order.status === 'pending' ||
       order.status === 'cooking' ||
@@ -62,6 +66,10 @@ export default function RestaurantDashboard() {
   ).length;
 
   const handleStatusChange = async (orderId: string, newStatus: 'cooking' | 'ready' | 'picked_up') => {
+    // Store original status for potential revert
+    const originalOrder = orders.find((order) => order.id === orderId);
+    if (!originalOrder) return;
+
     // Optimistic update
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
@@ -69,15 +77,14 @@ export default function RestaurantDashboard() {
       )
     );
 
-    // Call API (will update cached mock data if API unavailable)
+    // Update mock data (persists in memory via module caching)
     const success = await orderService.updateOrderStatus(orderId, newStatus);
-    
     if (!success) {
-      // Revert on failure
+      // Revert on failure using stored original status
       console.error('Failed to update order status, reverting');
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === orderId ? { ...order, status: order.status } : order
+          order.id === orderId ? { ...order, status: originalOrder.status } : order
         )
       );
     }
@@ -107,33 +114,16 @@ export default function RestaurantDashboard() {
       <main className="flex-1 p-6 overflow-hidden">
         {selectedRestaurant ? (
           <div className="grid grid-cols-4 gap-5 h-full">
-            <OrderColumn
-              title="Pending"
-              status="pending"
-              orders={filteredOrders}
-              onStatusChange={handleStatusChange}
-              colorClass="bg-gradient-to-r from-gray-500 to-gray-600"
-            />
-            <OrderColumn
-              title="Cooking"
-              status="cooking"
-              orders={filteredOrders}
-              onStatusChange={handleStatusChange}
-              colorClass="bg-gradient-to-r from-emerald-400 to-teal-500"
-            />
-            <OrderColumn
-              title="Ready"
-              status="ready"
-              orders={filteredOrders}
-              onStatusChange={handleStatusChange}
-              colorClass="bg-gradient-to-r from-blue-500 to-indigo-600"
-            />
-            <OrderColumn
-              title="Picked Up"
-              status="picked_up"
-              orders={filteredOrders}
-              colorClass="bg-gradient-to-r from-purple-500 to-pink-600"
-            />
+            {ORDER_COLUMNS.map((column) => (
+              <OrderColumn
+                key={column.status}
+                title={column.title}
+                status={column.status}
+                orders={orders}
+                onStatusChange={column.status !== 'picked_up' ? handleStatusChange : undefined}
+                colorClass={column.colorClass}
+              />
+            ))}
           </div>
         ) : (
           <div className="h-full flex items-center justify-center">

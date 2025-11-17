@@ -7,8 +7,6 @@ export function Logo() {
       <div className="flex items-center justify-center w-8 h-8 bg-green-600 rounded-lg">
         <Zap className="h-5 w-5 text-white fill-white" />
       </div>
-
-      {/* Brand Text - Clean and Simple */}
       <div className="flex flex-col">
         <span className="text-lg font-bold text-gray-900">
           Feast-Faster

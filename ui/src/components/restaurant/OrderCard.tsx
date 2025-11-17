@@ -4,8 +4,82 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { Order } from '@/types/restaurant';
+
+// Constants
+const URGENCY_STYLES = {
+  overdue: {
+    bg: 'bg-red-50',
+    border: 'border-red-300',
+    text: 'text-red-700',
+    icon: 'text-red-600',
+    badge: 'bg-red-100 text-red-700 border-red-300',
+    animate: 'animate-pulse'
+  },
+  urgent: {
+    bg: 'bg-orange-50',
+    border: 'border-orange-300',
+    text: 'text-orange-700',
+    icon: 'text-orange-600',
+    badge: 'bg-orange-100 text-orange-700 border-orange-300',
+    animate: 'animate-pulse'
+  },
+  soon: {
+    bg: 'bg-yellow-50',
+    border: 'border-yellow-300',
+    text: 'text-yellow-700',
+    icon: 'text-yellow-600',
+    badge: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+    animate: ''
+  },
+  normal: {
+    bg: 'bg-green-50',
+    border: 'border-green-300',
+    text: 'text-green-700',
+    icon: 'text-green-600',
+    badge: 'bg-green-100 text-green-700 border-green-300',
+    animate: ''
+  }
+} as const;
+
+// Urgency messages
+const URGENCY_MESSAGES = {
+  overdue: {
+    icon: TrendingDown,
+    text: 'Customer is late - food may be getting cold',
+    color: 'text-red-600'
+  },
+  urgent: {
+    icon: AlertCircle,
+    text: 'Customer arriving very soon!',
+    color: 'text-orange-600'
+  },
+  soon: {
+    icon: Timer,
+    text: 'Ensure order is ready soon',
+    color: 'text-yellow-700'
+  }
+} as const;
+
+// Helper functions
+const formatTime = (date: Date): string => {
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+const getMinutesFromNow = (date: Date): number => {
+  const now = new Date();
+  const diff = Math.floor((date.getTime() - now.getTime()) / 1000 / 60);
+  return diff;
+};
+
+const getUrgencyLevel = (etaMinutes: number): keyof typeof URGENCY_STYLES => {
+  if (etaMinutes < 0) return 'overdue';
+  if (etaMinutes <= 5) return 'urgent';
+  if (etaMinutes <= 15) return 'soon';
+  return 'normal';
+};
 
 interface OrderCardProps {
   order: Order;
@@ -15,25 +89,14 @@ interface OrderCardProps {
 export function OrderCard({ order, onStatusChange }: OrderCardProps) {
   // Force re-render every minute to update countdown
   const [, setTick] = useState(0);
-  
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTick(prev => prev + 1);
     }, 60000); // Update every 60 seconds
-    
+
     return () => clearInterval(timer);
   }, []);
-  const formatTime = (date: Date): string => {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
-
-  const getMinutesFromNow = (date: Date): number => {
-    const now = new Date();
-    const diff = Math.floor((date.getTime() - now.getTime()) / 1000 / 60);
-    return diff;
-  };
 
   const maxPrepTime = Math.max(...order.items.map((item) => item.preparationTime));
   const startCookingTime = new Date(order.customerETA);
@@ -41,67 +104,8 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
 
   const etaMinutes = getMinutesFromNow(order.customerETA);
   const etaText = etaMinutes >= 0 ? `in ${etaMinutes} min` : `${Math.abs(etaMinutes)} min ago`;
-  
-  // Determine urgency level for visual styling
-  const getUrgencyLevel = () => {
-    if (etaMinutes < 0) return 'overdue'; // Past ETA
-    if (etaMinutes <= 5) return 'urgent'; // 5 minutes or less
-    if (etaMinutes <= 15) return 'soon'; // 15 minutes or less
-    return 'normal'; // More than 15 minutes
-  };
-  
-  const urgencyLevel = getUrgencyLevel();
-  
-  // Get color scheme based on urgency
-  const getUrgencyStyles = () => {
-    switch (urgencyLevel) {
-      case 'overdue':
-        return {
-          bg: 'bg-red-50',
-          border: 'border-red-300',
-          text: 'text-red-700',
-          icon: 'text-red-600',
-          badge: 'bg-red-100 text-red-700 border-red-300',
-          animate: 'animate-pulse'
-        };
-      case 'urgent':
-        return {
-          bg: 'bg-orange-50',
-          border: 'border-orange-300',
-          text: 'text-orange-700',
-          icon: 'text-orange-600',
-          badge: 'bg-orange-100 text-orange-700 border-orange-300',
-          animate: 'animate-pulse'
-        };
-      case 'soon':
-        return {
-          bg: 'bg-yellow-50',
-          border: 'border-yellow-300',
-          text: 'text-yellow-700',
-          icon: 'text-yellow-600',
-          badge: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-          animate: ''
-        };
-      default:
-        return {
-          bg: 'bg-green-50',
-          border: 'border-green-300',
-          text: 'text-green-700',
-          icon: 'text-green-600',
-          badge: 'bg-green-100 text-green-700 border-green-300',
-          animate: ''
-        };
-    }
-  };
-  
-  const urgencyStyles = getUrgencyStyles();
-  
-  // Calculate progress percentage (time until arrival)
-  const getProgressPercentage = () => {
-    const totalMinutes = 30; // Assume 30 min window for visualization
-    const remaining = Math.max(0, Math.min(etaMinutes, totalMinutes));
-    return ((totalMinutes - remaining) / totalMinutes) * 100;
-  };
+  const urgencyLevel = getUrgencyLevel(etaMinutes);
+  const urgencyStyles = URGENCY_STYLES[urgencyLevel];
 
   return (
     <Card className="p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300 bg-white">
@@ -132,14 +136,9 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         ) : (
           <div className={`relative p-4 rounded-xl border-2 ${urgencyStyles.bg} ${urgencyStyles.border} ${urgencyStyles.animate}`}>
             {/* Urgency Badge */}
-            {urgencyLevel === 'overdue' && (
+            {(urgencyLevel === 'overdue' || urgencyLevel === 'urgent') && (
               <Badge variant="outline" className={`absolute -top-2 -right-2 ${urgencyStyles.badge} font-semibold`}>
-                OVERDUE
-              </Badge>
-            )}
-            {urgencyLevel === 'urgent' && (
-              <Badge variant="outline" className={`absolute -top-2 -right-2 ${urgencyStyles.badge} font-semibold`}>
-                URGENT
+                {urgencyLevel === 'overdue' ? 'OVERDUE' : 'URGENT'}
               </Badge>
             )}
             
@@ -158,34 +157,18 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
                 </div>
               </div>
             </div>
-            
-            {/* Progress Bar */}
-            <div className="mt-3">
-              <Progress 
-                value={getProgressPercentage()} 
-                className={`h-2 ${urgencyStyles.bg}`}
-              />
-            </div>
-            
+
             {/* Time-based message */}
-            {urgencyLevel === 'overdue' && (
-              <div className="mt-2 text-xs text-red-600 font-medium flex items-center gap-1">
-                <TrendingDown className="h-3 w-3" />
-                Customer is late - food may be getting cold
-              </div>
-            )}
-            {urgencyLevel === 'urgent' && (
-              <div className="mt-2 text-xs text-orange-600 font-medium flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Customer arriving very soon!
-              </div>
-            )}
-            {urgencyLevel === 'soon' && (
-              <div className="mt-2 text-xs text-yellow-700 font-medium flex items-center gap-1">
-                <Timer className="h-3 w-3" />
-                Ensure order is ready soon
-              </div>
-            )}
+            {urgencyLevel !== 'normal' && URGENCY_MESSAGES[urgencyLevel as keyof typeof URGENCY_MESSAGES] && (() => {
+              const message = URGENCY_MESSAGES[urgencyLevel as keyof typeof URGENCY_MESSAGES];
+              const IconComponent = message.icon;
+              return (
+                <div className={`mt-2 text-xs ${message.color} font-medium flex items-center gap-1`}>
+                  <IconComponent className="h-3 w-3" />
+                  {message.text}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -193,8 +176,8 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
 
         {/* Items */}
         <div className="space-y-2">
-          {order.items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          {order.items.map((item) => (
+            <div key={`${order.id}-${item.name}-${item.quantity}`} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-900">{item.name}</span>
                 <Badge variant="secondary" className="text-xs px-2 py-0.5">
@@ -219,15 +202,6 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         )}
 
         {/* Action Buttons */}
-        {order.status === 'pending' && onStatusChange && (
-          <Button
-            onClick={() => onStatusChange(order.id, 'cooking')}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium shadow-md hover:shadow-lg transition-all"
-          >
-            Start Cooking
-          </Button>
-        )}
-
         {order.status === 'cooking' && onStatusChange && (
           <Button
             onClick={() => onStatusChange(order.id, 'ready')}

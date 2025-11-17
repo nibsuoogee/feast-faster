@@ -19,14 +19,6 @@ const statusIcons = {
   picked_up: Package,
 };
 
-// Map status to workflow progress (1-4)
-const statusProgress = {
-  pending: 1,
-  cooking: 2,
-  ready: 3,
-  picked_up: 4,
-};
-
 export function OrderColumn({
   title,
   status,
@@ -36,7 +28,6 @@ export function OrderColumn({
 }: OrderColumnProps) {
   const filteredOrders = orders.filter((order) => order.status === status);
   const Icon = statusIcons[status];
-  const progress = statusProgress[status];
 
   return (
     <div className="flex flex-col h-full rounded-xl bg-white overflow-hidden border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-lg">
