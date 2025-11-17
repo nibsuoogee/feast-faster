@@ -33,6 +33,8 @@ import {
   ChevronUp,
   Battery,
   UtensilsCrossed,
+  Search,
+  Filter,
 } from "lucide-react";
 import MapView from "@/components/MapView";
 import { getStationsRestaurantsMock } from "@/services/stations";
@@ -147,6 +149,7 @@ export const Home = () => {
   const [endLocation, setEndLocation] = useState("");
   const [isPlanning, setIsPlanning] = useState(false);
   const [mapKey, setMapKey] = useState(0);
+  const [mapSearchQuery, setMapSearchQuery] = useState("");
 
   // When the Map tab becomes active, trigger a resize event so Leaflet can recalculate size
   // and increment mapKey to force a fresh mount of MapView (avoid "already initialized" error)
@@ -545,6 +548,160 @@ export const Home = () => {
     },
   ];
 
+  // Additional charging stations for map view (real locations in Finland)
+  const mapStations: ChargingStation[] = [
+    ...stations,
+    // Helsinki area
+    {
+      id: "5",
+      name: "K-Citymarket Easton",
+      address: "Itäkatu 1-7, Helsinki",
+      distance: 210.0,
+      availableChargers: 0,
+      totalChargers: 4,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.39,
+      lat: 60.2107,
+      lng: 25.0791,
+      restaurants: [],
+    },
+    {
+      id: "6",
+      name: "Itis Shopping Center",
+      address: "Itäkatu 1, Helsinki",
+      distance: 215.0,
+      availableChargers: 2,
+      totalChargers: 6,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.42,
+      lat: 60.2109,
+      lng: 25.0821,
+      restaurants: [],
+    },
+    // Vantaa
+    {
+      id: "7",
+      name: "Helsinki-Vantaa Airport",
+      address: "Lentoasemantie 1, Vantaa",
+      distance: 195.0,
+      availableChargers: 8,
+      totalChargers: 12,
+      chargerTypes: ["CCS", "Type 2", "ChaDeMo"],
+      pricePerKwh: 0.45,
+      lat: 60.3172,
+      lng: 24.9633,
+      restaurants: [],
+    },
+    {
+      id: "8",
+      name: "Jumbo Shopping Center",
+      address: "Vantaanportinkatu 3, Vantaa",
+      distance: 200.0,
+      availableChargers: 3,
+      totalChargers: 8,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.40,
+      lat: 60.2925,
+      lng: 25.0424,
+      restaurants: [],
+    },
+    // Espoo
+    {
+      id: "9",
+      name: "Sello Shopping Center",
+      address: "Leppävaarankatu 3-9, Espoo",
+      distance: 220.0,
+      availableChargers: 0,
+      totalChargers: 6,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.41,
+      lat: 60.2177,
+      lng: 24.8095,
+      restaurants: [],
+    },
+    {
+      id: "10",
+      name: "Iso Omena",
+      address: "Piispansilta 11, Espoo",
+      distance: 225.0,
+      availableChargers: 5,
+      totalChargers: 10,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.38,
+      lat: 60.1616,
+      lng: 24.7373,
+      restaurants: [],
+    },
+    // Between Lahti and Helsinki
+    {
+      id: "11",
+      name: "ABC Mäntsälä",
+      address: "Ratatie 2, Mäntsälä",
+      distance: 35.0,
+      availableChargers: 4,
+      totalChargers: 6,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.40,
+      lat: 60.6349,
+      lng: 25.3173,
+      restaurants: [],
+    },
+    {
+      id: "12",
+      name: "Orimattila ABC",
+      address: "Lähteläntie 1, Orimattila",
+      distance: 25.0,
+      availableChargers: 0,
+      totalChargers: 4,
+      chargerTypes: ["CCS"],
+      pricePerKwh: 0.42,
+      lat: 60.8046,
+      lng: 25.7296,
+      restaurants: [],
+    },
+    // Lahti area
+    {
+      id: "13",
+      name: "Lahti Travel Center",
+      address: "Rautatienkatu 22, Lahti",
+      distance: 2.0,
+      availableChargers: 6,
+      totalChargers: 8,
+      chargerTypes: ["CCS", "Type 2", "ChaDeMo"],
+      pricePerKwh: 0.37,
+      lat: 60.9826,
+      lng: 25.6559,
+      restaurants: [],
+    },
+    {
+      id: "14",
+      name: "Karisma Shopping Center",
+      address: "Kauppakatu 10, Lahti",
+      distance: 1.5,
+      availableChargers: 2,
+      totalChargers: 4,
+      chargerTypes: ["Type 2", "CCS"],
+      pricePerKwh: 0.39,
+      lat: 60.9833,
+      lng: 25.6552,
+      restaurants: [],
+    },
+    // Towards Tampere
+    {
+      id: "15",
+      name: "Hollola ABC",
+      address: "Hämeentie 133, Hollola",
+      distance: 15.0,
+      availableChargers: 0,
+      totalChargers: 4,
+      chargerTypes: ["CCS", "Type 2"],
+      pricePerKwh: 0.41,
+      lat: 61.0538,
+      lng: 25.4373,
+      restaurants: [],
+    },
+  ];
+
   const handlePlanRoute = async () => {
     if (!endLocation) return;
 
@@ -938,17 +1095,43 @@ export const Home = () => {
             </TabsContent>
 
             <TabsContent value="map" className="m-0">
-              <div className="p-4 space-y-4">
-                <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="w-6 h-6 text-green-600" />
-                    <h2 className="text-xl font-semibold">Map</h2>
+              <div className="relative h-[calc(100vh-120px)]">
+                {/* Search Bar */}
+                <div className="absolute top-4 left-20 right-4 z-[1000] flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search for charging stations..."
+                      value={mapSearchQuery}
+                      onChange={(e) => setMapSearchQuery(e.target.value)}
+                      className="pl-9 bg-white shadow-lg"
+                    />
                   </div>
-                  <p className="text-gray-600 mb-4">Interactive map view of charging stations and route (placeholder).</p>
-                  <div>
-                    {currentTab === "map" && <MapView key={mapKey} active />}
+                  <Button variant="outline" size="icon" className="bg-white shadow-lg">
+                    <Filter className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="bg-white shadow-lg">
+                    <Navigation className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Map */}
+                <div className="w-full h-full relative z-0">
+                  {currentTab === "map" && <MapView key={mapKey} active stations={mapStations} />}
+                </div>
+
+                {/* Legend */}
+                <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-sm z-[1000]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-3 h-3 bg-green-600 rounded-full" />
+                    <span>Available</span>
                   </div>
-                </Card>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-gray-400 rounded-full" />
+                    <span>Occupied</span>
+                  </div>
+                </div>
               </div>
             </TabsContent>
 
