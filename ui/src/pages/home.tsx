@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChargingSession } from "@/components/ChargingSession";
 import { UserProfile } from "@/components/UserProfile";
@@ -34,6 +34,7 @@ import {
   Battery,
   UtensilsCrossed,
 } from "lucide-react";
+import MapView from "@/components/MapView";
 import { getStationsRestaurantsMock } from "@/services/stations";
 
 const Toaster: FC<{ position?: string }> = () => null;
@@ -145,6 +146,16 @@ export const Home = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [endLocation, setEndLocation] = useState("");
   const [isPlanning, setIsPlanning] = useState(false);
+  const [mapKey, setMapKey] = useState(0);
+
+  // When the Map tab becomes active, trigger a resize event so Leaflet can recalculate size
+  // and increment mapKey to force a fresh mount of MapView (avoid "already initialized" error)
+  useEffect(() => {
+    if (currentTab === "map") {
+      setMapKey(prev => prev + 1);
+      setTimeout(() => window.dispatchEvent(new Event("resize")), 250);
+    }
+  }, [currentTab]);
 
   // Mock charging stations data
   const stations: ChargingStation[] = [
@@ -926,6 +937,21 @@ export const Home = () => {
               </div>
             </TabsContent>
 
+            <TabsContent value="map" className="m-0">
+              <div className="p-4 space-y-4">
+                <Card className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-6 h-6 text-green-600" />
+                    <h2 className="text-xl font-semibold">Map</h2>
+                  </div>
+                  <p className="text-gray-600 mb-4">Interactive map view of charging stations and route (placeholder).</p>
+                  <div>
+                    {currentTab === "map" && <MapView key={mapKey} active />}
+                  </div>
+                </Card>
+              </div>
+            </TabsContent>
+
             <TabsContent value="session" className="m-0">
               <ChargingSession
                 activeSession={activeSession}
@@ -953,7 +979,7 @@ export const Home = () => {
       {!showRoutePreview && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t">
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="w-full h-16 grid grid-cols-3 rounded-none bg-white">
+            <TabsList className="w-full h-16 grid grid-cols-4 rounded-none bg-white">
               <TabsTrigger
                 value="journey"
                 className="flex flex-col gap-1 data-[state=active]:text-green-600 relative"
@@ -976,6 +1002,13 @@ export const Home = () => {
                   )) && (
                   <span className="absolute top-2 right-3 w-2 h-2 bg-green-600 rounded-full animate-pulse" />
                 )}
+              </TabsTrigger>
+              <TabsTrigger
+                value="map"
+                className="flex flex-col gap-1 data-[state=active]:text-green-600 relative"
+              >
+                <MapPin className="w-5 h-5" />
+                <span className="text-xs">Map</span>
               </TabsTrigger>
               <TabsTrigger
                 value="profile"
