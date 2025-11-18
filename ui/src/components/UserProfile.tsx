@@ -2,7 +2,7 @@ import { RestaurantOrder } from "@/pages/home";
 import { PlannedJourney } from "@/pages/home";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { useState } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Switch } from "./ui/switch";
 import { Separator } from "./ui/separator";
@@ -23,13 +23,12 @@ import {
 import { Slider } from "./ui/slider";
 import {
   User,
-  CreditCard,
   Car,
   Bell,
   Settings,
   HelpCircle,
   LogOut,
-  ChevronRight,
+  
   Zap,
   MapPin,
   DollarSign,
@@ -65,28 +64,10 @@ export function UserProfile({
     batteryCapacity: 75,
   };
 
-  const paymentMethods = [
-    { id: "1", type: "Visa", last4: "4242", isDefault: true },
-    {
-      id: "2",
-      type: "Mastercard",
-      last4: "5555",
-      isDefault: false,
-    },
-  ];
-
-  const stats = {
-    totalSessions: 47,
-    totalEnergy: 1234.5,
-    totalSpent: 432.18,
-    co2Saved: 892,
-    totalJourneys: pastJourneys.length + 12,
-    totalMiles:
-      pastJourneys.reduce(
-        (sum, j) => sum + j.totalDistance,
-        0,
-      ) + 3420,
-  };
+  const [desiredChargeAtStops, setDesiredChargeAtStops] = useState<number>(80);
+  const [evModel, setEvModel] = useState<string>("any");
+  const [connectorType, setConnectorType] = useState<string>("any");
+  const [cuisinePref, setCuisinePref] = useState<string>("any");
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50 pb-4">
@@ -124,7 +105,7 @@ export function UserProfile({
         <div className="space-y-2">
           <div className="space-y-2">
             <Label className="text-sm">EV Model</Label>
-            <Select value={"evmodel"}>
+            <Select value={evModel} onValueChange={setEvModel}>
               <SelectTrigger>
                 <SelectValue placeholder="Your EV model" />
               </SelectTrigger>
@@ -141,18 +122,22 @@ export function UserProfile({
             </Select>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label className="text-sm">
-                Desired Charge Level at Stops
-              </Label>
-              <span className="text-sm text-green-600">
-                80%
-              </span>
+            <div className="flex justify-between mb-2">
+              <Label className="text-sm">Desired Charge Level at Stops</Label>
+              <span className="text-sm text-green-600">{desiredChargeAtStops}%</span>
             </div>
+            <Slider
+              value={[desiredChargeAtStops]}
+              onValueChange={(v: number[]) => setDesiredChargeAtStops(v[0])}
+              min={50}
+              max={100}
+              step={5}
+              className="w-full"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-sm">Connector Type</Label>
-            <Select value={"connectorType"}>
+            <Select value={connectorType} onValueChange={setConnectorType}>
               <SelectTrigger>
                 <SelectValue placeholder="Select connector type" />
               </SelectTrigger>
@@ -180,8 +165,8 @@ export function UserProfile({
               Cuisine Preference
             </Label>
             <Select
-              value={""}
-              onValueChange={() => console.log()}
+              value={cuisinePref}
+              onValueChange={setCuisinePref}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select cuisine" />
@@ -211,46 +196,13 @@ export function UserProfile({
         </div>
       </Card>
 
-      <Card className="mx-4 mb-4 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-gray-600" />
-            <h3>Payment Methods</h3>
-          </div>
-          <Button variant="ghost" size="sm">
-            Add
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {paymentMethods.map((method) => (
-            <div
-              key={method.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-5 h-5 text-gray-600" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span>{method.type}</span>
-                    {method.isDefault && (
-                      <Badge
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        Default
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-600">
-                    •••• {method.last4}
-                  </span>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </div>
-          ))}
-        </div>
-      </Card>
+      <div className="mx-4 mb-4">
+        <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+          Save Vehicle and Cuisine Preference
+        </Button>
+      </div>
+
+      {/* Payment Methods removed per request */}
 
       <div className="mx-4">
         <Button onClick={onLogout} variant="outline" className="w-full" size="lg">

@@ -1,8 +1,13 @@
 from app.dependencies.database import get_session
+from app.services.open_route import get_location_range, get_driving_etas, RoutingServiceError
+from app.services.charging_estimation import get_estimate_charging_time
+from app.services.database import get_stations_from_db
+from app.models import Station, StationRequest, StationRequestMock
+from app.config import logger
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
-from app.models import Station, Restaurant, StationRequest
 from fastapi import APIRouter, Depends, HTTPException
+
 
 router = APIRouter(
     prefix="/api",
@@ -11,7 +16,7 @@ router = APIRouter(
 
 @router.post("/stations-restaurants-MOCK")
 async def get_stations_restaurants_(
-    body: StationRequest,
+    body: StationRequestMock,
     session: Session = Depends(get_session)
 ):
     # Select first 2 stations, eagerly loading their restaurants
@@ -60,3 +65,36 @@ async def get_stations_restaurants_(
         })
 
     return data
+
+
+@router.post("/get-filtered-stations")
+def get_filtered_stations(
+    body: StationRequest,
+    session: Session = Depends(get_session)
+):
+    # Get location range - by OpenRouteService
+    current_location = body.current_location
+    try:
+        buffer_geojson = get_location_range(body.current_location, body.destination)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    logger.info("Received buffer_geojson from OpenRouteService")
+
+    # Get stations from database within a route
+    stations = get_stations_from_db(session, buffer_geojson, body.cuisines, body.connector_type)
+
+    # Get ETAs - by OpenRouteService
+    try:
+        stations_with_eta = get_driving_etas(current_location, stations)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    logger.info("Received driving ETAa from OpenRouteService")
+
+    # Calculate the charging time
+    stations_with_charging_time = get_estimate_charging_time(body.ev_model, body.current_soc, body.current_car_range,
+                                                             body.desired_soc, stations_with_eta)
+
+    # Sort by distance
+    stations_sorted = sorted(stations_with_charging_time, key=lambda x: x["distance_km"])
+
+    return stations_sorted

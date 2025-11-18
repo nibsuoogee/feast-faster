@@ -10,6 +10,9 @@ WORKDIR /usr/src/app
 # Set the UV_LINK_MODE to copy in order to make system to accept mounting from local filesystem
 ENV UV_LINK_MODE=copy
 
+# Install system dependencies for model loading
+RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+
 # Copy pyproject.toml and lockfile (if exists) for dependency installation
 COPY pyproject.toml .
 COPY uv.lock* ./

@@ -1,13 +1,15 @@
+import ProtectedLayout from "@/components/ProtectedLayout";
 import axios from "axios";
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedLayout from "@/components/ProtectedLayout";
-import { Landing } from "./pages/landing";
-import { Register } from "./pages/register";
-import { Login } from "./pages/login";
+import { StateProvider } from "./contexts/StateContext";
 import { Home } from "./pages/home";
+import { Landing } from "./pages/landing";
+import { Login } from "./pages/login";
+import { Register } from "./pages/register";
 
 function App() {
   useEffect(() => {
@@ -38,27 +40,33 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes — no context */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+    <>
+      <Toaster />
+      <Router>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes — no context */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
 
-          {/* Protected route group */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <ProtectedLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/home" element={<Home />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </Router>
+            {/* Protected route group */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  {/* State provider */}
+                  <StateProvider>
+                    <ProtectedLayout />
+                  </StateProvider>
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/home" element={<Home />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </>
   );
 }
 

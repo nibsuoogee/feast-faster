@@ -34,6 +34,7 @@ import {
   Battery,
   UtensilsCrossed,
 } from "lucide-react";
+import { getStationsRestaurantsMock } from "@/services/stations";
 
 const Toaster: FC<{ position?: string }> = () => null;
 const toast = {
@@ -138,6 +139,7 @@ export const Home = () => {
   const [currentSOC, setCurrentSOC] = useState([75]);
   const [currentRange, setCurrentRange] = useState([180]);
   const [desiredSOC, setDesiredSOC] = useState([80]);
+  const [demoStations, setDemoStations] = useState<any[] | null>(null);
   const [connectorType, setConnectorType] = useState<string>("any");
   const [cuisinePreference, setCuisinePreference] = useState<string>("any");
   const [showFilters, setShowFilters] = useState(false);
@@ -532,22 +534,98 @@ export const Home = () => {
     },
   ];
 
-  const handlePlanRoute = () => {
+  const handlePlanRoute = async () => {
     if (!endLocation) return;
 
     console.log("Planning route to:", endLocation);
     console.log("Filters:", { connectorType, cuisinePreference, currentSOC, currentRange, desiredSOC });
-    
+
     setIsPlanning(true);
-    
-    // Simulate route planning
-    setTimeout(() => {
-      const filteredStations = stations.filter((station) => {
+
+    // If demoStations (API results) exist, use them; otherwise try to fetch the API now
+    let sourceStations: any[] = [];
+    if (demoStations && demoStations.length > 0) {
+      sourceStations = demoStations;
+    }
+
+    // For API restaurants we don't have menus in the response.
+    // Instead of attempting to match, attach a small static menu here so the UI can show orders.
+    const staticMenuForApiRestaurant = (apiR: any): MenuItem[] => {
+      const base = String(apiR?.name || "Restaurant").replace(/[^a-z0-9]/gi, "").toLowerCase();
+      return [
+        { id: `${base}-m1`, name: "Chef's Special", description: "House specialty with seasonal ingredients", price: 12.99, category: "Mains", prepTime: 15 },
+        { id: `${base}-m2`, name: "Quick Snack", description: "Light bite for the road", price: 6.5, category: "Snacks", prepTime: 5 },
+        { id: `${base}-m3`, name: "Coffee", description: "Freshly brewed coffee", price: 3.5, category: "Beverages", prepTime: 3 },
+      ];
+    };
+
+    // Map API station shape to our local ChargingStation type
+    const mapApiStationToChargingStation = (s: any): ChargingStation => {
+      const chargers = Array.isArray(s.chargers) ? s.chargers : [];
+      const chargerTypes = Array.from(new Set(chargers.map((c: any) => {
+        if (!c || !c.type) return "Type 2";
+        const t = String(c.type).toLowerCase();
+        if (t.includes("chademo")) return "ChaDeMo" as any;
+        if (t.includes("ccs")) return "CCS" as any;
+        return c.type;
+      })));
+
+      const availableChargers = chargers.filter((c: any) => c.status === "available").length;
+      const totalChargers = chargers.length;
+
+      const restaurants = Array.isArray(s.restaurants) ? s.restaurants.map((r: any, idx: number) => ({
+        id: String(r.restaurant_id || r.id || `${s.station_id}-r${idx}`),
+        name: r.name || "Unknown",
+        cuisine: Array.isArray(r.cuisines) ? r.cuisines : (r.cuisine ? [r.cuisine] : ["Unknown"]),
+        prepTime: (s.estimate_charging_time_min ? `${s.estimate_charging_time_min} min` : "15-25 min"),
+        image: r.image || "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=400&q=80",
+        menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
+      })) : [];
+
+      return {
+        id: String(s.station_id),
+        name: s.name || "Charging Station",
+        address: s.address || "",
+        distance: typeof s.distance_km === "number" ? s.distance_km : (s.distance || 0),
+        availableChargers,
+        totalChargers,
+        chargerTypes: chargerTypes as any,
+        pricePerKwh: typeof s.price_per_kwh === "number" ? s.price_per_kwh : 0.4,
+        lat: typeof s.lat === "number" ? s.lat : 0,
+        lng: typeof s.lng === "number" ? s.lng : 0,
+        restaurants,
+      };
+    };
+
+    try {
+      if (sourceStations.length === 0) {
+        try {
+          const body = {
+            current_location: [60.984, 25.663] as [number, number],
+            destination: endLocation || "Tampere",
+            ev_model: "Nissan Leaf",
+            current_car_range: 120,
+            current_soc: currentSOC[0] || 50,
+            desired_soc: desiredSOC[0] || 80,
+          };
+          const data = await getStationsRestaurantsMock(body);
+          if (data && Array.isArray(data)) {
+            sourceStations = data as any[];
+            setDemoStations(sourceStations as any[]);
+          }
+        } catch (err) {
+          console.warn("Could not fetch stations from API, falling back to static data", err);
+        }
+      }
+
+      const mappedStations: ChargingStation[] = (sourceStations.length > 0 ? sourceStations.map(mapApiStationToChargingStation) : stations);
+
+      const filteredStations = mappedStations.filter((station) => {
         if (connectorType !== "any" && !station.chargerTypes.includes(connectorType as any)) {
           console.log(`Station ${station.name} filtered out by connector type`);
           return false;
         }
-        
+
         if (cuisinePreference !== "any") {
           const hasCuisine = station.restaurants.some((r) =>
             r.cuisine.some((c) => c.toLowerCase() === cuisinePreference.toLowerCase())
@@ -557,7 +635,7 @@ export const Home = () => {
             return false;
           }
         }
-        
+
         return true;
       });
 
@@ -570,7 +648,7 @@ export const Home = () => {
           endLocation: endLocation,
           totalDistance: filteredStations[filteredStations.length - 1]?.distance || 45,
           estimatedDuration: Math.ceil(filteredStations.reduce((sum, s) => sum + s.distance, 0) / 80 * 60),
-          stops: filteredStations.map((station, index) => ({
+          stops: filteredStations.map((station) => ({
             station,
             estimatedArrivalTime: new Date(Date.now() + (station.distance / 80) * 60 * 60 * 1000),
             chargingDuration: 30,
@@ -587,10 +665,12 @@ export const Home = () => {
         console.log("No stations found matching criteria");
         toast.error("No charging stations found matching your criteria. Try adjusting your filters or selecting 'Any' for connector type and cuisine.");
       }
-      
+    } finally {
       setIsPlanning(false);
-    }, 1500);
+    }
   };
+
+  // demo fetch button removed; Plan My Route will fetch API automatically when needed
 
   const startChargingSession = (station: ChargingStation) => {
     const session: ChargingSessionType = {
@@ -822,24 +902,26 @@ export const Home = () => {
                     </div>
                   </div>
 
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 mt-4"
-                    size="lg"
-                    onClick={handlePlanRoute}
-                    disabled={!endLocation || isPlanning}
-                  >
-                    {isPlanning ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Planning Route...
-                      </>
-                    ) : (
-                      <>
-                        <RouteIcon className="w-5 h-5 mr-2" />
-                        Plan My Route
-                      </>
-                    )}
-                  </Button>
+                                  <div className="space-y-2">
+                                  <Button
+                                    className="w-full bg-green-600 hover:bg-green-700 mt-0"
+                                    size="lg"
+                                    onClick={handlePlanRoute}
+                                    disabled={!endLocation || isPlanning}
+                                  >
+                                  {isPlanning ? (
+                                    <>
+                                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                      Planning Route...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RouteIcon className="w-5 h-5 mr-2" />
+                                      Plan My Route
+                                    </>
+                                  )}
+                                </Button>
+                                  </div>
                 </Card>
               </div>
             </TabsContent>

@@ -1,8 +1,10 @@
 # Node related gitignores
 node_modules
 
-# VSCode related gitignores
+# IDE related gitignores
 .vscode
+.idea
+venv/
 
 # Certificates
 *.pem
@@ -13,5 +15,5 @@ db_data
 # Environment
 .env
 
-
 mkcert.exe
+.env.local

@@ -31,7 +31,7 @@ services:
     environment:
       - PORT=3001 # We want to set the port in the environment variables
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
-      - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb
+      - POSTGRES_URL=postgres://user:password@feast-faster-postgres-1:5432/projectdb
     env_file:
       - .env
     labels:
@@ -65,7 +65,7 @@ services:
       - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
     command: bun run dev # This is the command we want to run. We are now overriding the default command.
     environment:
-      - POSTGRES_URL=postgres://user:password@postgres:5432/projectdb # This is the database URL
+      - POSTGRES_URL=postgres://user:password@feast-faster-postgres-1:5432/projectdb # This is the database URL
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
     env_file:
       - .env
@@ -77,6 +77,7 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
   postgres:
     image: postgis/postgis:17-3.5 # https://hub.docker.com/r/postgis/postgis/
+    platform: linux/amd64 # Force amd64 platform
     container_name: feast-faster-postgres-1
     environment:
       - TZ=Europe/Helsinki
@@ -86,6 +87,7 @@ services:
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/inserts.sql:/docker-entrypoint-initdb.d/inserts.sql
+      - ./database/test.sql:/docker-entrypoint-initdb.d/test.sql
       - ./db_data:/var/lib/postgresql/data
     healthcheck: # Hey! We are checking that the postgres is up and running!
       test: ["CMD-SHELL", "pg_isready -U user -d projectdb"]
@@ -112,14 +114,34 @@ services:
     ports:
       - "8000:8000" # Open port 8000 to the outside world
     environment:
+      - DATABASE_URL=postgresql+psycopg2://user:password@feast-faster-postgres-1:5432/projectdb # This is the database URL
       - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables. This must match the one in auth and backend!
-      - DATABASE_URL=postgresql://user:password@feast-faster-postgres-1:5432/projectdb
+    env_file:
+      - .env
+      - .env.local
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.processor.rule=Host(`processor.localhost`)" # This is the backend service URL
       - "traefik.http.routers.processor.entrypoints=websecure"
       - "traefik.http.routers.processor.tls=true"
       - "traefik.http.services.processor.loadbalancer.server.port=8000"
+  charger:
+    image: project-charger:dev # This is the image we have built. If missing, check build_images.sh
+    volumes:
+      - ./charger:/usr/src/app # We want to mount our local charger folder to the container
+    networks:
+      - cloud_project # Note the network is the same as for traefik! Otherwise this won't work!
+    command: bun dev # This is the command we want to run. We are now overriding the default command.
+    environment:
+      - PORT=3002 # We want to set the port in the environment variables
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.charger.rule=Host(`charger.localhost`)"
+      - "traefik.http.routers.charger.entrypoints=websecure"
+      - "traefik.http.routers.charger.tls=true"
+      - "traefik.http.services.charger.loadbalancer.server.port=3002"
 
 networks:
   cloud_project:
