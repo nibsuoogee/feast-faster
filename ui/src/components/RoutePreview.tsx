@@ -7,15 +7,10 @@ import { Separator } from "./ui/separator";
 import { RestaurantMenu } from "./RestaurantMenu";
 import {
   MapPin,
-  Navigation,
   Zap,
   Clock,
   UtensilsCrossed,
-  Star,
-  ChevronRight,
   Flag,
-  Play,
-  ArrowRight,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
@@ -32,14 +27,10 @@ export function RoutePreview({
   onPlaceOrder,
   onBack,
 }: RoutePreviewProps) {
-  const [selectedStop, setSelectedStop] =
-    useState<JourneyStop | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<{
     stop: JourneyStop;
     restaurant: JourneyStop["station"]["restaurants"][0];
   } | null>(null);
-
-  const [, setRefresh] = useState(0);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
