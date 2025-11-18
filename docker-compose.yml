@@ -58,6 +58,7 @@ services:
       - "traefik.http.services.ui.loadbalancer.server.port=5173"
   backend:
     image: project-backend:dev # This is the image we have built. If missing, check build_images.sh
+   
     volumes:
       - ./backend:/usr/src/app # We want to mount our local backend folder to the container
     networks:
