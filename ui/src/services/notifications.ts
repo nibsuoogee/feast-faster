@@ -15,16 +15,16 @@ export const notificationService = {
       onmessage(ev) {
         const data = JSON.parse(ev.data);
 
-        switch (data.message) {
-          case "Charging started":
+        switch (ev.event) {
+          case "charging_started":
             toast.info("Your vehicle is now charging");
             console.log("Charging was started");
             break;
-          case "Charging stopped":
+          case "charging_stopped":
             toast.info("Your vehicle is no longer charging");
             console.log("Charging has ended");
             break;
-          case "reservation":
+          case "reservation_data":
             const result = reservationModel.safeParse(data.reservation);
             if (!result.success) {
               console.error("Failed to parse reservation: ", result.error);
@@ -32,6 +32,10 @@ export const notificationService = {
               console.log("reservation: ", result.data);
               setReservation(result.data);
             }
+            break;
+          case "food_status":
+            toast.info(data.message);
+            console.log("Food status update: ", data.message);
             break;
           default:
             break;
