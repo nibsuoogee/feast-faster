@@ -1,15 +1,8 @@
 import Elysia, { sse, t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
-import { userNotifications } from "../index";
-
-export function sendToUser(userId: number, event: string, data: any) {
-  const queue = userNotifications.get(userId);
-  if (!queue) return false;
-
-  queue.push({ event, data });
-  return true;
-}
+import { userNotifications } from "..";
+import { sendToUser } from "@utils/notification";
 
 export const notificationRouter = new Elysia()
   .use(jwtConfig)

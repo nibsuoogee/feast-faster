@@ -1,8 +1,8 @@
 import { chargingModel, ReservationDTO } from "@models/chargerModel";
+import { SettingsDTO } from "@models/settingsModel";
+import { sendToUser } from "@utils/notification";
 import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
-import { sendToUser } from "./notificationRouter";
-import { SettingsDTO, settingsModel } from "@models/settingsModel";
 
 export const chargingSessions = new Map<number, number>();
 const chargingTimeouts = new Map<number, NodeJS.Timeout>(); // charger_id -> timeout
@@ -33,8 +33,7 @@ export const chargerRouter = new Elysia()
 
         chargingSessions.set(charger_id, driverId);
 
-        sendToUser(driverId, "notification", {
-          message: "Charging started",
+        sendToUser(driverId, "charging_started", {
           time: new Date().toISOString(),
         });
       }
@@ -47,8 +46,7 @@ export const chargerRouter = new Elysia()
       const driverId = chargingSessions.get(charger_id);
 
       if (driverId) {
-        sendToUser(driverId, "data", {
-          message: "reservation",
+        sendToUser(driverId, "reservation_data", {
           reservation: reservation,
           time: new Date().toISOString(),
         });
@@ -57,8 +55,7 @@ export const chargerRouter = new Elysia()
       // Set a new 5-second timeout
       const timeout = setTimeout(() => {
         if (driverId) {
-          sendToUser(driverId, "notification", {
-            message: "Charging stopped",
+          sendToUser(driverId, "charging_stopped", {
             time: new Date().toISOString(),
           });
 

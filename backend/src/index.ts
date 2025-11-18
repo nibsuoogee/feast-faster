@@ -5,6 +5,7 @@ import { settingsRouter } from "./routes/settingsRouter";
 import { notificationRouter } from "./routes/notificationRouter";
 import { chargerRouter } from "./routes/chargerRouter";
 import { stationsRouter } from "./routes/stationsRouter";
+import { orderRouter } from "./routes/orderRouter";
 
 export const userNotifications = new Map<number, any[]>();
 
@@ -16,6 +17,7 @@ const app = new Elysia()
   .use(notificationRouter)
   .use(chargerRouter)
   .use(stationsRouter)
+  .use(orderRouter)
   .listen(3000);
 
 console.log(
