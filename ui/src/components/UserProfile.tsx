@@ -16,6 +16,7 @@ import {
 import { CuisineMultiSelect } from "@/components/CuisinesMultiSelect";
 import { AUTH_URL } from "@/lib/urls";
 import { Slider } from "./ui/slider";
+import { useAuth } from "@/contexts/AuthContext";
 import { Car, UtensilsCrossed, LogOut } from "lucide-react";
 
 type UserProfileProps = {
@@ -29,6 +30,25 @@ export function UserProfile({ onLogout }: UserProfileProps) {
   const [evModel, setEvModel] = useState<string>("any");
   const [connectorType, setConnectorType] = useState<string>("any");
   const [cuisinePref, setCuisinePref] = useState<string[]>([]);
+  const { settings, updateSettings } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const toast = {
+    success: (msg: string) => {
+      if (typeof window !== "undefined" && (window as any).toast) {
+        (window as any).toast(msg);
+      } else {
+        alert(msg);
+      }
+    },
+    error: (msg: string) => {
+      if (typeof window !== "undefined" && (window as any).toast) {
+        (window as any).toast(msg);
+      } else {
+        alert(msg);
+      }
+    },
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -43,6 +63,20 @@ export function UserProfile({ onLogout }: UserProfileProps) {
       }
     })();
   }, []);
+
+  // Initialize UI fields when settings are loaded/changed
+  useEffect(() => {
+    if (!settings) return;
+    try {
+      setEvModel(settings.vehicle_model ?? "any");
+      setConnectorType(settings.connector_type ?? "any");
+      setDesiredChargeAtStops(settings.desired_soc ?? 80);
+      const cuisines = settings.cuisines ?? [];
+      setCuisinePref(Array.isArray(cuisines) ? cuisines : []);
+    } catch (err) {
+      console.error("Failed to apply settings to UI state", err);
+    }
+  }, [settings]);
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50 pb-4">
@@ -120,7 +154,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
                 </SelectItem>
                 <SelectItem value="Type 2">Type 2</SelectItem>
                 <SelectItem value="CCS">CCS</SelectItem>
-                <SelectItem value="ChaDeMo">ChaDeMo</SelectItem>
+                <SelectItem value="CHAdeMO">CHAdeMO</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -143,8 +177,39 @@ export function UserProfile({ onLogout }: UserProfileProps) {
       </Card>
 
       <div className="mx-4 mb-4">
-        <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-          Save Vehicle and Cuisine Preference
+        <Button
+          onClick={async () => {
+            setIsSaving(true);
+            try {
+              const body = {
+                vehicle_model: evModel || "any",
+                connector_type: connectorType || "any",
+                desired_soc: desiredChargeAtStops,
+                cuisines:
+                  !cuisinePref || cuisinePref.length === 0 || cuisinePref.includes("any")
+                    ? []
+                    : cuisinePref,
+              };
+              await updateSettings(body);
+              toast.success("Preferences saved");
+            } catch (err) {
+              console.error("Failed to save settings", err);
+              toast.error("Failed to save preferences — network error");
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          disabled={isSaving}
+          className={`w-full bg-green-600 hover:bg-green-700 text-white ${isSaving ? "opacity-70 cursor-not-allowed" : ""}`}
+        >
+          {isSaving ? (
+            <span className="flex items-center justify-center w-full">
+              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Saving...
+            </span>
+          ) : (
+            "Save Vehicle and Cuisine Preference"
+          )}
         </Button>
       </div>
 
