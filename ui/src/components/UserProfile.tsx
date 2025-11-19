@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { VehicleSelect } from "@/components/VehicleSelect";
 import { CuisineMultiSelect } from "@/components/CuisinesMultiSelect";
 import { AUTH_URL } from "@/lib/urls";
 import { Slider } from "./ui/slider";
@@ -112,21 +113,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
         <div className="space-y-2">
           <div className="space-y-2">
             <Label className="text-sm">EV Model</Label>
-            <Select value={evModel} onValueChange={setEvModel}>
-              <SelectTrigger>
-                <SelectValue placeholder="Your EV model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">Select</SelectItem>
-                <SelectItem value="Skoda">
-                  Skoda ...{" "}
-                </SelectItem>
-                <SelectItem value="VW">
-                  Volkswagen ...
-                </SelectItem>
-                <SelectItem value="Audi">Audi ...</SelectItem>
-              </SelectContent>
-            </Select>
+            <VehicleSelect value={evModel} onChange={setEvModel} />
           </div>
           <div className="space-y-2">
             <div className="flex justify-between mb-2">
