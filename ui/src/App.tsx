@@ -10,6 +10,7 @@ import { Home } from "./pages/home";
 import { Landing } from "./pages/landing";
 import { Login } from "./pages/login";
 import { Register } from "./pages/register";
+import RestaurantDashboard from "./pages/restaurant-dashboard";
 
 function App() {
   useEffect(() => {
@@ -63,6 +64,16 @@ function App() {
             >
               <Route path="/home" element={<Home />} />
             </Route>
+
+            {/* Restaurant Dashboard - Protected route */}
+            <Route
+              path="/restaurant"
+              element={
+                <ProtectedRoute>
+                  <RestaurantDashboard />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </AuthProvider>
       </Router>
