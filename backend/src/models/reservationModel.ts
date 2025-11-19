@@ -15,22 +15,22 @@ export const reservationModel = t.Object({
 });
 export type Reservation = typeof reservationModel.static;
 
-/**
- * RESERVATION CREATION SHAPE
- */
+// reservation creation
+
 export const reservationForCreation = t.Object({
   order_id: t.Number(),
   charger_id: t.Number(),
+  created_at: t.Date(),
   reservation_start: t.Date(),
   reservation_end: t.Date(),
   time_of_payment: t.Optional(t.Date()),
+  current_soc: t.Nullable(t.Number()),
   cumulative_price_of_charge: t.Nullable(t.Number()),
 });
 export type ReservationForCreation = typeof reservationForCreation.static;
 
-/**
- * RESERVATION DTO
- */
+// reservation DTO
+
 export const ReservationDTO = {
   createReservation: async (
     reservation: ReservationForCreation
@@ -40,14 +40,5 @@ export const ReservationDTO = {
       RETURNING *
     `;
     return newReservation;
-  },
-
-  getReservationByOrderId: async (
-    order_id: number
-  ): Promise<Reservation | null> => {
-    const result = await sql`
-      SELECT * FROM reservations WHERE order_id = ${order_id}
-    `;
-    return result[0] || null;
   },
 };

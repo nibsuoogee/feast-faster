@@ -13,10 +13,8 @@ import { orderRouter } from "./routes/orderRouter";
 
 const app = new Elysia()
   .use(swagger())
-  .use(cors({
-    origin: /^https?:\/\/(.*\.)?localhost(:\d+)?$/, // matches all your localhost subdomains and ports
-    credentials: true, // needed for Authorization header or cookies
-  }))  .get("/", () => "Hello Elysia")
+  .use(cors())
+  .get("/", () => "Hello Elysia")
   .use(settingsRouter)
   .use(menuItemsRouter)
   .use(notificationRouter)
@@ -26,5 +24,5 @@ const app = new Elysia()
   .listen(3000);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );

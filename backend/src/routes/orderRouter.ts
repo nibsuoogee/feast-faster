@@ -37,18 +37,16 @@ import {
 
 import { tryCatch } from "@utils/tryCatch";
 
-//
-// ------------------------------
-// BODY SCHEMA (runtime validation)
-// ------------------------------
-//
+
+// schema that is expected (runtime validation)
+
 const createOrderBody = t.Object({
-  restaurantId: t.String(), // keep string from frontend, will convert to number before updating db
-  stationId: t.String(), // keep string from frontend, will convert to number before updating db
+  restaurantId: t.Number(),
+  stationId: t.Number(),
   items: t.Array(
     t.Object({
       menuItem: t.Object({
-        id: t.String(), // keep string from frontend, will convert to number before updating db
+        id: t.Number(),
         name: t.String(),
         description: t.Optional(t.String()),
         price: t.Number(),
@@ -56,14 +54,17 @@ const createOrderBody = t.Object({
       quantity: t.Number(),
     })
   ),
+  customerEta: t.Optional(t.String()),
   isPaid: t.Boolean(),
+  reservationStart: t.Optional(t.String()),
+  reservationEnd: t.Optional(t.String()),
+  currentSoc: t.Optional(t.Number()),
+  orderTime: t.Optional(t.String()),
 });
 
-//
-// ------------------------------
-// RESPONSE SCHEMA
-// ------------------------------
-//
+
+// response schema
+
 const createOrderResponse = t.Object({
   message: t.String(),
   order: orderModel,
@@ -80,7 +81,6 @@ export const orderRouter = new Elysia()
       beforeHandle: async ({ headers, jwt_auth, status }) => {
         const { user } = await authorizationMiddleware({ headers, jwt_auth });
         if (!user) return status(401, "Not Authorized");
-        //return { user };
       },
     },
     (app) =>
