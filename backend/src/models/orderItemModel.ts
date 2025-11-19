@@ -11,6 +11,7 @@ export const orderItemModel = t.Object({
   name: t.String(),
   details: t.String(),
   price: t.Number(),
+  quantity: t.Number(),
 });
 export type OrderItem = typeof orderItemModel.static;
 
@@ -23,6 +24,7 @@ export const orderItemModelForCreation = t.Object({
   name: t.String(),
   details: t.String(),
   price: t.Number(),
+  quantity: t.Number(),
 });
 export type OrderItemForCreation = typeof orderItemModelForCreation.static;
 

@@ -123,7 +123,8 @@ CREATE TABLE "order_items" (
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "name" varchar(255) NOT NULL,
   "details" varchar(255) NOT NULL,
-  "price" float NOT NULL
+  "price" float NOT NULL,
+  "quantity" int NOT NULL DEFAULT 1
 );
 
 CREATE INDEX "idx_stations_geom" ON "stations" USING GIST ("location");

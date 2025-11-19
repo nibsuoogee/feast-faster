@@ -115,14 +115,14 @@ export const orderRouter = new Elysia()
             const createdItems: typeof orderItemModel.static[] = [];
 
             for (const i of body.items) {
-              for (let q = 0; q < i.quantity; q++) {
-                const itemData: OrderItemForCreation = {
-                  order_id: order.order_id,
-                  menu_item_id: i.menuItem.id,
-                  name: i.menuItem.name,
-                  details: i.menuItem.description ?? "",
-                  price: i.menuItem.price,
-                  created_at: createdAt,
+              const itemData: OrderItemForCreation = {
+                order_id: order.order_id,
+                menu_item_id: i.menuItem.id,
+                name: i.menuItem.name,
+                details: i.menuItem.description ?? "",
+                price: i.menuItem.price,
+                quantity: i.quantity,
+                created_at: createdAt,
               };
 
               const [createdItem, errItem] = await tryCatch(
@@ -132,7 +132,6 @@ export const orderRouter = new Elysia()
               if (errItem) return status(500, errItem.message);
               createdItems.push(createdItem);
               }
-            }
 
             // create reservation
 
