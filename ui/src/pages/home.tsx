@@ -36,6 +36,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { getFilteredStations } from "@/services/stations";
+import { useUserLocation } from "@/services/geocode";
 
 const Toaster: FC<{ position?: string }> = () => null;
 const toast = {
@@ -151,6 +152,9 @@ export const Home = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [endLocation, setEndLocation] = useState("");
   const [isPlanning, setIsPlanning] = useState(false);
+
+  // Current user location
+  const currentUserLocation = useUserLocation();
 
   // // Mock charging stations data
   // const stations: ChargingStation[] = [
@@ -589,7 +593,6 @@ export const Home = () => {
         menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
       })) : [];
 
-      console.log(s);
       return {
         id: s.station_id,
         name: s.name,
@@ -615,7 +618,7 @@ export const Home = () => {
       //if (sourceStations.length === 0) {
       try {
         const body = {
-          current_location: [25.6589235, 60.9777510] as [number, number], // Todo Browser API
+          current_location: [currentUserLocation.longitude, currentUserLocation.latitude] as [number, number],
           destination: [22.242114343027588, 60.449298344439924] as [number, number], // Todo
           ev_model: "Nissan Leaf", // Get from settings
           current_car_range: 120, // Get from settings
@@ -660,7 +663,7 @@ export const Home = () => {
       if (filteredStations.length > 0) {
         const journey: PlannedJourney = {
           id: Date.now().toString(),
-          startLocation: "Lahti", // Todo What is it
+          startLocation: currentUserLocation.address || "Lahti",
           endLocation: endLocation, // Todo What is it
           totalDistance: filteredStations[filteredStations.length - 1]?.distance || 45, // Todo simplify
           estimatedDuration: Math.ceil(filteredStations.reduce((sum, s) => sum + s.distance, 0) / 80 * 60),
@@ -898,7 +901,7 @@ export const Home = () => {
                       <Navigation className="w-4 h-4 text-green-600 flex-shrink-0" />
                       <div className="flex-1">
                         <div className="text-xs text-gray-500">Current Location</div>
-                        <div className="font-medium">Lahti</div>
+                        <div className="font-medium">{currentUserLocation?.address}</div>
                       </div>
                     </div>
                     <div className="relative">
