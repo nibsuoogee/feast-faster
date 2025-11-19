@@ -3,8 +3,6 @@ import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { }
-from "./ui/switch";
 import { Label } from "./ui/label";
 import {
   Select,
