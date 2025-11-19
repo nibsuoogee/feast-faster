@@ -67,7 +67,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
   useEffect(() => {
     if (!settings) return;
     try {
-      setEvModel(settings.vehicle_model ?? "any");
+      setEvModel(settings.vehicle_model ?? "Audi E-Tron");
       setConnectorType(settings.connector_type ?? "any");
       setDesiredChargeAtStops(settings.desired_soc ?? 80);
       const cuisines = settings.cuisines ?? [];
