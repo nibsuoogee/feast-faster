@@ -10,6 +10,14 @@ export const foodStatusEnum = t.UnionEnum([
 export type FoodStatus = typeof foodStatusEnum.static;
 
 export const OrderDTO = {
+  createOrder: async (order: OrderModelForCreation): Promise<Order> => {
+    const [newOrder] = await sql`
+      INSERT INTO orders ${sql(order)}
+      RETURNING *
+    `;
+    return newOrder;
+  },
+
   updateOrderStatus: async (
     order_id: number,
     food_status: FoodStatus
@@ -30,10 +38,21 @@ export const orderModel = t.Object({
   restaurant_id: t.Number(),
   total_price: t.Number(),
   created_at: t.Date(),
-  customer_eta: t.Date(),
+  customer_eta: t.Optional(t.Date()),
   food_status: foodStatusEnum,
 });
 export type Order = typeof orderModel.static;
+
+// order creation
+
+export const orderModelForCreation = t.Object({
+  customer_id: t.Number(),
+  restaurant_id: t.Number(),
+  total_price: t.Number(),
+  created_at: t.Date(),
+  customer_eta: t.Date(),
+});
+export type OrderModelForCreation = typeof orderModelForCreation.static;
 
 export const orderUpdateStatusBody = t.Object({
   order_id: t.Number(),
