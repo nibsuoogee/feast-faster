@@ -67,7 +67,7 @@ export function RoutePreview({
             {journey.stops.length > 1 ? "s" : ""}
           </span>
         </div>
-        <p className="text-sm text-orange-600">
+        <p className="text-sm text-gray-600">
           Review the suggested charging stations below and pre-order a meal to start your journey
         </p>
       </div>

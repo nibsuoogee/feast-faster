@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ChargingSession } from "@/components/ChargingSession";
 import { UserProfile } from "@/components/UserProfile";
 import { RoutePreview } from "@/components/RoutePreview";
+import { CuisineMultiSelect } from "@/components/CuisinesMultiSelect";
 import {
   Tabs,
   TabsContent,
@@ -144,9 +145,9 @@ export const Home = () => {
   const [currentSOC, setCurrentSOC] = useState([75]);
   const [currentRange, setCurrentRange] = useState([180]);
   const [desiredSOC, setDesiredSOC] = useState([80]);
-  const [demoStations, setDemoStations] = useState<any[] | null>(null);
+  const [, setDemoStations] = useState<any[] | null>(null);
   const [connectorType, setConnectorType] = useState<string>("any");
-  const [cuisinePreference, setCuisinePreference] = useState<string>("any");
+  const [cuisinePreference, setCuisinePreference] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [endLocation, setEndLocation] = useState("");
   const [isPlanning, setIsPlanning] = useState(false);
@@ -621,7 +622,7 @@ export const Home = () => {
           current_soc: currentSOC[0] || 50,
           desired_soc: desiredSOC[0] || 80,
           connector_type: connectorType,
-          cuisines: [cuisinePreference] // Todo: make multiple choice
+          cuisines: cuisinePreference
         };
 
         const data = await getFilteredStations(body);
@@ -778,12 +779,13 @@ export const Home = () => {
                         {connectorType}
                       </Badge>
                     )}
-                    {cuisinePreference !== "any" && (
-                      <Badge variant="outline" className="bg-orange-50">
+                    {cuisinePreference.length > 0 && 
+                    cuisinePreference.map(c => (              
+                      <Badge key={c} variant="outline" className="bg-orange-50">
                         <UtensilsCrossed className="w-3 h-3 mr-1" />
-                        {cuisinePreference}
+                        {c[0].toUpperCase() + c.slice(1)}
                       </Badge>
-                    )}
+                    ))}
                   </div>
 
                   {/* Filters Toggle */}
@@ -882,19 +884,10 @@ export const Home = () => {
                       {/* Cuisine Preference */}
                       <div className="space-y-2">
                         <Label>Cuisine Preference</Label>
-                        <Select value={cuisinePreference} onValueChange={setCuisinePreference}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select cuisine" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="any">Any Cuisine</SelectItem>
-                            <SelectItem value="american">American</SelectItem>
-                            <SelectItem value="asian">Asian</SelectItem>
-                            <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                            <SelectItem value="italian">Italian</SelectItem>
-                            <SelectItem value="european">European</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <CuisineMultiSelect
+                          value={cuisinePreference}
+                          onChange={setCuisinePreference}
+                        />
                       </div>
                     </div>
                   )}
