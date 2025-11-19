@@ -2,25 +2,15 @@ import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
+
+import { sendToUser } from "@utils/notification";
+
 import {
   FoodStatus,
   OrderDTO,
-  orderModel,
-  orderUpdateStatusBody,
-} from "@models/orderModel";
-import { sendToUser } from "@utils/notification";
-
-const foodStatusMessage: Record<FoodStatus, string> = {
-  pending: "Your meal is not being cooked yet.",
-  cooking: "Your meal is now being cooked.",
-  ready: "Your meal is ready.",
-  picked_up: "Your meal was successfully picked up.",
-};
-
-import {
-  OrderDTO,
   OrderModelForCreation,
   orderModel,
+  orderUpdateStatusBody,
 } from "@models/orderModel";
 
 import {
@@ -35,8 +25,13 @@ import {
   reservationModel,
 } from "@models/reservationModel";
 
-import { tryCatch } from "@utils/tryCatch";
 
+const foodStatusMessage: Record<FoodStatus, string> = {
+  pending: "Your meal is not being cooked yet.",
+  cooking: "Your meal is now being cooked.",
+  ready: "Your meal is ready.",
+  picked_up: "Your meal was successfully picked up.",
+};
 
 // schema that is expected (runtime validation)
 
@@ -84,7 +79,109 @@ export const orderRouter = new Elysia()
       },
     },
     (app) =>
-      app.patch(
+      app
+        .post(
+          "/orders",
+          async ({ body, user, status }) => {
+        
+            // create Order
+
+            const createdAt = body.orderTime
+              ? new Date(body.orderTime)
+              : new Date();
+
+            const orderData: OrderModelForCreation = {
+            
+              customer_id: user.user_id,
+              restaurant_id: body.restaurantId,
+              total_price: Number(body.items.reduce((total, i) => total + i.menuItem.price * i.quantity, 0).toFixed(2)
+              ),
+              created_at: createdAt,
+              // add 30 mins as estimated arrival time if received eta is empty.
+              customer_eta: body.customerEta
+                ? new Date(body.customerEta)
+                : new Date(Date.now() + 30 * 60 * 1000),
+            };
+
+            const [order, errOrder] = await tryCatch(
+              OrderDTO.createOrder(orderData)
+           );
+
+            if (errOrder) return status(500, errOrder.message);
+            if (!order) return status(500, "Failed to create order");
+
+            // create order_items
+
+            const createdItems: typeof orderItemModel.static[] = [];
+
+            for (const i of body.items) {
+              for (let q = 0; q < i.quantity; q++) {
+                const itemData: OrderItemForCreation = {
+                  order_id: order.order_id,
+                  menu_item_id: i.menuItem.id,
+                  name: i.menuItem.name,
+                  details: i.menuItem.description ?? "",
+                  price: i.menuItem.price,
+                  created_at: createdAt,
+              };
+
+              const [createdItem, errItem] = await tryCatch(
+                OrderItemDTO.createOrderItem(itemData)
+              );
+
+              if (errItem) return status(500, errItem.message);
+              createdItems.push(createdItem);
+              }
+            }
+
+            // create reservation
+
+            const reservationStart = body.reservationStart
+              ? new Date(body.reservationStart)
+              : new Date(new Date().getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready 
+
+            const reservationEnd = body.reservationEnd
+              ? new Date(body.reservationEnd)
+              : new Date(reservationStart.getTime() + 30 * 60 * 1000); // 30 mins after start
+
+            const reservationData: ReservationForCreation = {
+              order_id: order.order_id,
+              charger_id: body.stationId,
+              created_at: new Date(),
+              reservation_start: reservationStart,
+              reservation_end: reservationEnd,
+              time_of_payment: body.isPaid ? new Date() : undefined,
+              current_soc: body.currentSoc ?? null,
+              cumulative_price_of_charge: body.isPaid ? order.total_price : null, // should be updated after charging is done.
+            };
+            const [reservation, errReservation] = await tryCatch(
+              ReservationDTO.createReservation(reservationData)
+            );
+
+            if (errReservation) return status(500, errReservation.message);
+            if (!reservation)
+              return status(500, "Failed to create reservation");
+
+            // final response
+
+            return {
+              message: "Order and reservation created successfully",
+              order,
+              items: createdItems,
+              reservation,
+            };
+          },
+          {
+            body: createOrderBody,
+            response: {
+              200: createOrderResponse,
+              400: t.String(),
+              401: t.String(),
+              500: t.String(),
+            },
+          }
+        ) 
+      .patch(
         "/order-status",
         async ({ body, status }) => {
           // 1) Update the order food status
