@@ -205,4 +205,12 @@ export const vehicles = [
   "yutong u13",
 ];
 
-export const vehicleOptions = vehicles.map((v) => ({ label: v, value: v }));
+const titleCase = (s: string) =>
+  s.replace(/\w[^\s-]*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1));
+
+export const vehicleOptions = vehicles.map((v) => ({
+  label: titleCase(v),
+  value: v,
+}));
+
+export default vehicles;
