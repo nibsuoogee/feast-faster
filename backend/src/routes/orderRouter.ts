@@ -149,9 +149,6 @@ export const orderRouter = new Elysia()
               created_at: new Date(),
               reservation_start: reservationStart,
               reservation_end: reservationEnd,
-              time_of_payment: body.isPaid ? new Date() : undefined,
-              current_soc: body.currentSoc ?? null,
-              cumulative_price_of_charge: body.isPaid ? order.total_price : null, // should be updated after charging is done.
             };
             const [reservation, errReservation] = await tryCatch(
               ReservationDTO.createReservation(reservationData)
