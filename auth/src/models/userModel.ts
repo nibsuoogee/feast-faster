@@ -9,6 +9,10 @@ export const UserDTO = {
     const result = await sql`SELECT * FROM users WHERE email = ${email}`;
     return result[0];
   },
+  findUserById: async (user_id: number): Promise<User | null> => {
+    const result = await sql`SELECT * FROM users WHERE user_id = ${user_id}`;
+    return result[0] ?? null;
+  },
   createUser: async (user: UserModelForRegistration): Promise<User> => {
     const [newUser] = await sql`
       INSERT INTO users ${sql(user)}

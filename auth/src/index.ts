@@ -3,6 +3,7 @@ import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { registerRouter } from "./routes/registerRouter";
 import { loginRouter } from "./routes/loginRouter";
+import { meRouter } from "./routes/meRouter";
 
 const app = new Elysia()
   .use(swagger())
@@ -10,6 +11,7 @@ const app = new Elysia()
   .get("/", () => "Hello fom auth!")
   .use(registerRouter)
   .use(loginRouter)
+  .use(meRouter)
   .listen(3001);
 
 console.log(

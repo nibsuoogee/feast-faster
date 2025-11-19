@@ -1,17 +1,10 @@
-import { RestaurantOrder } from "@/pages/home";
-import { PlannedJourney } from "@/pages/home";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Switch } from "./ui/switch";
-import { Separator } from "./ui/separator";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "./ui/tabs";
+import { }
+from "./ui/switch";
 import { Label } from "./ui/label";
 import {
   Select,
@@ -20,54 +13,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { CuisineMultiSelect } from "@/components/CuisinesMultiSelect";
+import { AUTH_URL } from "@/lib/urls";
 import { Slider } from "./ui/slider";
-import {
-  User,
-  Car,
-  Bell,
-  Settings,
-  HelpCircle,
-  LogOut,
-  
-  Zap,
-  MapPin,
-  DollarSign,
-  Award,
-  UtensilsCrossed,
-  Receipt,
-  Route,
-  Navigation,
-} from "lucide-react";
+import { Car, UtensilsCrossed, LogOut } from "lucide-react";
 
 type UserProfileProps = {
-  restaurantOrders: RestaurantOrder[];
-  pastJourneys?: PlannedJourney[];
   onLogout: () => void;
 };
 
-export function UserProfile({
-  restaurantOrders,
-  pastJourneys = [],
-  onLogout,
-}: UserProfileProps) {
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    memberSince: "January 2024",
-    membershipTier: "Premium",
-  };
-
-  const vehicle = {
-    make: "Tesla",
-    model: "Model 3",
-    year: 2023,
-    batteryCapacity: 75,
-  };
+export function UserProfile({ onLogout }: UserProfileProps) {
+  const [userInfo, setUserInfo] = useState<{ username?: string; email?: string } | null>(null);
 
   const [desiredChargeAtStops, setDesiredChargeAtStops] = useState<number>(80);
   const [evModel, setEvModel] = useState<string>("any");
   const [connectorType, setConnectorType] = useState<string>("any");
-  const [cuisinePref, setCuisinePref] = useState<string>("any");
+  const [cuisinePref, setCuisinePref] = useState<string[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    (async () => {
+      try {
+        const res = await axios.get(`${AUTH_URL}/me`);
+        setUserInfo(res.data.user || null);
+      } catch (err) {
+        console.debug("No user info available", err);
+      }
+    })();
+  }, []);
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50 pb-4">
@@ -75,17 +50,15 @@ export function UserProfile({
         <div className="flex items-center gap-4 mb-4">
           <Avatar className="w-16 h-16">
             <AvatarFallback className="bg-green-600 text-white text-xl">
-              {user.name
+              {(userInfo?.username || "Guest")
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h2 className="mb-1">{user.name}</h2>
-            <p className="text-sm text-gray-600">
-              {user.email}
-            </p>
+            <h2 className="mb-1">{userInfo?.username ?? "Guest User"}</h2>
+            <p className="text-sm text-gray-600">{userInfo?.email ?? ""}</p>
           </div>
         </div>
       </Card>
@@ -164,34 +137,7 @@ export function UserProfile({
             <Label className="text-sm">
               Cuisine Preference
             </Label>
-            <Select
-              value={cuisinePref}
-              onValueChange={setCuisinePref}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select cuisine" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">Any Cuisine</SelectItem>
-                <SelectItem value="american">
-                  American
-                </SelectItem>
-                <SelectItem value="asian">Asian</SelectItem>
-                <SelectItem value="healthy">
-                  Vegetarian
-                </SelectItem>
-                <SelectItem value="italian">Italian</SelectItem>
-                <SelectItem value="japanese">
-                  Japanese
-                </SelectItem>
-                <SelectItem value="coffee">
-                  Coffee & Pastries
-                </SelectItem>
-                <SelectItem value="international">
-                  International
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <CuisineMultiSelect value={cuisinePref} onChange={setCuisinePref} />
           </div>
         </div>
       </Card>
