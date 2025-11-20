@@ -31,7 +31,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { getFilteredStations } from "@/services/stations";
-import { useUserLocation } from "@/services/geocode";
+import { useUserLocation, geocodeAddress } from "@/services/geocode";
 
 const Toaster: FC<{ position?: string }> = () => null;
 const toast = {
@@ -550,8 +550,7 @@ export const Home = () => {
   const handlePlanRoute = async () => {
     if (!endLocation) return;
 
-    console.log("Planning route to:", endLocation);
-    // console.log("Filters:", { connectorType, cuisinePreference, currentSOC, currentRange, desiredSOC });
+    const destinationLocation = await geocodeAddress(endLocation);
 
     setIsPlanning(true);
 
@@ -650,8 +649,6 @@ export const Home = () => {
       };
     };
 
-    // Todo endLocation convert from address to lon, lat
-
     try {
       let stations: any[] = [];
       //if (sourceStations.length === 0) {
@@ -661,10 +658,10 @@ export const Home = () => {
             currentUserLocation.longitude,
             currentUserLocation.latitude,
           ] as [number, number],
-          destination: [22.242114343027588, 60.449298344439924] as [
-            number,
-            number
-          ], // Todo
+          destination: [
+            destinationLocation.longitude,
+            destinationLocation.latitude,
+          ] as [number, number],
           ev_model: "Nissan Leaf", // Get from settings
           current_car_range: 120, // Get from settings
           current_soc: currentSOC[0] || 50,
@@ -711,7 +708,7 @@ export const Home = () => {
         const journey: PlannedJourney = {
           id: Date.now().toString(),
           startLocation: currentUserLocation.address || "Lahti",
-          endLocation: endLocation, // Todo What is it
+          endLocation: destinationLocation.address || endLocation,
           totalDistance:
             filteredStations[filteredStations.length - 1]?.distance || 45, // Todo simplify
           estimatedDuration: Math.ceil(

@@ -37,6 +37,13 @@ const defaultLocation: LocationData = {
   address: "Mukkulankatu 19, Lahti",
 };
 
+// Mother Church of the Evangelical Lutheran Church of Finland
+const defaultDestination: LocationData = {
+  latitude: 60.449298344439924,
+  longitude: 22.242114343027588,
+  address: "Turku",
+};
+
 const LOCATION_KEY = "cached_user_location";
 
 export const useUserLocation = () => {
@@ -95,4 +102,37 @@ export const useUserLocation = () => {
   }, [location]);
 
   return location;
+};
+
+export const geocodeAddress = async (address: string) => {
+  if (!address) return defaultDestination;
+
+  const response = await fromAddress(address);
+
+  if (!response.results.length) {
+    return defaultDestination;
+  }
+  const result = response.results[0];
+  const components = result.address_components;
+
+  const get = (type: string) =>
+    components.find((c: AddressComponent) => c.types.includes(type))
+      ?.long_name || "";
+
+  const street = get("route");
+  const houseNumber = get("street_number");
+  const city =
+    get("locality") || // normal cities
+    get("postal_town") || // UK / Nordic use postal_town
+    get("administrative_area_level_2"); // fallback
+
+  const { lat, lng } = result.geometry.location;
+  const addr =
+    street && houseNumber ? `${street} ${houseNumber}, ${city}` : city;
+
+  return {
+    latitude: lat,
+    longitude: lng,
+    address: addr,
+  };
 };
