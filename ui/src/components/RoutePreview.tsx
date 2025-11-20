@@ -40,7 +40,7 @@ export function RoutePreview({
   } | null>(null);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString("en-GB", {
       hour: "numeric",
       minute: "2-digit",
     });

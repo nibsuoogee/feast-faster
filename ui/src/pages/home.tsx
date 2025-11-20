@@ -74,33 +74,26 @@ export type ChargingStation = {
   travelTimeMin: number;
   availableChargers: number;
   totalChargers: number;
-  chargerTypes: ("Type 2" | "CCS" | "ChaDeMo")[];
-  pricePerKwh: number; // Todo
-  lat: number; // Todo do we need it?
-  lng: number; // Todo do we need it?
+  chargerTypes: ("Type 2" | "CCS" | "CHAdeMO")[];
   restaurants: Restaurant[];
-  socAtArrival: number; // Do we need it here?
-  //chargers: t.Array(chargerModel), // Use this or charger number?
+  socAtArrival: number;
   estimateChargingTimeMin: number;
 };
 
 export type JourneyStop = {
-  // Do we need Journey stop at all?
   station: ChargingStation;
-  estimatedArrivalTime: Date; // Todo Now + travelTimeMin: check
-  socAtArrival: number; // Do we need it here?
-  chargingDuration: number; // estimateChargingTimeMin: number; // Do we need it?
+  estimatedArrivalTime: Date;
+  socAtArrival: number;
+  chargingDuration: number;
   distanceFromStart: number;
-  selectedRestaurantId?: number; // Do we need it?
-  isSelected: boolean; // Todo: Check how station selection works when ordering
+  selectedRestaurantId?: number;
+  isSelected: boolean;
 };
 
 export type PlannedJourney = {
   id: string;
   startLocation: string;
   endLocation: string;
-  totalDistance: number;
-  estimatedDuration: number;
   stops: JourneyStop[];
   createdAt: Date;
 };
@@ -158,407 +151,12 @@ export const Home = () => {
   // Current user location
   const currentUserLocation = useUserLocation();
 
-  // // Mock charging stations data
-  // const stations: ChargingStation[] = [
-  //   {
-  //     id: "1",
-  //     name: "Downtown Charging Hub",
-  //     address: "123 Main St, Lahti",
-  //     distance: 5.2,
-  //     availableChargers: 4,
-  //     totalChargers: 8,
-  //     chargerTypes: ["CCS", "Type 2"],
-  //     pricePerKwh: 0.35,
-  //     lat: 60.9827,
-  //     lng: 25.6612,
-  //     restaurants: [
-  //       {
-  //         id: "r1",
-  //         name: "Green Leaf Bistro",
-  //         cuisine: ["Vegetarian"],
-  //         prepTime: "15-20 min",
-  //         image: "https://images.unsplash.com/photo-1555057949-7e4a30956f1f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m1",
-  //             name: "Quinoa Power Bowl",
-  //             description: "Mixed quinoa, roasted vegetables, avocado, tahini dressing",
-  //             price: 12.99,
-  //             category: "Bowls",
-  //             prepTime: 15,
-  //           },
-  //           {
-  //             id: "m2",
-  //             name: "Green Goddess Smoothie",
-  //             description: "Spinach, banana, mango, almond milk, chia seeds",
-  //             price: 7.99,
-  //             category: "Beverages",
-  //             prepTime: 5,
-  //           },
-  //           {
-  //             id: "m3",
-  //             name: "Grilled Chicken Wrap",
-  //             description: "Herb-marinated chicken, mixed greens, hummus, whole wheat wrap",
-  //             price: 10.99,
-  //             category: "Wraps",
-  //             prepTime: 12,
-  //           },
-  //           {
-  //             id: "m201",
-  //             name: "Mediterranean Salad",
-  //             description: "Fresh tomatoes, cucumber, olives, feta cheese, olive oil",
-  //             price: 9.99,
-  //             category: "Salads",
-  //             prepTime: 10,
-  //           },
-  //         ],
-  //       },
-  //       {
-  //         id: "r2",
-  //         name: "Urban Coffee House",
-  //         cuisine: ["European"],
-  //         prepTime: "5-10 min",
-  //         image: "https://images.unsplash.com/photo-1628565350863-533a3c174b85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m4",
-  //             name: "Cappuccino",
-  //             description: "Double shot espresso with steamed milk",
-  //             price: 4.5,
-  //             category: "Coffee",
-  //             prepTime: 5,
-  //           },
-  //           {
-  //             id: "m5",
-  //             name: "Croissant",
-  //             description: "Freshly baked butter croissant",
-  //             price: 3.99,
-  //             category: "Pastries",
-  //             prepTime: 2,
-  //           },
-  //           {
-  //             id: "m6",
-  //             name: "Avocado Toast",
-  //             description: "Smashed avocado on sourdough, cherry tomatoes, feta",
-  //             price: 8.99,
-  //             category: "Breakfast",
-  //             prepTime: 8,
-  //           },
-  //           {
-  //             id: "m202",
-  //             name: "Latte",
-  //             description: "Espresso with steamed milk and foam",
-  //             price: 4.99,
-  //             category: "Coffee",
-  //             prepTime: 5,
-  //           },
-  //           {
-  //             id: "m203",
-  //             name: "Chocolate Muffin",
-  //             description: "Rich chocolate muffin with chocolate chips",
-  //             price: 4.50,
-  //             category: "Pastries",
-  //             prepTime: 2,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: "2",
-  //     name: "Highway Service Station",
-  //     address: "E75 Highway, 45km marker",
-  //     distance: 45.0,
-  //     availableChargers: 6,
-  //     totalChargers: 10,
-  //     chargerTypes: ["CCS", "ChaDeMo"],
-  //     pricePerKwh: 0.42,
-  //     lat: 61.2827,
-  //     lng: 25.8612,
-  //     restaurants: [
-  //       {
-  //         id: "r3",
-  //         name: "Burger Junction",
-  //         cuisine: ["American"],
-  //         prepTime: "12-18 min",
-  //         image: "https://images.unsplash.com/photo-1644447381290-85358ae625cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m7",
-  //             name: "Classic Cheeseburger",
-  //             description: "Angus beef patty, cheddar, lettuce, tomato, special sauce",
-  //             price: 11.99,
-  //             category: "Burgers",
-  //             prepTime: 15,
-  //           },
-  //           {
-  //             id: "m8",
-  //             name: "Sweet Potato Fries",
-  //             description: "Crispy sweet potato fries with chipotle mayo",
-  //             price: 5.99,
-  //             category: "Sides",
-  //             prepTime: 10,
-  //           },
-  //           {
-  //             id: "m204",
-  //             name: "BBQ Bacon Burger",
-  //             description: "Double beef patty, bacon, BBQ sauce, onion rings",
-  //             price: 13.99,
-  //             category: "Burgers",
-  //             prepTime: 18,
-  //           },
-  //           {
-  //             id: "m205",
-  //             name: "Chicken Wings",
-  //             description: "8 pieces with choice of sauce",
-  //             price: 9.99,
-  //             category: "Appetizers",
-  //             prepTime: 12,
-  //           },
-  //           {
-  //             id: "m206",
-  //             name: "Milkshake",
-  //             description: "Vanilla, chocolate, or strawberry",
-  //             price: 5.50,
-  //             category: "Beverages",
-  //             prepTime: 5,
-  //           },
-  //         ],
-  //       },
-  //       {
-  //         id: "r4",
-  //         name: "Pizza Express",
-  //         cuisine: ["Italian"],
-  //         prepTime: "10-15 min",
-  //         image: "https://images.unsplash.com/photo-1563245738-9169ff58eccf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m9",
-  //             name: "Margherita Pizza Slice",
-  //             description: "Fresh mozzarella, basil, San Marzano tomatoes",
-  //             price: 4.99,
-  //             category: "Pizza",
-  //             prepTime: 8,
-  //           },
-  //           {
-  //             id: "m10",
-  //             name: "Pepperoni Pizza Slice",
-  //             description: "Classic pepperoni with mozzarella",
-  //             price: 5.99,
-  //             category: "Pizza",
-  //             prepTime: 8,
-  //           },
-  //           {
-  //             id: "m11",
-  //             name: "Garlic Knots",
-  //             description: "Warm garlic knots with marinara sauce",
-  //             price: 5.99,
-  //             category: "Appetizers",
-  //             prepTime: 10,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: "3",
-  //     name: "Tesla Supercharger Hämeenlinna",
-  //     address: "Parolantie 52, Hämeenlinna",
-  //     distance: 70.5,
-  //     availableChargers: 8,
-  //     totalChargers: 12,
-  //     chargerTypes: ["CCS", "Type 2"],
-  //     pricePerKwh: 0.38,
-  //     lat: 60.9959,
-  //     lng: 24.4608,
-  //     restaurants: [
-  //       {
-  //         id: "r5",
-  //         name: "Sushi Express",
-  //         cuisine: ["Asian"],
-  //         prepTime: "10-15 min",
-  //         image: "https://images.unsplash.com/photo-1600470944938-b301e41001c8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m12",
-  //             name: "California Roll",
-  //             description: "Crab, avocado, cucumber",
-  //             price: 8.99,
-  //             category: "Rolls",
-  //             prepTime: 10,
-  //           },
-  //           {
-  //             id: "m13",
-  //             name: "Spicy Tuna Roll",
-  //             description: "Fresh tuna, spicy mayo, cucumber",
-  //             price: 9.99,
-  //             category: "Rolls",
-  //             prepTime: 10,
-  //           },
-  //           {
-  //             id: "m14",
-  //             name: "Miso Soup",
-  //             description: "Traditional Japanese soup with tofu and seaweed",
-  //             price: 3.99,
-  //             category: "Appetizers",
-  //             prepTime: 5,
-  //           },
-  //           {
-  //             id: "m207",
-  //             name: "Salmon Nigiri",
-  //             description: "Fresh salmon on seasoned rice (2 pieces)",
-  //             price: 6.99,
-  //             category: "Nigiri",
-  //             prepTime: 8,
-  //           },
-  //           {
-  //             id: "m208",
-  //             name: "Edamame",
-  //             description: "Steamed soybeans with sea salt",
-  //             price: 4.99,
-  //             category: "Appetizers",
-  //             prepTime: 5,
-  //           },
-  //         ],
-  //       },
-  //       {
-  //         id: "r6",
-  //         name: "Thai Kitchen",
-  //         cuisine: ["Asian"],
-  //         prepTime: "15-20 min",
-  //         image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m15",
-  //             name: "Pad Thai",
-  //             description: "Stir-fried rice noodles with shrimp, peanuts, lime",
-  //             price: 12.99,
-  //             category: "Noodles",
-  //             prepTime: 15,
-  //           },
-  //           {
-  //             id: "m16",
-  //             name: "Green Curry",
-  //             description: "Coconut green curry with vegetables and chicken",
-  //             price: 11.99,
-  //             category: "Curry",
-  //             prepTime: 18,
-  //           },
-  //           {
-  //             id: "m209",
-  //             name: "Tom Yum Soup",
-  //             description: "Spicy and sour Thai soup with shrimp",
-  //             price: 8.99,
-  //             category: "Soups",
-  //             prepTime: 12,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: "4",
-  //     name: "ABC Charging Point",
-  //     address: "Keskuskatu 15, Tampere",
-  //     distance: 130.0,
-  //     availableChargers: 3,
-  //     totalChargers: 6,
-  //     chargerTypes: ["Type 2", "CCS"],
-  //     pricePerKwh: 0.40,
-  //     lat: 61.4978,
-  //     lng: 23.7610,
-  //     restaurants: [
-  //       {
-  //         id: "r7",
-  //         name: "Nordic Grill",
-  //         cuisine: ["European"],
-  //         prepTime: "15-25 min",
-  //         image: "https://images.unsplash.com/photo-1710533820700-dd6f6623cc97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m17",
-  //             name: "Grilled Salmon",
-  //             description: "Fresh salmon with dill sauce and vegetables",
-  //             price: 16.99,
-  //             category: "Main Course",
-  //             prepTime: 20,
-  //           },
-  //           {
-  //             id: "m18",
-  //             name: "Caesar Salad",
-  //             description: "Romaine, parmesan, croutons, Caesar dressing",
-  //             price: 9.99,
-  //             category: "Salads",
-  //             prepTime: 10,
-  //           },
-  //           {
-  //             id: "m19",
-  //             name: "Mushroom Soup",
-  //             description: "Creamy forest mushroom soup with bread",
-  //             price: 7.99,
-  //             category: "Soups",
-  //             prepTime: 8,
-  //           },
-  //           {
-  //             id: "m210",
-  //             name: "Reindeer Steak",
-  //             description: "Traditional Finnish reindeer with mashed potatoes",
-  //             price: 18.99,
-  //             category: "Main Course",
-  //             prepTime: 25,
-  //           },
-  //         ],
-  //       },
-  //       {
-  //         id: "r8",
-  //         name: "Coffee & Pastries",
-  //         cuisine: ["European"],
-  //         prepTime: "5-10 min",
-  //         image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-  //         menu: [
-  //           {
-  //             id: "m20",
-  //             name: "Cinnamon Bun",
-  //             description: "Traditional Finnish korvapuusti",
-  //             price: 3.50,
-  //             category: "Pastries",
-  //             prepTime: 2,
-  //           },
-  //           {
-  //             id: "m21",
-  //             name: "Espresso",
-  //             description: "Strong Italian espresso",
-  //             price: 2.99,
-  //             category: "Coffee",
-  //             prepTime: 3,
-  //           },
-  //           {
-  //             id: "m211",
-  //             name: "Blueberry Pie",
-  //             description: "Fresh Finnish blueberry pie slice",
-  //             price: 4.99,
-  //             category: "Pastries",
-  //             prepTime: 5,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   },
-  // ];
-
   const handlePlanRoute = async () => {
     if (!endLocation) return;
 
     const destinationLocation = await geocodeAddress(endLocation);
 
     setIsPlanning(true);
-
-    // If demoStations (API results) exist, use them; otherwise try to fetch the API now
-    // Todo Why do we need source stations? We have demoStations useState
-    // let sourceStations: any[] = [];
-    // if (demoStations && demoStations.length > 0) {
-    //   sourceStations = demoStations;
-    // }
 
     // For API restaurants we don't have menus in the response.
     // Instead of attempting to match, attach a small static menu here so the UI can show orders.
@@ -602,7 +200,7 @@ export const Home = () => {
           chargers.map((c: any) => {
             if (!c || !c.type) return "Type 2";
             const t = String(c.type).toLowerCase();
-            if (t.includes("chademo")) return "ChaDeMo" as any;
+            if (t.includes("chademo")) return "CHAdeMO" as any;
             if (t.includes("ccs")) return "CCS" as any;
             return c.type;
           })
@@ -619,9 +217,7 @@ export const Home = () => {
             id: r.restaurant_id,
             name: r.name,
             cuisine: r.cuisines,
-            prepTime: s.estimate_charging_time_min
-              ? `${s.estimate_charging_time_min} min`
-              : "15-25 min", // todo just mock ?
+            prepTime: "15-25 min",
             menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
           }))
         : [];
@@ -634,12 +230,8 @@ export const Home = () => {
         availableChargers,
         totalChargers,
         chargerTypes: chargerTypes as any,
-        pricePerKwh:
-          typeof s.price_per_kwh === "number" ? s.price_per_kwh : 0.4, // Todo What to do about it?
-        lat: typeof s.lat === "number" ? s.lat : 0, // Todo Do we need it?
-        lng: typeof s.lng === "number" ? s.lng : 0, // Todo Do we need it?
         restaurants,
-        travelTimeMin: s.travel_time_min, // Todo format
+        travelTimeMin: s.travel_time_min,
         socAtArrival: s.soc_at_arrival,
         estimateChargingTimeMin: s.estimate_charging_time_min,
       };
@@ -647,7 +239,7 @@ export const Home = () => {
 
     try {
       let stations: any[] = [];
-      //if (sourceStations.length === 0) {
+
       try {
         const body = {
           current_location: [
@@ -670,46 +262,19 @@ export const Home = () => {
 
         stations = Array.isArray(data?.stations) ? data.stations : [];
         setDemoStations(stations);
-        //sourceStations = data.stations as any[];
       } catch (err) {
-        // Todo: Show empty search page
         console.log("Could not fetch stations from API", err);
       }
-      //}
 
       const filteredStations: ChargingStation[] = stations.map(
         mapApiStationToChargingStation
       );
-
-      // const filteredStations = mappedStations.filter((station) => {
-      //   if (connectorType !== "any" && !station.chargerTypes.includes(connectorType as any)) {
-      //     console.log(`Station ${station.name} filtered out by connector type`);
-      //     return false;
-      //   }
-
-      //   if (cuisinePreference !== "any") {
-      //     const hasCuisine = station.restaurants.some((r) =>
-      //       r.cuisine.some((c) => c.toLowerCase() === cuisinePreference.toLowerCase())
-      //     );
-      //     if (!hasCuisine) {
-      //       console.log(`Station ${station.name} filtered out by cuisine`);
-      //       return false;
-      //     }
-      //   }
-
-      //   return true;
-      // });
 
       if (filteredStations.length > 0) {
         const journey: PlannedJourney = {
           id: Date.now().toString(),
           startLocation: currentUserLocation.address || "Lahti",
           endLocation: destinationLocation.address || endLocation,
-          totalDistance:
-            filteredStations[filteredStations.length - 1]?.distance || 45, // Todo simplify
-          estimatedDuration: Math.ceil(
-            (filteredStations.reduce((sum, s) => sum + s.distance, 0) / 80) * 60
-          ),
           stops: filteredStations.map((station) => ({
             station,
             estimatedArrivalTime: new Date(
@@ -727,11 +292,10 @@ export const Home = () => {
         setPlannedJourney(journey);
         setShowRoutePreview(true);
       } else {
-        // Show normal toast or better empty search page
         console.log("No stations found matching criteria");
         toast.error(
           "No charging stations found matching your criteria. Try adjusting your filters."
-        ); // Todo fix toast
+        );
       }
     } finally {
       setIsPlanning(false);
@@ -951,7 +515,7 @@ export const Home = () => {
                             <SelectItem value="any">Any Connector</SelectItem>
                             <SelectItem value="Type 2">Type 2</SelectItem>
                             <SelectItem value="CCS">CCS</SelectItem>
-                            <SelectItem value="ChaDeMo">ChaDeMo</SelectItem>
+                            <SelectItem value="CHAdeMO">CHAdeMO</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1033,11 +597,7 @@ export const Home = () => {
             </TabsContent>
 
             <TabsContent value="profile" className="m-0">
-              <UserProfile
-                restaurantOrders={restaurantOrders}
-                pastJourneys={[]}
-                onLogout={logout}
-              />
+              <UserProfile onLogout={logout} />
             </TabsContent>
           </Tabs>
         )}
