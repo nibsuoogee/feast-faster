@@ -3,10 +3,23 @@ import { PlannedJourney, JourneyStop, RestaurantOrder } from "@/pages/home";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
 import { RestaurantMenu } from "./RestaurantMenu";
 import { MapPin, Zap, Clock, UtensilsCrossed, Flag } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
+
+const restaurantImages = [
+  "https://images.unsplash.com/photo-1555057949-7e4a30956f1f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1628565350863-533a3c174b85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1644447381290-85358ae625cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1563245738-9169ff58eccf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1600470944938-b301e41001c8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1559314809-0d155014e29e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1710533820700-dd6f6623cc97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+];
+
+const randomFromArray = (arr: string[]) => {
+  return arr[Math.floor(Math.random() * arr.length)];
+};
 
 type RoutePreviewProps = {
   journey: PlannedJourney;
@@ -37,9 +50,9 @@ export function RoutePreview({
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     if (hours > 0) {
-      return `${hours}h ${mins}m`;
+      return `${hours} h ${mins} min`;
     }
-    return `${mins}m`;
+    return `${mins} min`;
   };
 
   return (
@@ -62,172 +75,132 @@ export function RoutePreview({
         </p>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          {/* Route Overview */}
-          <Card className="p-4">
-            <div className="space-y-4">
-              {/* Start */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-600">Starting Point</div>
-                  <div>{journey.startLocation}</div>
-                </div>
-                <Badge variant="outline">Now</Badge>
-              </div>
+      <div className="p-4 space-y-4 w-full max-w-full">
+        {/* Route Overview */}
+        <div className="space-y-4 w-full max-w-full overflow-hidden">
+          {/* Start */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-600">Starting Point</div>
+              <div>{journey.startLocation}</div>
+            </div>
+            <Badge variant="outline">Now</Badge>
+          </div>
 
-              <div className="ml-5 border-l-2 border-dashed border-gray-300 pl-8 space-y-4">
-                {/* Charging Stops */}
-                {journey.stops.map((stop, index) => (
-                  <div key={index} className="relative">
-                    <div
-                      className={`absolute -left-[54px] w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                        stop.isSelected || stop.selectedRestaurantId
-                          ? "bg-green-600 border-green-600"
-                          : "bg-white border-gray-300"
-                      }`}
-                    >
-                      <Zap
-                        className={`w-5 h-5 ${
-                          stop.isSelected || stop.selectedRestaurantId
-                            ? "text-white"
-                            : "text-gray-400"
-                        }`}
-                      />
+          {/* Charging Stops */}
+          <div className="space-y-4">
+            {journey.stops.map((stop, index) => (
+              <div key={index} className="relative">
+                <Card className="bg-white hover:shadow-md p-4 w-full max-w-full box-border overflow-x-hidden">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-medium">{stop.station.name}</p>
+                      <span className="text-sm text-gray-600">
+                        {stop.station.address}
+                      </span>
                     </div>
 
-                    <Card
-                      className={`p-3 transition-all ${
-                        stop.isSelected || stop.selectedRestaurantId
-                          ? "border-2 border-green-600 bg-green-50"
-                          : "hover:shadow-md"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p>
-                              {/* Stop {index + 1}:{" "} */}
-                              <p>{stop.station.name}</p>
-                              <span className="text-sm text-gray-600">
-                                {stop.station.address}
-                              </span>
-                            </p>
-
-                            <Badge variant="outline" className="text-xs">
-                              {stop.distanceFromStart} km
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Card className="p-4">
-                        <h3 className="mb-3">Charger Details</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">
-                              Available chargers
-                            </span>
-                            <Badge
-                              className={
-                                stop.station.availableChargers > 0
-                                  ? "bg-green-600"
-                                  : "bg-gray-400"
-                              }
-                            >
-                              {stop.station.availableChargers}/
-                              {stop.station.totalChargers}
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Price</span>
-                            <span>${stop.station.pricePerKwh}/kWh</span>
-                          </div>
-                        </div>
-                      </Card>
-
-                      <div className="flex items-center gap-4 text-sm mb-2">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-gray-600" />
-                          <span className="text-gray-600">
-                            Arrive {formatTime(stop.estimatedArrivalTime)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Zap className="w-3 h-3 text-gray-600" />
-                          <span className="text-gray-600">
-                            {stop.chargingDuration} min charge
-                          </span>
-                        </div>
-                      </div>
-
-                      {stop.station.restaurants.length > 0 && (
-                        <>
-                          <Separator className="my-2" />
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm">
-                              <UtensilsCrossed className="w-4 h-4 text-green-600" />
-                              <span className="text-gray-600">
-                                Pre-order food:
-                              </span>
-                            </div>
-                            <div className="flex gap-2 overflow-x-auto pb-2">
-                              {stop.station.restaurants.map((restaurant) => (
-                                <button
-                                  key={restaurant.id}
-                                  onClick={() => {
-                                    setSelectedRestaurant({
-                                      stop,
-                                      restaurant,
-                                    });
-                                  }}
-                                  className="flex-shrink-0 w-32 bg-gray-50 hover:bg-gray-100 rounded-lg p-2 transition-colors"
-                                >
-                                  <img
-                                    src={restaurant.image}
-                                    alt={restaurant.name}
-                                    className="w-full h-20 object-cover rounded-md mb-2"
-                                  />
-                                  <div className="text-xs truncate">
-                                    {restaurant.name}
-                                  </div>
-                                  <div className="text-xs text-gray-500 truncate">
-                                    {restaurant.cuisine}
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {stop.selectedRestaurantId && (
-                        <Badge className="mt-2 bg-orange-600">
-                          Food pre-ordered
-                        </Badge>
-                      )}
-                    </Card>
+                    <Badge variant="outline" className="text-xs">
+                      {stop.distanceFromStart} km
+                    </Badge>
                   </div>
-                ))}
-              </div>
 
-              {/* Destination */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Flag className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-600">Destination</div>
-                  <div>{journey.endLocation}</div>
-                </div>
+                  <Card className="p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Available chargers</span>
+                      <Badge
+                        className={
+                          stop.station.availableChargers > 0
+                            ? "bg-green-600"
+                            : "bg-gray-400"
+                        }
+                      >
+                        {stop.station.availableChargers}/
+                        {stop.station.totalChargers}
+                      </Badge>
+                    </div>
+                  </Card>
+
+                  <div className="flex items-center gap-4 text-sm mb-2">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-gray-600" />
+                      <span className="text-gray-600">
+                        Arrive {formatTime(stop.estimatedArrivalTime)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-gray-600" />
+                      <span className="text-gray-600">
+                        {formatDuration(stop.chargingDuration)} charge
+                      </span>
+                    </div>
+                  </div>
+
+                  {stop.station.restaurants.length > 0 && (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <UtensilsCrossed className="w-4 h-4 text-green-600" />
+                          <span className="text-gray-600">Pre-order food:</span>
+                        </div>
+                        {/* Scrollable row */}
+                        <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-2">
+                          {stop.station.restaurants.map((restaurant) => (
+                            <button
+                              key={restaurant.id}
+                              onClick={() => {
+                                setSelectedRestaurant({
+                                  stop,
+                                  restaurant,
+                                });
+                              }}
+                              className="flex-shrink-0 w-32 bg-gray-50 hover:bg-gray-100 rounded-lg p-2 transition-colors"
+                            >
+                              <img
+                                src={randomFromArray(restaurantImages)}
+                                alt={restaurant.name}
+                                className="w-full h-20 object-cover rounded-md mb-2"
+                              />
+                              <div className="text-xs truncate">
+                                {restaurant.name}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate">
+                                {restaurant.cuisine
+                                  .map((c) => c[0].toUpperCase() + c.slice(1))
+                                  .join(", ")}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {stop.selectedRestaurantId && (
+                    <Badge className="mt-2 bg-orange-600">
+                      Food pre-ordered
+                    </Badge>
+                  )}
+                </Card>
               </div>
+            ))}
+          </div>
+
+          {/* Destination */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <Flag className="w-5 h-5 text-white" />
             </div>
-          </Card>
+            <div className="flex-1">
+              <div className="text-sm text-gray-600">Destination</div>
+              <div>{journey.endLocation}</div>
+            </div>
+          </div>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Restaurant Menu Modal */}
       {selectedRestaurant && (

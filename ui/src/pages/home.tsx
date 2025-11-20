@@ -63,7 +63,6 @@ export type Restaurant = {
   name: string;
   cuisine: string[];
   prepTime: string;
-  image: string;
   menu: MenuItem[];
 };
 
@@ -623,9 +622,6 @@ export const Home = () => {
             prepTime: s.estimate_charging_time_min
               ? `${s.estimate_charging_time_min} min`
               : "15-25 min", // todo just mock ?
-            image:
-              r.image ||
-              "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=400&q=80",
             menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
           }))
         : [];
