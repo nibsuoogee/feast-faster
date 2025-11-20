@@ -1,4 +1,3 @@
-import ProtectedLayout from "@/components/ProtectedLayout";
 import axios from "axios";
 import { useEffect } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
@@ -45,36 +44,34 @@ function App() {
       <Toaster />
       <Router>
         <AuthProvider>
-          <Routes>
-            {/* Public routes — no context */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
+          <StateProvider>
+            <Routes>
+              {/* Public routes — no context */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
 
-            {/* Protected route group */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  {/* State provider */}
-                  <StateProvider>
-                    <ProtectedLayout />
-                  </StateProvider>
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/home" element={<Home />} />
-            </Route>
+              {/* Driver routes */}
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute requiredRole="driver">
+                    <Home />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Restaurant Dashboard - Protected route */}
-            <Route
-              path="/restaurant"
-              element={
-                <ProtectedRoute>
-                  <RestaurantDashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+              {/* Restaurant Manager routes */}
+              <Route
+                path="/restaurant"
+                element={
+                  <ProtectedRoute requiredRole="restaurant_manager">
+                    <RestaurantDashboard />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </StateProvider>
         </AuthProvider>
       </Router>
     </>

@@ -1,25 +1,32 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useStateContext } from "@/contexts/StateContext";
+import { useEffect } from "react";
+import { notificationService } from "@/services/notifications";
 
-interface ProtectedRouteProps {
+export default function ProtectedRoute({
+  children,
+  requiredRole,
+}: {
   children: React.ReactNode;
-}
+  requiredRole?: "driver" | "restaurant_manager";
+}) {
+  const { setContextReservation } = useStateContext();
+  const { user, loading } = useAuth();
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
 
-  //Show a loading state while checking authentication
-  if (loading) {
-    return <div>Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/login" replace />;
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
+  useEffect(() => {
+    if (user.role === "driver") {
+      notificationService.subscribe(setContextReservation);
+    }
+  });
 
-  // Render the children (the protected component)
   return <>{children}</>;
-};
-
-export default ProtectedRoute;
+}

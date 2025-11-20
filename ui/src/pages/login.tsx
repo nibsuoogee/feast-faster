@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { userService } from "@/services/user";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import z from "zod";
@@ -11,7 +12,7 @@ const loginFormSchema = z.object({
 });
 
 export const Login = () => {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm({
@@ -21,6 +22,20 @@ export const Login = () => {
       password: "",
     },
   });
+
+  // Redirect after login based on role
+  useEffect(() => {
+    switch (user?.role) {
+      case "driver":
+        navigate("/home");
+        break;
+      case "restaurant_manager":
+        navigate("/restaurant");
+        break;
+      default:
+        break;
+    }
+  }, [user, navigate]);
 
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
     // Send login request to the auth server
@@ -36,8 +51,7 @@ export const Login = () => {
     // Update authentication state using the context
     login(access_token);
 
-    // Redirect to the home page or dashboard
-    navigate("/home");
+    // Redirect happens via useEffect when user is updated
   }
 
   return (

@@ -29,6 +29,7 @@ export const loginRouter = new Elysia().use(jwtConfig).post(
       // 5. Tokenize the results with JWT and return the token.
       const token = await jwt_auth.sign({
         user_id: foundUser.user_id,
+        role: foundUser.role,
         //permissions: foundUser.permissions.toString(),
       });
 

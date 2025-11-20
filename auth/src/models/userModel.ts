@@ -1,6 +1,9 @@
 import { t } from "elysia";
 import { sql } from "bun";
 
+export const userRoleEnum = t.UnionEnum(["driver", "restaurant_manager"]);
+export type UserRole = typeof userRoleEnum.static;
+
 /**
  * User Data Transfer Object
  */
@@ -45,6 +48,7 @@ export const userModel = t.Object({
   email: t.String(),
   password: t.String(),
   created_at: t.Date(),
+  role: userRoleEnum,
 });
 export type User = typeof userModel.static;
 
