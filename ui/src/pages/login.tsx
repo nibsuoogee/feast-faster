@@ -114,7 +114,7 @@ export const Login = () => {
                   Sign in
                 </h2>
                 <p className="text-primary-foreground text-sm opacity-90">
-                  Welcome back — sign in to continue
+                  Sign in to your account
                 </p>
               </div>
             </div>

@@ -73,10 +73,10 @@ export const Register = () => {
               </div>
               <div>
                 <h2 className="text-primary-foreground text-2xl font-semibold">
-                  Create account
+                  Create your account
                 </h2>
                 <p className="text-primary-foreground text-sm opacity-90">
-                  Join Feast Faster — sign up to get started
+                  Provide your details to register and access the platform
                 </p>
               </div>
             </div>
