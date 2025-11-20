@@ -37,6 +37,10 @@ export const notificationService = {
             toast.info(data.message);
             console.log("Food status update: ", data.message);
             break;
+          case "charging_paid":
+            toast.info("Your charging session was succesfully paid.");
+            console.log("Charging payment successful.");
+            break;
           default:
             break;
         }

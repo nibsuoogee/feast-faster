@@ -35,22 +35,4 @@ export const notificationRouter = new Elysia()
       // Optional heartbeat
       yield sse({ event: "ping", data: { time: new Date().toISOString() } });
     }
-  })
-  .post(
-    "/notify",
-    async ({ query, body, status }) => {
-      const userId = Number(query.user_id);
-      const { message } = body;
-      const messages = userNotifications.get(userId);
-
-      if (!messages) return status(404, `User ${userId} not connected`);
-
-      sendToUser(userId, "notification", {
-        message,
-        time: new Date().toISOString(),
-      });
-
-      return { delivered: true };
-    },
-    { body: t.Object({ message: t.String() }) }
-  );
+  });
