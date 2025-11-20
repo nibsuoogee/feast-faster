@@ -1,20 +1,25 @@
-import { chargingModel, ReservationDTO } from "@models/chargerModel";
+import { chargingModel, ChargingDTO } from "@models/chargerModel";
 import { SettingsDTO } from "@models/settingsModel";
 import { sendToUser } from "@utils/notification";
 import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
+import { CHARGER_URL } from "../lib/urls";
+import { authorizationMiddleware } from "../middleware/authorization";
+import { jwtConfig } from "../config/jwtConfig";
 
 export const chargingSessions = new Map<number, number>();
 const chargingTimeouts = new Map<number, NodeJS.Timeout>(); // charger_id -> timeout
 
 export const chargerRouter = new Elysia()
+  .use(jwtConfig)
+  .derive(authorizationMiddleware)
   .patch(
     "/charging",
     async ({ query, body, status }) => {
       const { charger_id, ...chargingData } = body;
       // 1) Update the reservation's charging details
       const [reservation, errReservation] = await tryCatch(
-        ReservationDTO.updateCharging(body.charger_id, chargingData)
+        ChargingDTO.updateCharging(body.charger_id, chargingData)
       );
       if (errReservation) return status(500, errReservation.message);
       if (!reservation) return status(500, "Failed to update reservation");
@@ -26,7 +31,7 @@ export const chargerRouter = new Elysia()
         // and send the driver a notification that charging was started
 
         const [driverId, errDriverId] = await tryCatch(
-          ReservationDTO.getUserIdByChargerId(body.charger_id)
+          ChargingDTO.getUserIdByChargerId(body.charger_id)
         );
         if (errDriverId) return status(500, errDriverId.message);
         if (!driverId) return status(500, "Failed to get driver ID");
@@ -86,7 +91,7 @@ export const chargerRouter = new Elysia()
 
       // 1) Get the driver ID
       const [driverId, errDriverId] = await tryCatch(
-        ReservationDTO.getUserIdByChargerId(chargerId)
+        ChargingDTO.getUserIdByChargerId(chargerId)
       );
       if (errDriverId) return status(500, errDriverId.message);
       if (!driverId) return status(500, "Failed to get driver ID");
@@ -104,6 +109,54 @@ export const chargerRouter = new Elysia()
       response: {
         200: t.Object({ desired_soc: t.Number() }),
         400: t.String(),
+        500: t.String(),
+      },
+    }
+  )
+  .post(
+    "/finish-charging",
+    async ({ headers, jwt_auth, body, status }) => {
+      // Authentication in route because this is the only one meant for drivers
+      const { user } = await authorizationMiddleware({ headers, jwt_auth });
+      if (!user) return status(401, "Not Authorized");
+
+      const userId = user.user_id;
+
+      // 1) Stop charging
+      const response = await fetch(`${CHARGER_URL}/stop-charging`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        console.error("Processor error: ", await response.text());
+        return status(500, "Failed to stop charging");
+      }
+
+      // 2) Update payment time
+      const now = new Date();
+      const [reservation, errReservation] = await tryCatch(
+        ChargingDTO.updateReservationTimeOfPayment(body.charger_id, now)
+      );
+      if (errReservation) return status(500, errReservation.message);
+      if (!reservation) return status(500, "Failed to set time of payment");
+
+      sendToUser(userId, "charging_paid", {
+        time: new Date().toISOString(),
+      });
+
+      return "Charging stopped";
+    },
+    {
+      body: t.Object({
+        charger_id: t.Number(),
+      }),
+      response: {
+        200: t.String(),
+        401: t.String(),
         500: t.String(),
       },
     }

@@ -2,7 +2,7 @@ import { sql } from "bun";
 import { t } from "elysia";
 import { Reservation } from "./reservationModel";
 
-export const ReservationDTO = {
+export const ChargingDTO = {
   updateCharging: async (
     charger_id: number,
     chargingData: ChargingUpdateModel
@@ -30,6 +30,18 @@ export const ReservationDTO = {
   `;
 
     return reservation?.customer_id ?? null;
+  },
+  updateReservationTimeOfPayment: async (
+    reservation_id: number,
+    time_of_payment: Date
+  ): Promise<Reservation | null> => {
+    const [updatedReservation] = await sql`
+        UPDATE reservations
+        SET time_of_payment = ${time_of_payment}
+        WHERE reservation_id = ${reservation_id}
+        RETURNING *
+      `;
+    return updatedReservation ?? null;
   },
 };
 
