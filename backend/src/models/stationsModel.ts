@@ -2,6 +2,7 @@ import { t } from "elysia";
 import { chargerModel } from "./chargerModel";
 import { restaurantModel } from "./restaurantModel";
 import { PROCESSOR_URL } from "../lib/urls";
+import { sql } from "bun";
 
 export const StationsDTO = {
   getFilteredStations: async (
@@ -30,6 +31,32 @@ export const StationsDTO = {
       console.error("Error contacting processor: ", error);
       return null;
     }
+  },
+  /**
+   * Returns charger_ids for a given station that do NOT have
+   * any overlapping reservations in the requested time range.
+   */
+  getAvailableChargers: async (
+    station_id: number,
+    requested_start: Date,
+    requested_end: Date
+  ): Promise<number[]> => {
+    const result: { charger_id: number }[] = await sql`
+      SELECT c.charger_id
+      FROM chargers c
+      WHERE c.station_id = ${station_id}
+        AND NOT EXISTS (
+          SELECT 1
+          FROM reservations r
+          WHERE r.charger_id = c.charger_id
+            -- Overlap condition:
+            AND r.reservation_start < ${requested_end}
+            AND r.reservation_end   > ${requested_start}
+        );
+    `;
+
+    // result is rows like: [{ charger_id: 3 }, { charger_id: 7 }]
+    return result.map((row) => row.charger_id);
   },
 };
 

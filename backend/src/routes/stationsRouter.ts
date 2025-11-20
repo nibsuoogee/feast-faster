@@ -19,26 +19,56 @@ export const stationsRouter = new Elysia()
       },
     },
     (app) =>
-      app.post(
-        "/filtered-stations",
-        async ({ body, status }) => {
-          const [stations, errStations] = await tryCatch(
-            StationsDTO.getFilteredStations(body)
-          );
+      app
+        .post(
+          "/filtered-stations",
+          async ({ body, status }) => {
+            const [stations, errStations] = await tryCatch(
+              StationsDTO.getFilteredStations(body)
+            );
 
-          if (errStations) return status(500, errStations.message);
-          if (!stations) return status(500, "Failed to return stations");
+            if (errStations) return status(500, errStations.message);
+            if (!stations) return status(500, "Failed to return stations");
 
-          return { stations };
-        },
-        {
-          body: stationsFilterModel,
-          response: {
-            200: t.Object({
-              stations: stationsModel,
-            }),
-            500: t.String(),
+            return { stations };
           },
-        }
-      )
+          {
+            body: stationsFilterModel,
+            response: {
+              200: t.Object({
+                stations: stationsModel,
+              }),
+              500: t.String(),
+            },
+          }
+        )
+        .post(
+          "/station/availability",
+          async ({ body, status }) => {
+            const { station_id, reservation_start, reservation_end } = body;
+            const [availableChargers, err] = await tryCatch(
+              StationsDTO.getAvailableChargers(
+                station_id,
+                reservation_start,
+                reservation_end
+              )
+            );
+            if (err) return status(500, err.message);
+
+            return { chargers: availableChargers };
+          },
+          {
+            body: t.Object({
+              station_id: t.Number(),
+              reservation_start: t.Date(),
+              reservation_end: t.Date(),
+            }),
+            response: {
+              200: t.Object({
+                chargers: t.Array(t.Number()),
+              }),
+              500: t.String(),
+            },
+          }
+        )
   );
