@@ -1000,7 +1000,12 @@ export const Home = () => {
                       className="w-full bg-green-600 hover:bg-green-700 mt-0"
                       size="lg"
                       onClick={handlePlanRoute}
-                      disabled={!endLocation || isPlanning}
+                      disabled={
+                        !endLocation ||
+                        connectorType === "any" ||
+                        cuisinePreference.length === 0 ||
+                        isPlanning
+                      }
                     >
                       {isPlanning ? (
                         <>
