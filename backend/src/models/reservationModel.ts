@@ -26,6 +26,11 @@ export type ReservationForCreation = typeof reservationForCreation.static;
 // reservation DTO
 
 export const ReservationDTO = {
+  getReservationById: async (reservation_id: number): Promise<Reservation> => {
+    const result =
+      await sql`SELECT * FROM reservations WHERE reservation_id = ${reservation_id}`;
+    return result[0];
+  },
   createReservation: async (
     reservation: ReservationForCreation
   ): Promise<Reservation> => {
@@ -34,5 +39,27 @@ export const ReservationDTO = {
       RETURNING *
     `;
     return newReservation;
+  },
+  /**
+   * Checks whether a given charger has a reservation within 10 minutes
+   * of the given reservation end time.
+   */
+  hasConflictingReservation: async (
+    charger_id: number,
+    reservation_end: Date
+  ): Promise<boolean> => {
+    const TEN_MIN = 10 * 60 * 1000;
+    const limitTime = new Date(reservation_end.getTime() + TEN_MIN);
+
+    const result = await sql`
+      SELECT 1
+      FROM reservations
+      WHERE charger_id = ${charger_id}
+        AND reservation_start >= ${reservation_end}
+        AND reservation_start <= ${limitTime}
+      LIMIT 1
+    `;
+
+    return result.length > 0;
   },
 };
