@@ -23,7 +23,10 @@ type UserProfileProps = {
 };
 
 export function UserProfile({ onLogout }: UserProfileProps) {
-  const [userInfo, setUserInfo] = useState<{ username?: string; email?: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    username?: string;
+    email?: string;
+  } | null>(null);
 
   const [desiredChargeAtStops, setDesiredChargeAtStops] = useState<number>(80);
   const [evModel, setEvModel] = useState<string>("any");
@@ -97,8 +100,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
       </Card>
 
       <div className="mx-4 mb-4">
-        <div className="grid grid-cols-2 gap-3">
-        </div>
+        <div className="grid grid-cols-2 gap-3"></div>
       </div>
 
       <Card className="mx-4 mb-4 p-4">
@@ -116,7 +118,9 @@ export function UserProfile({ onLogout }: UserProfileProps) {
           <div className="space-y-2">
             <div className="flex justify-between mb-2">
               <Label className="text-sm">Desired Charge Level at Stops</Label>
-              <span className="text-sm text-green-600">{desiredChargeAtStops}%</span>
+              <span className="text-sm text-green-600">
+                {desiredChargeAtStops}%
+              </span>
             </div>
             <Slider
               value={[desiredChargeAtStops]}
@@ -134,9 +138,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
                 <SelectValue placeholder="Select connector type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">
-                  Connector type
-                </SelectItem>
+                <SelectItem value="any">Connector type</SelectItem>
                 <SelectItem value="Type 2">Type 2</SelectItem>
                 <SelectItem value="CCS">CCS</SelectItem>
                 <SelectItem value="CHAdeMO">CHAdeMO</SelectItem>
@@ -153,9 +155,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
             <h3>Your preferences</h3>
           </div>
           <div className="space-y-4">
-            <Label className="text-sm">
-              Cuisine Preference
-            </Label>
+            <Label className="text-sm">Cuisine Preference</Label>
             <CuisineMultiSelect value={cuisinePref} onChange={setCuisinePref} />
           </div>
         </div>
@@ -171,7 +171,9 @@ export function UserProfile({ onLogout }: UserProfileProps) {
                 connector_type: connectorType || "any",
                 desired_soc: desiredChargeAtStops,
                 cuisines:
-                  !cuisinePref || cuisinePref.length === 0 || cuisinePref.includes("any")
+                  !cuisinePref ||
+                  cuisinePref.length === 0 ||
+                  cuisinePref.includes("any")
                     ? []
                     : cuisinePref,
               };
@@ -185,7 +187,9 @@ export function UserProfile({ onLogout }: UserProfileProps) {
             }
           }}
           disabled={isSaving}
-          className={`w-full bg-green-600 hover:bg-green-700 text-white ${isSaving ? "opacity-70 cursor-not-allowed" : ""}`}
+          className={`w-full bg-green-600 hover:bg-green-700 text-white ${
+            isSaving ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
           {isSaving ? (
             <span className="flex items-center justify-center w-full">
@@ -201,7 +205,12 @@ export function UserProfile({ onLogout }: UserProfileProps) {
       {/* Payment Methods removed per request */}
 
       <div className="mx-4">
-        <Button onClick={onLogout} variant="outline" className="w-full" size="lg">
+        <Button
+          onClick={onLogout}
+          variant="outline"
+          className="w-full"
+          size="lg"
+        >
           <LogOut className="w-5 h-5 mr-2" />
           Log Out
         </Button>
