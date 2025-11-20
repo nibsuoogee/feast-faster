@@ -4,12 +4,7 @@ import { ChargingSession } from "@/components/ChargingSession";
 import { UserProfile } from "@/components/UserProfile";
 import { RoutePreview } from "@/components/RoutePreview";
 import { CuisineMultiSelect } from "@/components/CuisinesMultiSelect";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FC } from "react";
 import { Route as RouteIcon, Zap, User } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -43,7 +38,9 @@ const toast = {
   error: (msg: string) => {
     if (typeof window !== "undefined") {
       console.error(msg);
-      try { alert(msg); } catch {}
+      try {
+        alert(msg);
+      } catch {}
     } else {
       console.error(msg);
     }
@@ -85,17 +82,18 @@ export type ChargingStation = {
   restaurants: Restaurant[];
   socAtArrival: number; // Do we need it here?
   //chargers: t.Array(chargerModel), // Use this or charger number?
-  estimateChargingTimeMin: number
+  estimateChargingTimeMin: number;
 };
 
-export type JourneyStop = { // Do we need Journey stop at all?
+export type JourneyStop = {
+  // Do we need Journey stop at all?
   station: ChargingStation;
   estimatedArrivalTime: Date; // Todo Now + travelTimeMin: check
   socAtArrival: number; // Do we need it here?
   chargingDuration: number; // estimateChargingTimeMin: number; // Do we need it?
   distanceFromStart: number;
   selectedRestaurantId?: number; // Do we need it?
-  isSelected: boolean; // Todo: Check how station selection works when ordering 
+  isSelected: boolean; // Todo: Check how station selection works when ordering
 };
 
 export type PlannedJourney = {
@@ -136,9 +134,14 @@ export type RestaurantOrder = {
 export const Home = () => {
   const { logout } = useAuth();
   const [currentTab, setCurrentTab] = useState("journey");
-  const [activeSession, setActiveSession] = useState<ChargingSessionType | null>(null);
-  const [restaurantOrders, setRestaurantOrders] = useState<RestaurantOrder[]>([]);
-  const [plannedJourney, setPlannedJourney] = useState<PlannedJourney | null>(null);
+  const [activeSession, setActiveSession] =
+    useState<ChargingSessionType | null>(null);
+  const [restaurantOrders, setRestaurantOrders] = useState<RestaurantOrder[]>(
+    []
+  );
+  const [plannedJourney, setPlannedJourney] = useState<PlannedJourney | null>(
+    null
+  );
   const [showRoutePreview, setShowRoutePreview] = useState(false);
   const [isJourneyActive, setIsJourneyActive] = useState(false);
 
@@ -562,36 +565,71 @@ export const Home = () => {
     // For API restaurants we don't have menus in the response.
     // Instead of attempting to match, attach a small static menu here so the UI can show orders.
     const staticMenuForApiRestaurant = (apiR: any): MenuItem[] => {
-      const base = String(apiR?.name || "Restaurant").replace(/[^a-z0-9]/gi, "").toLowerCase();
+      const base = String(apiR?.name || "Restaurant")
+        .replace(/[^a-z0-9]/gi, "")
+        .toLowerCase();
       return [
-        { id: `${base}-m1`, name: "Chef's Special", description: "House specialty with seasonal ingredients", price: 12.99, category: "Mains", prepTime: 15 },
-        { id: `${base}-m2`, name: "Quick Snack", description: "Light bite for the road", price: 6.5, category: "Snacks", prepTime: 5 },
-        { id: `${base}-m3`, name: "Coffee", description: "Freshly brewed coffee", price: 3.5, category: "Beverages", prepTime: 3 },
+        {
+          id: `${base}-m1`,
+          name: "Chef's Special",
+          description: "House specialty with seasonal ingredients",
+          price: 12.99,
+          category: "Mains",
+          prepTime: 15,
+        },
+        {
+          id: `${base}-m2`,
+          name: "Quick Snack",
+          description: "Light bite for the road",
+          price: 6.5,
+          category: "Snacks",
+          prepTime: 5,
+        },
+        {
+          id: `${base}-m3`,
+          name: "Coffee",
+          description: "Freshly brewed coffee",
+          price: 3.5,
+          category: "Beverages",
+          prepTime: 3,
+        },
       ];
     };
 
     // Map API station shape to our local ChargingStation type
     const mapApiStationToChargingStation = (s: any): ChargingStation => {
       const chargers = Array.isArray(s.chargers) ? s.chargers : [];
-      const chargerTypes = Array.from(new Set(chargers.map((c: any) => {
-        if (!c || !c.type) return "Type 2";
-        const t = String(c.type).toLowerCase();
-        if (t.includes("chademo")) return "ChaDeMo" as any;
-        if (t.includes("ccs")) return "CCS" as any;
-        return c.type;
-      })));
+      const chargerTypes = Array.from(
+        new Set(
+          chargers.map((c: any) => {
+            if (!c || !c.type) return "Type 2";
+            const t = String(c.type).toLowerCase();
+            if (t.includes("chademo")) return "ChaDeMo" as any;
+            if (t.includes("ccs")) return "CCS" as any;
+            return c.type;
+          })
+        )
+      );
 
-      const availableChargers = chargers.filter((c: any) => c.status === "available").length;
+      const availableChargers = chargers.filter(
+        (c: any) => c.status === "available"
+      ).length;
       const totalChargers = chargers.length;
 
-      const restaurants = Array.isArray(s.restaurants) ? s.restaurants.map((r: any) => ({
-        id: r.restaurant_id,
-        name: r.name,
-        cuisine: r.cuisines,
-        prepTime: (s.estimate_charging_time_min ? `${s.estimate_charging_time_min} min` : "15-25 min"), // todo just mock ?
-        image: r.image || "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=400&q=80",
-        menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
-      })) : [];
+      const restaurants = Array.isArray(s.restaurants)
+        ? s.restaurants.map((r: any) => ({
+            id: r.restaurant_id,
+            name: r.name,
+            cuisine: r.cuisines,
+            prepTime: s.estimate_charging_time_min
+              ? `${s.estimate_charging_time_min} min`
+              : "15-25 min", // todo just mock ?
+            image:
+              r.image ||
+              "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=400&q=80",
+            menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
+          }))
+        : [];
 
       return {
         id: s.station_id,
@@ -601,13 +639,14 @@ export const Home = () => {
         availableChargers,
         totalChargers,
         chargerTypes: chargerTypes as any,
-        pricePerKwh: typeof s.price_per_kwh === "number" ? s.price_per_kwh : 0.4, // Todo What to do about it?
+        pricePerKwh:
+          typeof s.price_per_kwh === "number" ? s.price_per_kwh : 0.4, // Todo What to do about it?
         lat: typeof s.lat === "number" ? s.lat : 0, // Todo Do we need it?
         lng: typeof s.lng === "number" ? s.lng : 0, // Todo Do we need it?
         restaurants,
         travelTimeMin: s.travel_time_min, // Todo format
         socAtArrival: s.soc_at_arrival,
-        estimateChargingTimeMin: s.estimate_charging_time_min
+        estimateChargingTimeMin: s.estimate_charging_time_min,
       };
     };
 
@@ -618,14 +657,20 @@ export const Home = () => {
       //if (sourceStations.length === 0) {
       try {
         const body = {
-          current_location: [currentUserLocation.longitude, currentUserLocation.latitude] as [number, number],
-          destination: [22.242114343027588, 60.449298344439924] as [number, number], // Todo
+          current_location: [
+            currentUserLocation.longitude,
+            currentUserLocation.latitude,
+          ] as [number, number],
+          destination: [22.242114343027588, 60.449298344439924] as [
+            number,
+            number
+          ], // Todo
           ev_model: "Nissan Leaf", // Get from settings
           current_car_range: 120, // Get from settings
           current_soc: currentSOC[0] || 50,
           desired_soc: desiredSOC[0] || 80,
           connector_type: connectorType,
-          cuisines: cuisinePreference
+          cuisines: cuisinePreference,
         };
 
         const data = await getFilteredStations(body);
@@ -639,11 +684,13 @@ export const Home = () => {
       }
       //}
 
-      const filteredStations: ChargingStation[] = stations.map(mapApiStationToChargingStation);
+      const filteredStations: ChargingStation[] = stations.map(
+        mapApiStationToChargingStation
+      );
 
       // const filteredStations = mappedStations.filter((station) => {
       //   if (connectorType !== "any" && !station.chargerTypes.includes(connectorType as any)) {
-      //     console.log(`Station ${station.name} filtered out by connector type`); 
+      //     console.log(`Station ${station.name} filtered out by connector type`);
       //     return false;
       //   }
 
@@ -665,11 +712,16 @@ export const Home = () => {
           id: Date.now().toString(),
           startLocation: currentUserLocation.address || "Lahti",
           endLocation: endLocation, // Todo What is it
-          totalDistance: filteredStations[filteredStations.length - 1]?.distance || 45, // Todo simplify
-          estimatedDuration: Math.ceil(filteredStations.reduce((sum, s) => sum + s.distance, 0) / 80 * 60),
+          totalDistance:
+            filteredStations[filteredStations.length - 1]?.distance || 45, // Todo simplify
+          estimatedDuration: Math.ceil(
+            (filteredStations.reduce((sum, s) => sum + s.distance, 0) / 80) * 60
+          ),
           stops: filteredStations.map((station) => ({
             station,
-            estimatedArrivalTime: new Date(Date.now() + station.travelTimeMin * 60 * 1000),        
+            estimatedArrivalTime: new Date(
+              Date.now() + station.travelTimeMin * 60 * 1000
+            ),
             socAtArrival: station.socAtArrival,
             chargingDuration: station.estimateChargingTimeMin,
             distanceFromStart: station.distance,
@@ -684,7 +736,9 @@ export const Home = () => {
       } else {
         // Show normal toast or better empty search page
         console.log("No stations found matching criteria");
-        toast.error("No charging stations found matching your criteria. Try adjusting your filters."); // Todo fix toast
+        toast.error(
+          "No charging stations found matching your criteria. Try adjusting your filters."
+        ); // Todo fix toast
       }
     } finally {
       setIsPlanning(false);
@@ -722,7 +776,10 @@ export const Home = () => {
     setRestaurantOrders((prev) => [...prev, order]);
   };
 
-  const updateOrderStatus = (orderId: string, status: RestaurantOrder["status"]) => {
+  const updateOrderStatus = (
+    orderId: string,
+    status: RestaurantOrder["status"]
+  ) => {
     setRestaurantOrders((prev) =>
       prev.map((order) => (order.id === orderId ? { ...order, status } : order))
     );
@@ -737,7 +794,7 @@ export const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <Toaster position="top-center" />
-      
+
       <main className="h-full">
         {showRoutePreview && plannedJourney ? (
           <RoutePreview
@@ -747,7 +804,11 @@ export const Home = () => {
             onBack={() => setShowRoutePreview(false)}
           />
         ) : (
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <Tabs
+            value={currentTab}
+            onValueChange={setCurrentTab}
+            className="w-full"
+          >
             <TabsContent value="journey" className="m-0">
               {/* Journey Planner Content */}
               <div className="p-4 space-y-4">
@@ -755,11 +816,14 @@ export const Home = () => {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <RouteIcon className="w-6 h-6 text-green-600" />
-                      <h2 className="text-xl font-semibold">Plan Your Journey</h2>
+                      <h2 className="text-xl font-semibold">
+                        Plan Your Journey
+                      </h2>
                     </div>
                   </div>
                   <p className="text-gray-600 mb-4">
-                    Plan your trip with charging stops and pre-order meals along the way
+                    Plan your trip with charging stops and pre-order meals along
+                    the way
                   </p>
 
                   {/* Active Filters Summary - Always visible */}
@@ -782,13 +846,17 @@ export const Home = () => {
                         {connectorType}
                       </Badge>
                     )}
-                    {cuisinePreference.length > 0 && 
-                    cuisinePreference.map(c => (              
-                      <Badge key={c} variant="outline" className="bg-orange-50">
-                        <UtensilsCrossed className="w-3 h-3 mr-1" />
-                        {c[0].toUpperCase() + c.slice(1)}
-                      </Badge>
-                    ))}
+                    {cuisinePreference.length > 0 &&
+                      cuisinePreference.map((c) => (
+                        <Badge
+                          key={c}
+                          variant="outline"
+                          className="bg-orange-50"
+                        >
+                          <UtensilsCrossed className="w-3 h-3 mr-1" />
+                          {c[0].toUpperCase() + c.slice(1)}
+                        </Badge>
+                      ))}
                   </div>
 
                   {/* Filters Toggle */}
@@ -798,7 +866,9 @@ export const Home = () => {
                     className="w-full mb-4 justify-start"
                   >
                     <SlidersHorizontal className="w-4 h-4 mr-2 text-green-600" />
-                    <span className="flex-1 text-left">Journey Preferences</span>
+                    <span className="flex-1 text-left">
+                      Journey Preferences
+                    </span>
                     {showFilters ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -817,7 +887,9 @@ export const Home = () => {
                               <Battery className="w-4 h-4" />
                               Current Battery
                             </Label>
-                            <span className="text-sm text-gray-600">{currentSOC[0]}%</span>
+                            <span className="text-sm text-gray-600">
+                              {currentSOC[0]}%
+                            </span>
                           </div>
                           <Slider
                             value={currentSOC}
@@ -835,7 +907,9 @@ export const Home = () => {
                               <Navigation className="w-4 h-4" />
                               Current Range
                             </Label>
-                            <span className="text-sm text-gray-600">{currentRange[0]} km</span>
+                            <span className="text-sm text-gray-600">
+                              {currentRange[0]} km
+                            </span>
                           </div>
                           <Slider
                             value={currentRange}
@@ -853,7 +927,9 @@ export const Home = () => {
                               <Zap className="w-4 h-4" />
                               Desired Charge at Stops
                             </Label>
-                            <span className="text-sm text-green-600">{desiredSOC[0]}%</span>
+                            <span className="text-sm text-green-600">
+                              {desiredSOC[0]}%
+                            </span>
                           </div>
                           <Slider
                             value={desiredSOC}
@@ -871,7 +947,10 @@ export const Home = () => {
                       {/* Connector Type */}
                       <div className="space-y-2">
                         <Label>Connector Type</Label>
-                        <Select value={connectorType} onValueChange={setConnectorType}>
+                        <Select
+                          value={connectorType}
+                          onValueChange={setConnectorType}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select connector type" />
                           </SelectTrigger>
@@ -900,8 +979,12 @@ export const Home = () => {
                     <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
                       <Navigation className="w-4 h-4 text-green-600 flex-shrink-0" />
                       <div className="flex-1">
-                        <div className="text-xs text-gray-500">Current Location</div>
-                        <div className="font-medium">{currentUserLocation?.address}</div>
+                        <div className="text-xs text-gray-500">
+                          Current Location
+                        </div>
+                        <div className="font-medium">
+                          {currentUserLocation?.address}
+                        </div>
                       </div>
                     </div>
                     <div className="relative">
@@ -965,7 +1048,11 @@ export const Home = () => {
       {/* Bottom Navigation */}
       {!showRoutePreview && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t">
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <Tabs
+            value={currentTab}
+            onValueChange={setCurrentTab}
+            className="w-full"
+          >
             <TabsList className="w-full h-16 grid grid-cols-3 rounded-none bg-white">
               <TabsTrigger
                 value="journey"

@@ -8,7 +8,7 @@ import {
   fromPlaceId,
   setLocationType,
   geocode,
-  RequestType
+  RequestType,
 } from "react-geocode";
 
 // Set Google Maps API key
@@ -34,8 +34,8 @@ type AddressComponent = {
 const defaultLocation: LocationData = {
   latitude: 61.00581881792029,
   longitude: 25.664881992931964,
-  address: "Mukkulankatu 19, Lahti"
-}
+  address: "Mukkulankatu 19, Lahti",
+};
 
 const LOCATION_KEY = "cached_user_location";
 
@@ -61,20 +61,18 @@ export const useUserLocation = () => {
         const { latitude, longitude } = position.coords;
 
         try {
-          const response = await fromLatLng(
-            latitude,
-            longitude
-          );
+          const response = await fromLatLng(latitude, longitude);
           const components = response.results[0].address_components;
 
           const get = (type: string) =>
-            components.find((c: AddressComponent) => c.types.includes(type))?.long_name || "";
+            components.find((c: AddressComponent) => c.types.includes(type))
+              ?.long_name || "";
 
           const street = get("route");
           const houseNumber = get("street_number");
           const city =
-            get("locality") ||               // normal cities
-            get("postal_town") ||            // UK / Nordic use postal_town
+            get("locality") || // normal cities
+            get("postal_town") || // UK / Nordic use postal_town
             get("administrative_area_level_2"); // fallback
 
           const loc = {
