@@ -50,11 +50,10 @@ def get_stations_from_db(session, buffer_geojson, cuisines, connector_type):
         filtered_chargers = [
             {
                 "charger_id": c.charger_id,
-                "status": c.status,
                 "type": c.connector_type,
                 "max_power": c.power
             } for c in st.chargers
-            if c.connector_type == connector_type and c.status == "available"
+            if c.connector_type == connector_type
         ]
 
         if len(filtered_chargers) == 0:
