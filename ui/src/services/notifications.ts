@@ -41,6 +41,16 @@ export const notificationService = {
             toast.info("Your charging session was succesfully paid.");
             console.log("Charging payment successful.");
             break;
+          case "reservation_shift_success":
+            toast.info(
+              "Your reservation was successfully postponed by 5 minutes."
+            );
+            console.log("Reservation postponed by 5 minutes.");
+            break;
+          case "reservation_shift_not_allowed":
+            toast.info("Your reservation cannot be postponed.");
+            console.log("Reservation cannot be postponed.");
+            break;
           default:
             break;
         }

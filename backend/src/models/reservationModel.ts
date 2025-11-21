@@ -46,10 +46,10 @@ export const ReservationDTO = {
    */
   hasConflictingReservation: async (
     charger_id: number,
-    reservation_end: Date
+    reservation_end: Date,
+    postpone_seconds: number
   ): Promise<boolean> => {
-    const TEN_MIN = 10 * 60 * 1000;
-    const limitTime = new Date(reservation_end.getTime() + TEN_MIN);
+    const limitTime = new Date(reservation_end.getTime() + postpone_seconds);
 
     const result = await sql`
       SELECT 1
@@ -61,5 +61,36 @@ export const ReservationDTO = {
     `;
 
     return result.length > 0;
+  },
+  /**
+   * Shifts both reservation_start and reservation_end forward by a given number of minutes.
+   * Returns the updated reservation, or null if not found.
+   */
+  shiftReservation: async (
+    reservation_id: number,
+    minutes: number
+  ): Promise<Reservation | null> => {
+    const ms = minutes * 60 * 1000; // Convert minutes → milliseconds
+
+    // First retrieve existing reservation
+    const reservation =
+      await sql`SELECT * FROM reservations WHERE reservation_id = ${reservation_id}`;
+
+    if (reservation.length === 0) return null;
+
+    const r = reservation[0];
+
+    const newStart = new Date(new Date(r.reservation_start).getTime() + ms);
+    const newEnd = new Date(new Date(r.reservation_end).getTime() + ms);
+
+    const [updatedReservation] = await sql`
+      UPDATE reservations
+      SET reservation_start = ${newStart},
+          reservation_end = ${newEnd}
+      WHERE reservation_id = ${reservation_id}
+      RETURNING *
+    `;
+
+    return updatedReservation ?? null;
   },
 };
