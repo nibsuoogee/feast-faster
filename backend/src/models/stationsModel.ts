@@ -1,6 +1,5 @@
 import { t } from "elysia";
-import { chargerModel } from "./chargerModel";
-import { restaurantModel } from "./restaurantModel";
+import { stationModel } from "./stationModel";
 import { PROCESSOR_URL } from "../lib/urls";
 import { sql } from "bun";
 
@@ -72,17 +71,5 @@ export const stationsFilterModel = t.Object({
 });
 export type StationsFilterModel = typeof stationsFilterModel.static;
 
-export const stationsModel = t.Array(
-  t.Object({
-    station_id: t.Number(),
-    name: t.String(),
-    address: t.String(),
-    restaurants: t.Array(restaurantModel),
-    chargers: t.Array(chargerModel),
-    travel_time_min: t.Number(),
-    distance_km: t.Number(),
-    soc_at_arrival: t.Number(),
-    estimate_charging_time_min: t.Number(),
-  })
-);
+export const stationsModel = t.Array(stationModel);
 export type StationsModel = typeof stationsModel.static;

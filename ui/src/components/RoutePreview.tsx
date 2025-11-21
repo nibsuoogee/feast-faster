@@ -113,13 +113,12 @@ export function RoutePreview({
                       <span className="text-gray-600">Available chargers</span>
                       <Badge
                         className={
-                          stop.station.availableChargers > 0
+                          stop.station.chargers.length > 0
                             ? "bg-green-600"
                             : "bg-gray-400"
                         }
                       >
-                        {stop.station.availableChargers}/
-                        {stop.station.totalChargers}
+                        {stop.station.chargers.length}
                       </Badge>
                     </div>
                   </Card>

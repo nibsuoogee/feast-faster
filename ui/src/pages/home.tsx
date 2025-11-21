@@ -1,3 +1,4 @@
+import { StationModel } from "@types";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChargingSession } from "@/components/ChargingSession";
@@ -66,22 +67,8 @@ export type Restaurant = {
   menu: MenuItem[];
 };
 
-export type ChargingStation = {
-  id: number;
-  name: string;
-  address: string;
-  distance: number;
-  travelTimeMin: number;
-  availableChargers: number;
-  totalChargers: number;
-  chargerTypes: ("Type 2" | "CCS" | "CHAdeMO")[];
-  restaurants: Restaurant[];
-  socAtArrival: number;
-  estimateChargingTimeMin: number;
-};
-
 export type JourneyStop = {
-  station: ChargingStation;
+  station: StationModel;
   estimatedArrivalTime: Date;
   socAtArrival: number;
   chargingDuration: number;
@@ -200,25 +187,9 @@ export const Home = () => {
       ];
     };
 
-    // Map API station shape to our local ChargingStation type
-    const mapApiStationToChargingStation = (s: any): ChargingStation => {
+    // Map API station shape to our local StationModel type
+    const mapApiStationToChargingStation = (s: any): StationModel => {
       const chargers = Array.isArray(s.chargers) ? s.chargers : [];
-      const chargerTypes = Array.from(
-        new Set(
-          chargers.map((c: any) => {
-            if (!c || !c.type) return "Type 2";
-            const t = String(c.type).toLowerCase();
-            if (t.includes("chademo")) return "CHAdeMO" as any;
-            if (t.includes("ccs")) return "CCS" as any;
-            return c.type;
-          })
-        )
-      );
-
-      const availableChargers = chargers.filter(
-        (c: any) => c.status === "available"
-      ).length;
-      const totalChargers = chargers.length;
 
       const restaurants = Array.isArray(s.restaurants)
         ? s.restaurants.map((r: any) => ({
@@ -231,17 +202,15 @@ export const Home = () => {
         : [];
 
       return {
-        id: s.station_id,
+        station_id: s.station_id,
         name: s.name,
         address: s.address,
-        distance: s.distance_km,
-        availableChargers,
-        totalChargers,
-        chargerTypes: chargerTypes as any,
+        distance_km: s.distance_km,
+        chargers,
         restaurants,
-        travelTimeMin: s.travel_time_min,
-        socAtArrival: s.soc_at_arrival,
-        estimateChargingTimeMin: s.estimate_charging_time_min,
+        travel_time_min: s.travel_time_min,
+        soc_at_arrival: s.soc_at_arrival,
+        estimate_charging_time_min: s.estimate_charging_time_min,
       };
     };
 
@@ -274,7 +243,7 @@ export const Home = () => {
         console.log("Could not fetch stations from API", err);
       }
 
-      const filteredStations: ChargingStation[] = stations.map(
+      const filteredStations: StationModel[] = stations.map(
         mapApiStationToChargingStation
       );
 
@@ -286,11 +255,11 @@ export const Home = () => {
           stops: filteredStations.map((station) => ({
             station,
             estimatedArrivalTime: new Date(
-              Date.now() + station.travelTimeMin * 60 * 1000
+              Date.now() + station.travel_time_min * 60 * 1000
             ),
-            socAtArrival: station.socAtArrival,
-            chargingDuration: station.estimateChargingTimeMin,
-            distanceFromStart: station.distance,
+            socAtArrival: station.soc_at_arrival,
+            chargingDuration: station.estimate_charging_time_min,
+            distanceFromStart: station.distance_km,
             isSelected: false,
           })),
           createdAt: new Date(),
@@ -312,10 +281,10 @@ export const Home = () => {
 
   // demo fetch button removed; Plan My Route will fetch API automatically when needed
 
-  const startChargingSession = (station: ChargingStation) => {
+  const startChargingSession = (station: StationModel) => {
     const session: ChargingSessionType = {
       id: Date.now().toString(),
-      stationId: station.id,
+      stationId: station.station_id,
       stationName: station.name,
       startTime: new Date(),
       energyDelivered: 0,

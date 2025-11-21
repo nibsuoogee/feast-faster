@@ -1,0 +1,16 @@
+import { t } from "elysia";
+import { chargerModel } from "./chargerModel";
+import { restaurantModel } from "./restaurantModel";
+
+export const stationModel = t.Object({
+  station_id: t.Number(),
+  name: t.String(),
+  address: t.String(),
+  restaurants: t.Array(restaurantModel),
+  chargers: t.Array(chargerModel),
+  travel_time_min: t.Number(),
+  distance_km: t.Number(),
+  soc_at_arrival: t.Number(),
+  estimate_charging_time_min: t.Number(),
+});
+export type StationModel = typeof stationModel.static;
