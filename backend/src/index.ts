@@ -3,6 +3,7 @@ import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { settingsRouter } from "./routes/settingsRouter";
 import { menuItemsRouter } from "./routes/menuItemsRouter"; 
+import { restaurantsRouter } from "./routes/restaurantsRouter";
 
 const app = new Elysia()
   .use(swagger())
@@ -10,6 +11,7 @@ const app = new Elysia()
   .get("/", () => "Hello Elysia")
   .use(settingsRouter)
   .use(menuItemsRouter) 
+  .use(restaurantsRouter) 
   .listen({ port: 3000, hostname: "0.0.0.0" }); 
 
 console.log(
