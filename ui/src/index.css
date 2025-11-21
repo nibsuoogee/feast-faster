@@ -56,3 +56,63 @@
     color: hsl(var(--foreground));
   }
 }
+
+/* Custom icon animations for login banner */
+@layer base {
+  .icon-bolt {
+    animation: boltPulse 1.8s ease-in-out infinite;
+    transform-origin: 50% 50%;
+  }
+
+  .icon-utensil {
+    animation: utensilLift 1.8s ease-in-out infinite 0.45s;
+    transform-origin: 50% 50%;
+  }
+
+  @keyframes boltPulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    30% {
+      transform: scale(1.08);
+      opacity: 0.95;
+    }
+    60% {
+      transform: scale(0.98);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes utensilLift {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0.95;
+    }
+    40% {
+      transform: translateY(-2px) rotate(-2deg);
+      opacity: 1;
+    }
+    80% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0.95;
+    }
+    100% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0.95;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .icon-bolt,
+    .icon-utensil {
+      animation: none !important;
+    }
+  }
+}
+
+/* No background decorations on login page. */
