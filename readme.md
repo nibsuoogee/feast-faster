@@ -101,12 +101,15 @@ Create .env file in the root directory.
 
 Create .env.local file in the root directory, adding following variables.
 `OPEN_ROUTE_SERVICE_API_KEY` is an API key received from [Open Route Service](https://openrouteservice.org/).
-To get an API key, sign up https://openrouteservice.org/dev/#/signup
+To get an API key, sign up https://openrouteservice.org/dev/#/signup.
+
+`VITE_GOOGLE_GEOCODE_API_KEY` is an API key received from [Google Geocoding API](https://developers.google.com/maps/documentation/geocoding/get-api-key).
 
 ```
 # .env.local
 
 OPEN_ROUTE_SERVICE_API_KEY=''
+VITE_GOOGLE_GEOCODE_API_KEY=''
 ```
 
 Build images

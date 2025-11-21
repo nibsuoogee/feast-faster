@@ -30,7 +30,7 @@ const toast = {
 
 type RestaurantMenuProps = {
   restaurant: Restaurant;
-  stationId: string;
+  stationId: number;
   stationName: string;
   onClose: () => void;
   onPlaceOrder: (order: RestaurantOrder) => void;
