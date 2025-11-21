@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChargingSession } from "@/components/ChargingSession";
 import { UserProfile } from "@/components/UserProfile";
@@ -124,7 +124,7 @@ export type RestaurantOrder = {
 };
 
 export const Home = () => {
-  const { logout } = useAuth();
+  const { settings, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState("journey");
   const [activeSession, setActiveSession] =
     useState<ChargingSessionType | null>(null);
@@ -150,6 +150,14 @@ export const Home = () => {
 
   // Current user location
   const currentUserLocation = useUserLocation();
+
+  useEffect(() => {
+    if (!settings) return;
+
+    setDesiredSOC([settings.desired_soc ?? 80]);
+    setConnectorType(settings.connector_type ?? "any");
+    setCuisinePreference(settings.cuisines ?? []);
+  }, [settings]);
 
   const handlePlanRoute = async () => {
     if (!endLocation) return;
@@ -250,8 +258,8 @@ export const Home = () => {
             destinationLocation.longitude,
             destinationLocation.latitude,
           ] as [number, number],
-          ev_model: "Nissan Leaf", // Get from settings
-          current_car_range: 120, // Get from settings
+          ev_model: settings.vehicle_model,
+          current_car_range: currentRange[0],
           current_soc: currentSOC[0] || 50,
           desired_soc: desiredSOC[0] || 80,
           connector_type: connectorType,
