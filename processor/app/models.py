@@ -49,7 +49,6 @@ class Charger(SQLModel, table=True):
     charger_id: int = Field(primary_key=True)
     station_id: int = Field(foreign_key="stations.station_id", nullable=False)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    status: str
     connector_type: str
     power: int
     # Relationship to station
