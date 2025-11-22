@@ -7,6 +7,8 @@ import {
   StationsDTO,
 } from "@models/stationsModel";
 import { tryCatch } from "@utils/tryCatch";
+import { MenuItemsDTO } from "@models/menuItemModel";
+import { stationWithMenusModel } from "@models/stationModel";
 
 export const stationsRouter = new Elysia()
   .use(jwtConfig)
@@ -23,20 +25,54 @@ export const stationsRouter = new Elysia()
         .post(
           "/filtered-stations",
           async ({ body, status }) => {
+            // 1) Get suitable stations
             const [stations, errStations] = await tryCatch(
               StationsDTO.getFilteredStations(body)
             );
-
             if (errStations) return status(500, errStations.message);
             if (!stations) return status(500, "Failed to return stations");
 
-            return { stations };
+            // 2) Get menu items for all restaurants in all stations
+            const stationsWithMenuItems = await Promise.all(
+              stations.map(async (station) => {
+                const restaurantsWithMenuItems = await Promise.all(
+                  station.restaurants.map(async (restaurant) => {
+                    const [menuItems, error] = await tryCatch(
+                      MenuItemsDTO.getMenuItems(restaurant.restaurant_id)
+                    );
+
+                    if (error) {
+                      console.error(
+                        `Failed to fetch menu items for restaurant ${restaurant.restaurant_id}:`,
+                        error.message
+                      );
+                      return {
+                        ...restaurant,
+                        menu: [],
+                      };
+                    }
+
+                    return {
+                      ...restaurant,
+                      menu: menuItems || [],
+                    };
+                  })
+                );
+
+                return {
+                  ...station,
+                  restaurants: restaurantsWithMenuItems,
+                };
+              })
+            );
+
+            return { stations: stationsWithMenuItems };
           },
           {
             body: stationsFilterModel,
             response: {
               200: t.Object({
-                stations: stationsModel,
+                stations: t.Array(stationWithMenusModel),
               }),
               500: t.String(),
             },

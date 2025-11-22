@@ -25,7 +25,6 @@ import {
   reservationModel,
 } from "@models/reservationModel";
 
-
 const foodStatusMessage: Record<FoodStatus, string> = {
   pending: "Your meal is not being cooked yet.",
   cooking: "Your meal is now being cooked.",
@@ -36,8 +35,8 @@ const foodStatusMessage: Record<FoodStatus, string> = {
 // schema that is expected (runtime validation)
 
 const createOrderBody = t.Object({
-  restaurantId: t.Number(),
-  stationId: t.Number(),
+  restaurant_id: t.Number(),
+  station_id: t.Number(),
   items: t.Array(
     t.Object({
       menuItem: t.Object({
@@ -50,13 +49,11 @@ const createOrderBody = t.Object({
     })
   ),
   customerEta: t.Optional(t.String()),
-  isPaid: t.Boolean(),
   reservationStart: t.Optional(t.String()),
   reservationEnd: t.Optional(t.String()),
   currentSoc: t.Optional(t.Number()),
   orderTime: t.Optional(t.String()),
 });
-
 
 // response schema
 
@@ -66,7 +63,6 @@ const createOrderResponse = t.Object({
   items: t.Array(orderItemModel),
   reservation: reservationModel,
 });
-
 
 export const orderRouter = new Elysia()
   .use(jwtConfig)
@@ -83,7 +79,6 @@ export const orderRouter = new Elysia()
         .post(
           "/orders",
           async ({ body, user, status }) => {
-        
             // create Order
 
             const createdAt = body.orderTime
@@ -91,10 +86,15 @@ export const orderRouter = new Elysia()
               : new Date();
 
             const orderData: OrderModelForCreation = {
-            
               customer_id: user.user_id,
-              restaurant_id: body.restaurantId,
-              total_price: Number(body.items.reduce((total, i) => total + i.menuItem.price * i.quantity, 0).toFixed(2)
+              restaurant_id: body.restaurant_id,
+              total_price: Number(
+                body.items
+                  .reduce(
+                    (total, i) => total + i.menuItem.price * i.quantity,
+                    0
+                  )
+                  .toFixed(2)
               ),
               created_at: createdAt,
               // add 30 mins as estimated arrival time if received eta is empty.
@@ -105,14 +105,14 @@ export const orderRouter = new Elysia()
 
             const [order, errOrder] = await tryCatch(
               OrderDTO.createOrder(orderData)
-           );
+            );
 
             if (errOrder) return status(500, errOrder.message);
             if (!order) return status(500, "Failed to create order");
 
             // create order_items
 
-            const createdItems: typeof orderItemModel.static[] = [];
+            const createdItems: (typeof orderItemModel.static)[] = [];
 
             for (const i of body.items) {
               const itemData: OrderItemForCreation = {
@@ -131,13 +131,13 @@ export const orderRouter = new Elysia()
 
               if (errItem) return status(500, errItem.message);
               createdItems.push(createdItem);
-              }
+            }
 
             // create reservation
 
             const reservationStart = body.reservationStart
               ? new Date(body.reservationStart)
-              : new Date(new Date().getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready 
+              : new Date(new Date().getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready
 
             const reservationEnd = body.reservationEnd
               ? new Date(body.reservationEnd)
@@ -145,7 +145,7 @@ export const orderRouter = new Elysia()
 
             const reservationData: ReservationForCreation = {
               order_id: order.order_id,
-              charger_id: body.stationId,
+              charger_id: body.station_id,
               created_at: new Date(),
               reservation_start: reservationStart,
               reservation_end: reservationEnd,
@@ -176,30 +176,30 @@ export const orderRouter = new Elysia()
               500: t.String(),
             },
           }
-        ) 
-      .patch(
-        "/order-status",
-        async ({ body, status }) => {
-          // 1) Update the order food status
-          const [order, errOrder] = await tryCatch(
-            OrderDTO.updateOrderStatus(body.order_id, body.food_status)
-          );
-          if (errOrder) return status(500, errOrder.message);
-          if (!order) return status(500, "Failed to update order status");
+        )
+        .patch(
+          "/order-status",
+          async ({ body, status }) => {
+            // 1) Update the order food status
+            const [order, errOrder] = await tryCatch(
+              OrderDTO.updateOrderStatus(body.order_id, body.food_status)
+            );
+            if (errOrder) return status(500, errOrder.message);
+            if (!order) return status(500, "Failed to update order status");
 
-          sendToUser(order.customer_id, "food_status", {
-            message: foodStatusMessage[order.food_status],
-            time: new Date().toISOString(),
-          });
+            sendToUser(order.customer_id, "food_status", {
+              message: foodStatusMessage[order.food_status],
+              time: new Date().toISOString(),
+            });
 
-          return order;
-        },
-        {
-          body: orderUpdateStatusBody,
-          response: {
-            200: orderModel,
-            500: t.String(),
+            return order;
           },
-        }
-      )
+          {
+            body: orderUpdateStatusBody,
+            response: {
+              200: orderModel,
+              500: t.String(),
+            },
+          }
+        )
   );

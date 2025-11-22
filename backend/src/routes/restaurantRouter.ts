@@ -18,10 +18,10 @@ export const restaurantRouter = new Elysia()
       app.get(
         "/restaurants/:id/orders",
         async ({ params, status }) => {
-          const restaurantId = Number(params.id);
+          const restaurant_id = Number(params.id);
 
           const [orders, err] = await tryCatch(
-            RestaurantDTO.getOrdersWithDetails(restaurantId)
+            RestaurantDTO.getOrdersWithDetails(restaurant_id)
           );
 
           if (err) return status(500, err.message);

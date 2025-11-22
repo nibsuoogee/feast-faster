@@ -1,8 +1,9 @@
-import { t } from "elysia";
 import { sql } from "bun";
-import { FoodStatus, orderModel, Order } from "./orderModel";
-import { orderItemModel, OrderItem } from "./orderItemModel";
-import { reservationModel, Reservation } from "./reservationModel";
+import { t } from "elysia";
+import { OrderItem, orderItemModel } from "./orderItemModel";
+import { Order, orderModel } from "./orderModel";
+import { Reservation, reservationModel } from "./reservationModel";
+import { menuItemModel } from "./menuItemModel";
 
 // Response type
 export const restaurantOrdersModel = t.Object({
@@ -14,7 +15,9 @@ export const restaurantOrdersModel = t.Object({
 export type RestaurantOrder = typeof restaurantOrdersModel.static;
 
 export const RestaurantDTO = {
-  getOrdersWithDetails: async (restaurant_id: number): Promise<RestaurantOrder[]> => {
+  getOrdersWithDetails: async (
+    restaurant_id: number
+  ): Promise<RestaurantOrder[]> => {
     const orders: Order[] = await sql<Order[]>`
       SELECT * FROM orders
       WHERE restaurant_id = ${restaurant_id}
@@ -57,4 +60,11 @@ export const restaurantModel = t.Object({
 });
 export type RestaurantModel = typeof restaurantModel.static;
 
-
+export const restaurantWithMenuModel = t.Object({
+  restaurant_id: t.Number(),
+  name: t.String(),
+  address: t.String(),
+  cuisines: t.Array(t.String()),
+  menu: t.Array(menuItemModel),
+});
+export type RestaurantWithMenuModel = typeof restaurantWithMenuModel.static;

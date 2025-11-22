@@ -11,6 +11,12 @@ CREATE TYPE "menu_item_availability" AS ENUM (
   'unavailable'
 );
 
+CREATE TYPE "food_category" AS ENUM (
+  'Mains',
+  'Snacks',
+  'Beverages'
+);
+
 CREATE TYPE "food_status" AS ENUM (
   'pending',
   'cooking',
@@ -82,7 +88,8 @@ CREATE TABLE "menu_items" (
   "details" varchar(255) NOT NULL,
   "price" float NOT NULL,
   "minutes_to_prepare" int NOT NULL,
-  "availability" menu_item_availability NOT NULL
+  "availability" menu_item_availability NOT NULL,
+  "category" food_category NOT NULL
 );
 
 CREATE TABLE "orders" (
