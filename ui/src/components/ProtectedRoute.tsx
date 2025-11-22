@@ -14,6 +14,13 @@ export default function ProtectedRoute({
   const { setContextReservation } = useStateContext();
   const { user, loading } = useAuth();
 
+  // Move useEffect outside conditionals - hooks must always run
+  useEffect(() => {
+    if (user && user.role === "driver") {
+      notificationService.subscribe(setContextReservation);
+    }
+  }, [user, setContextReservation]);
+
   if (loading) return <div>Loading...</div>;
 
   if (!user) return <Navigate to="/login" replace />;
@@ -21,12 +28,6 @@ export default function ProtectedRoute({
   if (requiredRole && user.role !== requiredRole) {
     return <Navigate to="/login" replace />;
   }
-
-  useEffect(() => {
-    if (user.role === "driver") {
-      notificationService.subscribe(setContextReservation);
-    }
-  });
 
   return <>{children}</>;
 }
