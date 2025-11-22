@@ -66,14 +66,14 @@ export const stationsRouter = new Elysia()
               })
             );
 
-            return { stations: stationsWithMenuItems };
+            console.log(stations);
+
+            return stationsWithMenuItems;
           },
           {
             body: stationsFilterModel,
             response: {
-              200: t.Object({
-                stations: t.Array(stationWithMenusModel),
-              }),
+              200: t.Array(stationWithMenusModel),
               500: t.String(),
             },
           }

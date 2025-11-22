@@ -164,35 +164,29 @@ export const Home = () => {
     // };
 
     try {
-      let stations: StationWithMenusModel[] = [];
+      const body = {
+        current_location: [
+          currentUserLocation.longitude,
+          currentUserLocation.latitude,
+        ] as [number, number],
+        destination: [
+          destinationLocation.longitude,
+          destinationLocation.latitude,
+        ] as [number, number],
+        ev_model: settings.vehicle_model,
+        current_car_range: currentRange[0],
+        current_soc: currentSOC[0] || 50,
+        desired_soc: desiredSOC[0] || 80,
+        connector_type: connectorType,
+        cuisines: cuisinePreference,
+      };
 
-      try {
-        const body = {
-          current_location: [
-            currentUserLocation.longitude,
-            currentUserLocation.latitude,
-          ] as [number, number],
-          destination: [
-            destinationLocation.longitude,
-            destinationLocation.latitude,
-          ] as [number, number],
-          ev_model: settings.vehicle_model,
-          current_car_range: currentRange[0],
-          current_soc: currentSOC[0] || 50,
-          desired_soc: desiredSOC[0] || 80,
-          connector_type: connectorType,
-          cuisines: cuisinePreference,
-        };
+      const stations = await getFilteredStations(body);
 
-        const newStations = await getFilteredStations(body);
-        if (newStations) stations = newStations;
-
-        // setStations(stations);
-      } catch (err) {
-        console.log("Could not fetch stations from API", err);
+      if (!stations) {
+        console.log("Could not fetch stations from API");
+        return;
       }
-
-      // const filteredStations = stations.map(mapApiStationToChargingStation);
 
       if (stations.length > 0) {
         const journey: PlannedJourney = {
