@@ -55,16 +55,6 @@ class Charger(SQLModel, table=True):
     station: Station = Relationship(back_populates="chargers")
 
 
-# Request model
-class StationRequestMock(BaseModel):  # Delete after
-    current_location: tuple[float, float]
-    destination: str
-    ev_model: str
-    current_car_range: float
-    current_soc: float
-    desired_soc: float
-
-
 class StationRequest(BaseModel):
     current_location: tuple[float, float]
     destination: tuple[float, float]
