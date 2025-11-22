@@ -21,11 +21,11 @@ VALUES
 -- ===========================================
 INSERT INTO settings (customer_id, vehicle_model, connector_type, desired_soc, cuisines)
 VALUES
-  ((SELECT user_id FROM users WHERE username = 'test_user_1'), 'Model S', 'CCS', 80, ARRAY['italian','american']),
-  ((SELECT user_id FROM users WHERE username = 'test_user_2'), 'Leaf', 'Type 2', 90, ARRAY['turkish']),
-  ((SELECT user_id FROM users WHERE username = 'test_user_3'), 'Ioniq', 'CHAdeMO', 70, ARRAY['asian']),
-  ((SELECT user_id FROM users WHERE username = 'test_user_4'), 'Bolt', 'CCS', 85, ARRAY['mexican']),
-  ((SELECT user_id FROM users WHERE username = 'test_user_5'), 'e-Golf', 'Type 2', 75, ARRAY['regional']);
+  ((SELECT user_id FROM users WHERE username = 'test_user_1'), 'tesla model s', 'CCS', 80, ARRAY['italian','american']),
+  ((SELECT user_id FROM users WHERE username = 'test_user_2'), 'nissan leaf', 'Type 2', 90, ARRAY['turkish']),
+  ((SELECT user_id FROM users WHERE username = 'test_user_3'), 'hyundai ioniq', 'CHAdeMO', 70, ARRAY['asian']),
+  ((SELECT user_id FROM users WHERE username = 'test_user_4'), 'chevrolet bolt', 'CCS', 85, ARRAY['mexican']),
+  ((SELECT user_id FROM users WHERE username = 'test_user_5'), 'volkswagen e-golf', 'Type 2', 75, ARRAY['regional']);
 
 
 -- ===========================================
