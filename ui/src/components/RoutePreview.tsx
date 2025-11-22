@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PlannedJourney, JourneyStop, RestaurantOrder } from "@/pages/home";
+import { PlannedJourney, JourneyStop, RestaurantOrder } from "@/types/driver";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -149,7 +149,7 @@ export function RoutePreview({
                         <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-2">
                           {stop.station.restaurants.map((restaurant) => (
                             <button
-                              key={restaurant.id}
+                              key={restaurant.restaurant_id}
                               onClick={() => {
                                 setSelectedRestaurant({
                                   stop,
@@ -167,7 +167,7 @@ export function RoutePreview({
                                 {restaurant.name}
                               </div>
                               <div className="text-xs text-gray-500 truncate">
-                                {restaurant.cuisine
+                                {restaurant.cuisines
                                   .map((c) => c[0].toUpperCase() + c.slice(1))
                                   .join(", ")}
                               </div>
@@ -205,13 +205,15 @@ export function RoutePreview({
       {selectedRestaurant && (
         <RestaurantMenu
           restaurant={selectedRestaurant.restaurant}
-          stationId={selectedRestaurant.stop.station.id}
+          station_id={selectedRestaurant.stop.station.station_id}
           stationName={selectedRestaurant.stop.station.name}
           onClose={() => setSelectedRestaurant(null)}
           onPlaceOrder={(order) => {
             onPlaceOrder(order);
             const stopIndex = journey.stops.findIndex(
-              (s) => s.station.id === selectedRestaurant.stop.station.id
+              (s) =>
+                s.station.station_id ===
+                selectedRestaurant.stop.station.station_id
             );
             if (stopIndex !== -1) {
               journey.stops.forEach((stop, index) => {
@@ -220,7 +222,7 @@ export function RoutePreview({
                 }
               });
               journey.stops[stopIndex].selectedRestaurantId =
-                selectedRestaurant.restaurant.id;
+                selectedRestaurant.restaurant.restaurant_id;
               journey.stops[stopIndex].isSelected = true;
             }
             setSelectedRestaurant(null);

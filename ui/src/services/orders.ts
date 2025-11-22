@@ -16,8 +16,8 @@ export const orderService = {
   /**
    * Get orders for a specific restaurant
    */
-  getOrdersByRestaurant: async (restaurantId: string): Promise<Order[]> => {
-    return orders.filter(order => order.restaurantId === restaurantId);
+  getOrdersByRestaurant: async (restaurant_id: string): Promise<Order[]> => {
+    return orders.filter((order) => order.restaurant_id === restaurant_id);
   },
 
   /**
@@ -26,9 +26,9 @@ export const orderService = {
    */
   updateOrderStatus: async (
     orderId: string,
-    newStatus: 'cooking' | 'ready' | 'picked_up'
+    newStatus: "cooking" | "ready" | "picked_up"
   ): Promise<boolean> => {
-    const order = orders.find(o => o.id === orderId);
+    const order = orders.find((o) => o.id === orderId);
     if (order) {
       order.status = newStatus;
       console.log(`Updated order ${orderId} to status ${newStatus}`);

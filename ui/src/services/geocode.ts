@@ -1,14 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  fromAddress,
+  fromLatLng,
   setKey,
   setLanguage,
   setRegion,
-  fromAddress,
-  fromLatLng,
-  fromPlaceId,
-  setLocationType,
-  geocode,
-  RequestType,
 } from "react-geocode";
 
 // Set Google Maps API key

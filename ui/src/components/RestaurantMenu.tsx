@@ -1,20 +1,18 @@
-import { useState } from "react";
-import { Restaurant, MenuItem, RestaurantOrder } from "@/pages/home";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
+import { RestaurantOrder, RestaurantWithMenu } from "@/types/driver";
 import { orderService } from "@/services/order";
-
+import { useState } from "react";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { Separator } from "./ui/separator";
+import { MenuItem } from "@types";
 import {
-  X,
-  Plus,
-  Minus,
-  ShoppingCart,
-  Clock,
-  Star,
-  DollarSign,
   Check,
+  Clock,
+  DollarSign,
+  Minus,
+  Plus,
+  ShoppingCart,
+  X,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
@@ -29,8 +27,8 @@ const toast = {
 };
 
 type RestaurantMenuProps = {
-  restaurant: Restaurant;
-  stationId: number;
+  restaurant: RestaurantWithMenu;
+  station_id: number;
   stationName: string;
   onClose: () => void;
   onPlaceOrder: (order: RestaurantOrder) => void;
@@ -38,71 +36,68 @@ type RestaurantMenuProps = {
 
 export function RestaurantMenu({
   restaurant,
-  stationId,
+  station_id,
   stationName,
   onClose,
   onPlaceOrder,
 }: RestaurantMenuProps) {
-  const [cart, setCart] = useState<
-    { menuItem: MenuItem; quantity: number }[]
-  >([]);
+  const [cart, setCart] = useState<{ menuItem: MenuItem; quantity: number }[]>(
+    []
+  );
   const [showCheckout, setShowCheckout] = useState(false);
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
       const existing = prev.find(
-        (i) => i.menuItem.id === item.id,
+        (i) => i.menuItem.menu_item_id === item.menu_item_id
       );
       if (existing) {
         return prev.map((i) =>
-          i.menuItem.id === item.id
+          i.menuItem.menu_item_id === item.menu_item_id
             ? { ...i, quantity: i.quantity + 1 }
-            : i,
+            : i
         );
       }
       return [...prev, { menuItem: item, quantity: 1 }];
     });
   };
 
-  const removeFromCart = (itemId: string) => {
+  const removeFromCart = (menu_item_id: number) => {
     setCart((prev) => {
       const existing = prev.find(
-        (i) => i.menuItem.id === itemId,
+        (i) => i.menuItem.menu_item_id === menu_item_id
       );
       if (existing && existing.quantity > 1) {
         return prev.map((i) =>
-          i.menuItem.id === itemId
+          i.menuItem.menu_item_id === menu_item_id
             ? { ...i, quantity: i.quantity - 1 }
-            : i,
+            : i
         );
       }
-      return prev.filter((i) => i.menuItem.id !== itemId);
+      return prev.filter((i) => i.menuItem.menu_item_id !== menu_item_id);
     });
   };
 
   const totalCost = cart.reduce(
     (sum, item) => sum + item.menuItem.price * item.quantity,
-    0,
+    0
   );
 
-  const categories = [
-    ...new Set(restaurant.menu.map((item) => item.category)),
-  ];
+  const categories = [...new Set(restaurant.menu.map((item) => item.category))];
 
   const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
 
     const order: RestaurantOrder = {
       id: Date.now().toString(),
-      restaurantId: restaurant.id,
+      restaurant_id: restaurant.restaurant_id,
       restaurantName: restaurant.name,
-      stationId,
+      station_id,
       stationName,
       items: cart,
       totalCost,
       status: "pending",
       orderTime: new Date(),
-      isPaid: true, // Payment taken in advance
     };
 
     try {
@@ -120,7 +115,6 @@ export function RestaurantMenu({
       console.error(err);
       toast.success("Error placing order. Please try again.");
     }
-
   };
 
   if (showCheckout) {
@@ -144,21 +138,17 @@ export function RestaurantMenu({
               <div className="space-y-2">
                 {cart.map((item) => (
                   <div
-                    key={item.menuItem.id}
+                    key={item.menuItem.menu_item_id}
                     className="flex justify-between items-start"
                   >
                     <div className="flex-1">
                       <div>{item.menuItem.name}</div>
                       <div className="text-sm text-gray-600">
-                        ${item.menuItem.price.toFixed(2)} ×{" "}
-                        {item.quantity}
+                        ${item.menuItem.price.toFixed(2)} × {item.quantity}
                       </div>
                     </div>
                     <div>
-                      $
-                      {(
-                        item.menuItem.price * item.quantity
-                      ).toFixed(2)}
+                      ${(item.menuItem.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 ))}
@@ -166,9 +156,7 @@ export function RestaurantMenu({
               <Separator className="my-3" />
               <div className="flex justify-between items-center">
                 <span>Total</span>
-                <span className="text-xl">
-                  ${totalCost.toFixed(2)}
-                </span>
+                <span className="text-xl">${totalCost.toFixed(2)}</span>
               </div>
             </Card>
 
@@ -179,8 +167,8 @@ export function RestaurantMenu({
                 <div>
                   <p>Payment will be processed immediately</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    Your order will be ready for pickup when you
-                    arrive at the station
+                    Your order will be ready for pickup when you arrive at the
+                    station
                   </p>
                 </div>
               </div>
@@ -190,13 +178,11 @@ export function RestaurantMenu({
             <Card className="p-4">
               <h3 className="mb-2">Pickup Location</h3>
               <p className="text-gray-600">{restaurant.name}</p>
-              <p className="text-sm text-gray-600">
-                {stationName}
-              </p>
-              <div className="flex items-center gap-2 mt-2 text-sm">
+              <p className="text-sm text-gray-600">{stationName}</p>
+              {/* <div className="flex items-center gap-2 mt-2 text-sm">
                 <Clock className="w-4 h-4 text-gray-600" />
                 <span>Ready in {restaurant.prepTime}</span>
-              </div>
+              </div> */}
             </Card>
 
             {/* Payment Method */}
@@ -208,9 +194,7 @@ export function RestaurantMenu({
                 </div>
                 <div>
                   <div>Visa •••• 4242</div>
-                  <div className="text-sm text-gray-600">
-                    Default payment
-                  </div>
+                  <div className="text-sm text-gray-600">Default payment</div>
                 </div>
               </div>
             </Card>
@@ -225,8 +209,8 @@ export function RestaurantMenu({
             </Button>
 
             <p className="text-xs text-center text-gray-500">
-              By placing this order, you agree to pay the total
-              amount in advance
+              By placing this order, you agree to pay the total amount in
+              advance
             </p>
           </div>
         </div>
@@ -242,14 +226,14 @@ export function RestaurantMenu({
           <div className="flex-1">
             <h2 className="mb-1">{restaurant.name}</h2>
             <div className="flex items-center gap-3 text-sm text-gray-600">
-              {restaurant.cuisine.map((c) => (
+              {restaurant.cuisines.map((c) => (
                 <span>{c}</span>
               ))}
-              
-              <div className="flex items-center gap-1">
+
+              {/* <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 {restaurant.prepTime}
-              </div>
+              </div> */}
             </div>
           </div>
           <button
@@ -268,32 +252,26 @@ export function RestaurantMenu({
                 <h3 className="mb-3">{category}</h3>
                 <div className="space-y-3">
                   {restaurant.menu
-                    .filter(
-                      (item) => item.category === category,
-                    )
+                    .filter((item) => item.category === category)
                     .map((item) => {
                       const cartItem = cart.find(
-                        (i) => i.menuItem.id === item.id,
+                        (i) => i.menuItem.menu_item_id === item.menu_item_id
                       );
                       const quantity = cartItem?.quantity || 0;
 
                       return (
-                        <Card key={item.id} className="p-4">
+                        <Card key={item.menu_item_id} className="p-4">
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <h4 className="mb-1">
-                                {item.name}
-                              </h4>
+                              <h4 className="mb-1">{item.name}</h4>
                               <p className="text-sm text-gray-600 mb-2">
-                                {item.description}
+                                {item.details}
                               </p>
                               <div className="flex items-center gap-3">
-                                <span>
-                                  ${item.price.toFixed(2)}
-                                </span>
+                                <span>${item.price.toFixed(2)}</span>
                                 <span className="text-sm text-gray-600 flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
-                                  {item.prepTime} min
+                                  {item.minutes_to_prepare} min
                                 </span>
                               </div>
                             </div>
@@ -306,7 +284,7 @@ export function RestaurantMenu({
                                 variant="outline"
                                 className="h-8 w-8"
                                 onClick={() =>
-                                  removeFromCart(item.id)
+                                  removeFromCart(item.menu_item_id)
                                 }
                               >
                                 <Minus className="w-4 h-4" />
@@ -348,15 +326,10 @@ export function RestaurantMenu({
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-sm text-gray-600">
-                  {cart.reduce(
-                    (sum, item) => sum + item.quantity,
-                    0,
-                  )}{" "}
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
                   {cart.length === 1 ? "item" : "items"}
                 </div>
-                <div className="text-xl">
-                  ${totalCost.toFixed(2)}
-                </div>
+                <div className="text-xl">${totalCost.toFixed(2)}</div>
               </div>
               <Button
                 size="lg"

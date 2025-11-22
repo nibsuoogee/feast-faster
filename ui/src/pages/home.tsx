@@ -1,15 +1,9 @@
-import { StationModel } from "@types";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { ChargingSession } from "@/components/ChargingSession";
-import { UserProfile } from "@/components/UserProfile";
-import { RoutePreview } from "@/components/RoutePreview";
 import { CuisineMultiSelect } from "@/components/CuisinesMultiSelect";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { FC } from "react";
-import { Route as RouteIcon, Zap, User } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { RoutePreview } from "@/components/RoutePreview";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,20 +13,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserProfile } from "@/components/UserProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { geocodeAddress, useUserLocation } from "@/services/geocode";
+import { getFilteredStations } from "@/services/stations";
 import {
-  MapPin,
-  Navigation,
-  SlidersHorizontal,
+  ChargingSessionType,
+  PlannedJourney,
+  RestaurantOrder,
+} from "@/types/driver";
+import { StationModel, StationWithMenusModel } from "@types";
+import {
+  Battery,
   ChevronDown,
   ChevronUp,
-  Battery,
+  MapPin,
+  Navigation,
+  Route as RouteIcon,
+  SlidersHorizontal,
+  User,
   UtensilsCrossed,
+  Zap,
 } from "lucide-react";
-import { getFilteredStations } from "@/services/stations";
-import { useUserLocation, geocodeAddress } from "@/services/geocode";
+import type { FC } from "react";
+import { useEffect, useState } from "react";
 
 const Toaster: FC<{ position?: string }> = () => null;
 const toast = {
@@ -46,68 +53,6 @@ const toast = {
       console.error(msg);
     }
   },
-};
-
-// Types
-export type MenuItem = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image?: string;
-  prepTime: number;
-};
-
-export type Restaurant = {
-  id: number;
-  name: string;
-  cuisine: string[];
-  prepTime: string;
-  menu: MenuItem[];
-};
-
-export type JourneyStop = {
-  station: StationModel;
-  estimatedArrivalTime: Date;
-  socAtArrival: number;
-  chargingDuration: number;
-  distanceFromStart: number;
-  selectedRestaurantId?: number;
-  isSelected: boolean;
-};
-
-export type PlannedJourney = {
-  id: string;
-  startLocation: string;
-  endLocation: string;
-  stops: JourneyStop[];
-  createdAt: Date;
-};
-
-export type ChargingSessionType = {
-  id: string;
-  stationId: number;
-  stationName: string;
-  startTime: Date;
-  endTime?: Date;
-  energyDelivered: number;
-  cost: number;
-  status: "active" | "completed";
-};
-
-export type RestaurantOrder = {
-  id: string;
-  restaurantId: string;
-  restaurantName: string;
-  stationId: string;
-  stationName: string;
-  items: { menuItem: MenuItem; quantity: number }[];
-  totalCost: number;
-  status: "pending" | "cooking" | "ready" | "completed";
-  orderTime: Date;
-  pickupTime?: Date;
-  isPaid: boolean;
 };
 
 export const Home = () => {
@@ -128,7 +73,7 @@ export const Home = () => {
   const [currentSOC, setCurrentSOC] = useState([75]);
   const [currentRange, setCurrentRange] = useState([180]);
   const [desiredSOC, setDesiredSOC] = useState([80]);
-  const [, setDemoStations] = useState<any[] | null>(null);
+  // const [stations, setStations] = useState<StationModel | undefined>(undefined);
   const [connectorType, setConnectorType] = useState<string>("any");
   const [cuisinePreference, setCuisinePreference] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -155,67 +100,71 @@ export const Home = () => {
 
     // For API restaurants we don't have menus in the response.
     // Instead of attempting to match, attach a small static menu here so the UI can show orders.
-    const staticMenuForApiRestaurant = (apiR: any): MenuItem[] => {
-      const base = String(apiR?.name || "Restaurant")
-        .replace(/[^a-z0-9]/gi, "")
-        .toLowerCase();
-      return [
-        {
-          id: `${base}-m1`,
-          name: "Chef's Special",
-          description: "House specialty with seasonal ingredients",
-          price: 12.99,
-          category: "Mains",
-          prepTime: 15,
-        },
-        {
-          id: `${base}-m2`,
-          name: "Quick Snack",
-          description: "Light bite for the road",
-          price: 6.5,
-          category: "Snacks",
-          prepTime: 5,
-        },
-        {
-          id: `${base}-m3`,
-          name: "Coffee",
-          description: "Freshly brewed coffee",
-          price: 3.5,
-          category: "Beverages",
-          prepTime: 3,
-        },
-      ];
-    };
+    // const staticMenuForApiRestaurant = (apiR: any): MenuItem[] => {
+    //   const base = String(apiR?.name || "Restaurant")
+    //     .replace(/[^a-z0-9]/gi, "")
+    //     .toLowerCase();
+    //   return [
+    //     {
+    //       menu_item_id: 1,
+    //       name: "Chef's Special",
+    //       details: "House specialty with seasonal ingredients",
+    //       price: 12.99,
+    //       category: "Mains",
+    //       minutes_to_prepare: 15,
+    //       availability: "available",
+    //     },
+    //     {
+    //       menu_item_id: 2,
+    //       name: "Quick Snack",
+    //       details: "Light bite for the road",
+    //       price: 6.5,
+    //       category: "Snacks",
+    //       minutes_to_prepare: 5,
+    //       availability: "available",
+    //     },
+    //     {
+    //       menu_item_id: 3,
+    //       name: "Coffee",
+    //       details: "Freshly brewed coffee",
+    //       price: 3.5,
+    //       category: "Beverages",
+    //       minutes_to_prepare: 3,
+    //       availability: "available",
+    //     },
+    //   ];
+    // };
 
     // Map API station shape to our local StationModel type
-    const mapApiStationToChargingStation = (s: any): StationModel => {
-      const chargers = Array.isArray(s.chargers) ? s.chargers : [];
+    // const mapApiStationToChargingStation = (
+    //   s: StationsModel[number]
+    // ): StationModel => {
+    //   const chargers = Array.isArray(s.chargers) ? s.chargers : [];
 
-      const restaurants = Array.isArray(s.restaurants)
-        ? s.restaurants.map((r: any) => ({
-            id: r.restaurant_id,
-            name: r.name,
-            cuisine: r.cuisines,
-            prepTime: "15-25 min",
-            menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
-          }))
-        : [];
+    //   const restaurants = Array.isArray(s.restaurants)
+    //     ? s.restaurants.map((r: any) => ({
+    //         id: r.restaurant_id,
+    //         name: r.name,
+    //         cuisine: r.cuisines,
+    //         menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
+    //       }))
+    //     : [];
 
-      return {
-        station_id: s.station_id,
-        name: s.name,
-        address: s.address,
-        distance_km: s.distance_km,
-        chargers,
-        restaurants,
-        travel_time_min: s.travel_time_min,
-        soc_at_arrival: s.soc_at_arrival,
-        estimate_charging_time_min: s.estimate_charging_time_min,
-      };
-    };
+    //   return {
+    //     station_id: s.station_id,
+    //     name: s.name,
+    //     address: s.address,
+    //     distance_km: s.distance_km,
+    //     chargers,
+    //     restaurants,
+    //     travel_time_min: s.travel_time_min,
+    //     soc_at_arrival: s.soc_at_arrival,
+    //     estimate_charging_time_min: s.estimate_charging_time_min,
+    //   };
+    // };
 
     try {
-      let stations: any[] = [];
+      let stations: StationWithMenusModel[] = [];
 
       try {
         const body = {
@@ -235,24 +184,22 @@ export const Home = () => {
           cuisines: cuisinePreference,
         };
 
-        const data = await getFilteredStations(body);
+        const newStations = await getFilteredStations(body);
+        if (newStations) stations = newStations;
 
-        stations = Array.isArray(data?.stations) ? data.stations : [];
-        setDemoStations(stations);
+        // setStations(stations);
       } catch (err) {
         console.log("Could not fetch stations from API", err);
       }
 
-      const filteredStations: StationModel[] = stations.map(
-        mapApiStationToChargingStation
-      );
+      // const filteredStations = stations.map(mapApiStationToChargingStation);
 
-      if (filteredStations.length > 0) {
+      if (stations.length > 0) {
         const journey: PlannedJourney = {
           id: Date.now().toString(),
           startLocation: currentUserLocation.address || "Lahti",
           endLocation: destinationLocation.address || endLocation,
-          stops: filteredStations.map((station) => ({
+          stops: stations.map((station) => ({
             station,
             estimatedArrivalTime: new Date(
               Date.now() + station.travel_time_min * 60 * 1000
@@ -284,7 +231,7 @@ export const Home = () => {
   const startChargingSession = (station: StationModel) => {
     const session: ChargingSessionType = {
       id: Date.now().toString(),
-      stationId: station.station_id,
+      station_id: station.station_id,
       stationName: station.name,
       startTime: new Date(),
       energyDelivered: 0,
@@ -569,7 +516,7 @@ export const Home = () => {
                 onUpdateOrderStatus={updateOrderStatus}
                 isJourneyActive={isJourneyActive}
                 plannedJourney={plannedJourney}
-                onStartCharging={startChargingSession}
+                // onStartCharging={startChargingSession}
               />
             </TabsContent>
 

@@ -1,6 +1,7 @@
-import axios from "axios";
 import { handleApiRequest } from "@/lib/requests";
 import { BACKEND_URL } from "@/lib/urls";
+import { StationWithMenusModel } from "@types";
+import axios from "axios";
 
 export type StationRequestBody = {
   current_location: [number, number];
@@ -14,7 +15,7 @@ export type StationRequestBody = {
 };
 
 export const getFilteredStations = async (body: StationRequestBody) => {
-  return handleApiRequest(() =>
+  return handleApiRequest<StationWithMenusModel[]>(() =>
     axios.post(`${BACKEND_URL}/filtered-stations`, body)
   );
 };
