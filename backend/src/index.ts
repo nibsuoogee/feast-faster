@@ -9,6 +9,7 @@ import { stationsRouter } from "./routes/stationsRouter";
 import { orderRouter } from "./routes/orderRouter";
 import { reservationRouter } from "./routes/reservationRouter";
 import { restaurantRouter } from "./routes/restaurantRouter";
+import { restaurantListRouter } from "./routes/restaurantListRouter";
 
 export const userNotifications = new Map<number, any[]>();
 
@@ -24,6 +25,8 @@ const app = new Elysia()
   .use(orderRouter)
   .use(reservationRouter)
   .use(restaurantRouter)
+  .use(restaurantListRouter)
+
   .listen(3000);
 
 console.log(`Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
