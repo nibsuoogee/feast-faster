@@ -1,7 +1,7 @@
 -- ===========================================
 --  TEST DATA: USERS
 -- ===========================================
--- Passwords are hashed, but are just password1, password2, etc. based on test user number
+-- Passwords are hashed, but are just password1, password2, etc. based on test user id, e.g. test_user_6 would have password7
 INSERT INTO users (username, email, password, role)
 VALUES
   ('test_user_1', 'test1@example.com', '$argon2id$v=19$m=65536,t=2,p=1$Gxx8t4mjE8mhbKNVMwH2eziTDX6nlwmbH/pH+F3+s9M$jDtoR07+JMJxFH77+AqkzHC72keeHaY0cNABwLMNx9w', 'driver'),
