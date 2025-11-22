@@ -17,6 +17,7 @@ import { AUTH_URL } from "@/lib/urls";
 import { Slider } from "./ui/slider";
 import { useAuth } from "@/contexts/AuthContext";
 import { Car, UtensilsCrossed, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 type UserProfileProps = {
   onLogout: () => void;
@@ -34,23 +35,6 @@ export function UserProfile({ onLogout }: UserProfileProps) {
   const [cuisinePref, setCuisinePref] = useState<string[]>([]);
   const { settings, updateSettings } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-
-  const toast = {
-    success: (msg: string) => {
-      if (typeof window !== "undefined" && (window as any).toast) {
-        (window as any).toast(msg);
-      } else {
-        alert(msg);
-      }
-    },
-    error: (msg: string) => {
-      if (typeof window !== "undefined" && (window as any).toast) {
-        (window as any).toast(msg);
-      } else {
-        alert(msg);
-      }
-    },
-  };
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");

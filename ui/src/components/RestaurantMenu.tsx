@@ -15,16 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
-
-const toast = {
-  success: (msg: string) => {
-    if (typeof window !== "undefined" && (window as any).toast) {
-      (window as any).toast(msg);
-    } else {
-      alert(msg);
-    }
-  },
-};
+import { toast } from "sonner";
 
 type RestaurantMenuProps = {
   restaurant: RestaurantWithMenu;

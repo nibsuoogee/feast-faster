@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -60,11 +61,7 @@ export const Login = () => {
       login(access_token);
     } catch (err) {
       console.error("Login failed", err);
-      if (typeof window !== "undefined" && (window as any).toast) {
-        (window as any).toast("Login failed — check credentials or network");
-      } else {
-        alert("Login failed — check credentials or network");
-      }
+      toast("Login failed — check credentials or network");
     } finally {
       setIsSubmitting(false);
     }

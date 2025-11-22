@@ -40,7 +40,7 @@ const createOrderBody = t.Object({
   items: t.Array(
     t.Object({
       menuItem: t.Object({
-        id: t.Number(),
+        menu_item_id: t.Number(),
         name: t.String(),
         description: t.Optional(t.String()),
         price: t.Number(),
@@ -117,7 +117,7 @@ export const orderRouter = new Elysia()
             for (const i of body.items) {
               const itemData: OrderItemForCreation = {
                 order_id: order.order_id,
-                menu_item_id: i.menuItem.id,
+                menu_item_id: i.menuItem.menu_item_id,
                 name: i.menuItem.name,
                 details: i.menuItem.description ?? "",
                 price: i.menuItem.price,
