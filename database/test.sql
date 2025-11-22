@@ -30,27 +30,8 @@ VALUES
 
 -- ===========================================
 --  TEST DATA: MENU ITEMS
---  (Restaurant names MUST match your inserts.sql)
--- ===========================================
-INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability, category)
-SELECT r.restaurant_id, v.name, v.details, v.price, v.minutes_to_prepare, v.availability::menu_item_availability, v.category::food_category
-FROM (
-  VALUES
-    ('House of Sandwiches','Club Sandwich','Toasted club with fries',7.90,10,'available','Mains'),
-    ('China Wall','Beef Noodles','Spicy beef and noodles',9.50,15,'available','Mains'),
-    ('Pancho Villa','Chicken Burrito','Large burrito with salsa',8.20,12,'available','Mains'),
-    ('Fatboy','Margherita Pizza','Classic margherita',10.00,18,'available','Mains'),
-    ('Ristorante Momento','Pasta Carbonara','Creamy carbonara',11.50,14,'available','Mains'),
-    ('Kahvila-ravintola Pinetto','Salad Bowl','Seasonal salad',6.50,8,'available','Snacks'),
-    ('House of Sandwiches','Veggie Wrap','Wrap with hummus',6.90,9,'available','Mains'),
-    ('China Wall','Spring Rolls','4 pcs spring rolls',4.50,7,'available','Snacks'),
-    ('Pancho Villa','Nachos','Cheesy nachos',5.90,8,'available','Snacks'),
-    ('Fatboy','Chicken Wings','8 pcs spicy wings',9.00,15,'available','Snacks')
-) AS v(restaurant_name, name, details, price, minutes_to_prepare, availability, category)
-JOIN restaurants r ON r.name = v.restaurant_name;
-
-
 -- Fallback: ensure at least 1 menu_item exists
+-- ===========================================
 INSERT INTO menu_items (restaurant_id, name, details, price, minutes_to_prepare, availability, category)
 SELECT restaurant_id, 'Fallback Burger', 'A simple fallback burger', 7.0, 12, 'available'::menu_item_availability, 'Mains'::food_category
 FROM restaurants LIMIT 1;
