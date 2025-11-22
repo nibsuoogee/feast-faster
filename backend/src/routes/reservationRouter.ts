@@ -56,7 +56,7 @@ export const reservationRouter = new Elysia()
           }
         )
         .post(
-          "/my-location",
+          "/my-eta",
           async ({ body, user, status }) => {
             // 1) Get reservation
             const [reservation, errReservation] = await tryCatch(
@@ -95,7 +95,11 @@ export const reservationRouter = new Elysia()
               sendToUser(user.user_id, "reservation_shift_not_allowed", {
                 time: new Date().toISOString(),
               });
-              return "Reservation postpone not allowed";
+              return {
+                customer_eta: newETA,
+                reservation_start: reservation.reservation_start,
+                reservation_end: reservation.reservation_end,
+              };
             }
 
             // 5) Extend reservation
@@ -110,7 +114,11 @@ export const reservationRouter = new Elysia()
               time: new Date().toISOString(),
             });
 
-            return "Reservation postponed successfully";
+            return {
+              customer_eta: newETA,
+              reservation_start: shiftedReservation.reservation_start,
+              reservation_end: shiftedReservation.reservation_end,
+            };
           },
           {
             body: t.Object({
@@ -118,7 +126,11 @@ export const reservationRouter = new Elysia()
               location: t.Tuple([t.Number(), t.Number()]),
             }),
             response: {
-              200: t.String(),
+              200: t.Object({
+                customer_eta: t.Date(),
+                reservation_start: t.Date(),
+                reservation_end: t.Date(),
+              }),
               500: t.String(),
             },
           }
