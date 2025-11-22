@@ -17,7 +17,6 @@ export const OrderDTO = {
     `;
     return newOrder;
   },
-
   updateOrderStatus: async (
     order_id: number,
     food_status: FoodStatus
@@ -25,6 +24,18 @@ export const OrderDTO = {
     const [updatedOrder] = await sql`
       UPDATE orders
       SET food_status = ${food_status}
+      WHERE order_id = ${order_id}
+      RETURNING *
+    `;
+    return updatedOrder ?? null;
+  },
+  updateOrderETA: async (
+    order_id: number,
+    eta: Date
+  ): Promise<Order | null> => {
+    const [updatedOrder] = await sql`
+      UPDATE orders
+      SET customer_eta = ${eta}
       WHERE order_id = ${order_id}
       RETURNING *
     `;

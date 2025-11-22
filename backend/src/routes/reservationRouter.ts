@@ -1,9 +1,10 @@
-import { ReservationDTO } from "@models/reservationModel";
+import { ReservationDTO, reservationModel } from "@models/reservationModel";
 import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
 import { sendToUser } from "@utils/notification";
+import { OrderDTO, orderModel } from "@models/orderModel";
 
 export const reservationRouter = new Elysia()
   .use(jwtConfig)
@@ -74,14 +75,21 @@ export const reservationRouter = new Elysia()
               reservation.reservation_start.getTime() + SIXTEEN_MIN
             );
 
-            // 3) Check whether the driver is on schedule
+            // 3) Save the new eta in the order
+            const [order, errOrder] = await tryCatch(
+              OrderDTO.updateOrderETA(reservation.order_id, newETA)
+            );
+            if (errOrder) return status(500, errOrder.message);
+            if (!order) return status(500, "Failed to update order ETA");
+
+            // 4) Check whether the driver is on schedule
             const FIFTEEN_MIN = 15 * 60 * 1000;
             const isMoreThan15MinAfter =
               newETA.getTime() - reservation.reservation_start.getTime() >
               FIFTEEN_MIN;
             if (!isMoreThan15MinAfter) return "Driver on schedule";
 
-            // 4) Check conflicts
+            // 5) Check conflicts
             const FIVE_MIN = 5 * 60 * 1000; // Default extension time
             const [isConflicted, err] = await tryCatch(
               ReservationDTO.hasConflictingReservation(
@@ -96,13 +104,12 @@ export const reservationRouter = new Elysia()
                 time: new Date().toISOString(),
               });
               return {
-                customer_eta: newETA,
-                reservation_start: reservation.reservation_start,
-                reservation_end: reservation.reservation_end,
+                order: order,
+                reservation: reservation,
               };
             }
 
-            // 5) Extend reservation
+            // 6) Extend reservation
             const [shiftedReservation, errShifted] = await tryCatch(
               ReservationDTO.shiftReservation(body.reservation_id, 5)
             );
@@ -115,9 +122,8 @@ export const reservationRouter = new Elysia()
             });
 
             return {
-              customer_eta: newETA,
-              reservation_start: shiftedReservation.reservation_start,
-              reservation_end: shiftedReservation.reservation_end,
+              order: order,
+              reservation: shiftedReservation,
             };
           },
           {
@@ -127,9 +133,8 @@ export const reservationRouter = new Elysia()
             }),
             response: {
               200: t.Object({
-                customer_eta: t.Date(),
-                reservation_start: t.Date(),
-                reservation_end: t.Date(),
+                order: orderModel,
+                reservation: reservationModel,
               }),
               500: t.String(),
             },
