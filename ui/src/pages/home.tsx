@@ -25,7 +25,7 @@ import {
   PlannedJourney,
   RestaurantOrder,
 } from "@/types/driver";
-import { StationModel, StationWithMenusModel } from "@types";
+import { StationModel } from "@types";
 import {
   Battery,
   ChevronDown,
@@ -38,22 +38,8 @@ import {
   UtensilsCrossed,
   Zap,
 } from "lucide-react";
-import type { FC } from "react";
 import { useEffect, useState } from "react";
-
-const Toaster: FC<{ position?: string }> = () => null;
-const toast = {
-  error: (msg: string) => {
-    if (typeof window !== "undefined") {
-      console.error(msg);
-      try {
-        alert(msg);
-      } catch {}
-    } else {
-      console.error(msg);
-    }
-  },
-};
+import { toast } from "sonner";
 
 export const Home = () => {
   const { settings, logout } = useAuth();
@@ -97,71 +83,6 @@ export const Home = () => {
     const destinationLocation = await geocodeAddress(endLocation);
 
     setIsPlanning(true);
-
-    // For API restaurants we don't have menus in the response.
-    // Instead of attempting to match, attach a small static menu here so the UI can show orders.
-    // const staticMenuForApiRestaurant = (apiR: any): MenuItem[] => {
-    //   const base = String(apiR?.name || "Restaurant")
-    //     .replace(/[^a-z0-9]/gi, "")
-    //     .toLowerCase();
-    //   return [
-    //     {
-    //       menu_item_id: 1,
-    //       name: "Chef's Special",
-    //       details: "House specialty with seasonal ingredients",
-    //       price: 12.99,
-    //       category: "Mains",
-    //       minutes_to_prepare: 15,
-    //       availability: "available",
-    //     },
-    //     {
-    //       menu_item_id: 2,
-    //       name: "Quick Snack",
-    //       details: "Light bite for the road",
-    //       price: 6.5,
-    //       category: "Snacks",
-    //       minutes_to_prepare: 5,
-    //       availability: "available",
-    //     },
-    //     {
-    //       menu_item_id: 3,
-    //       name: "Coffee",
-    //       details: "Freshly brewed coffee",
-    //       price: 3.5,
-    //       category: "Beverages",
-    //       minutes_to_prepare: 3,
-    //       availability: "available",
-    //     },
-    //   ];
-    // };
-
-    // Map API station shape to our local StationModel type
-    // const mapApiStationToChargingStation = (
-    //   s: StationsModel[number]
-    // ): StationModel => {
-    //   const chargers = Array.isArray(s.chargers) ? s.chargers : [];
-
-    //   const restaurants = Array.isArray(s.restaurants)
-    //     ? s.restaurants.map((r: any) => ({
-    //         id: r.restaurant_id,
-    //         name: r.name,
-    //         cuisine: r.cuisines,
-    //         menu: staticMenuForApiRestaurant(r), // attach small static menu so ordering UI works
-    //       }))
-    //     : [];
-
-    //   return {
-    //     station_id: s.station_id,
-    //     name: s.name,
-    //     address: s.address,
-    //     distance_km: s.distance_km,
-    //     chargers,
-    //     restaurants,
-    //     travel_time_min: s.travel_time_min,
-    //     soc_at_arrival: s.soc_at_arrival,
-    //     estimate_charging_time_min: s.estimate_charging_time_min,
-    //   };
-    // };
 
     try {
       const body = {
@@ -220,8 +141,6 @@ export const Home = () => {
     }
   };
 
-  // demo fetch button removed; Plan My Route will fetch API automatically when needed
-
   const startChargingSession = (station: StationModel) => {
     const session: ChargingSessionType = {
       id: Date.now().toString(),
@@ -268,8 +187,6 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <Toaster position="top-center" />
-
       <main className="h-full">
         {showRoutePreview && plannedJourney ? (
           <RoutePreview

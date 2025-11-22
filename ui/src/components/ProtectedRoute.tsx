@@ -14,7 +14,6 @@ export default function ProtectedRoute({
   const { setContextReservation } = useStateContext();
   const { user, loading } = useAuth();
 
-  // Move useEffect outside conditionals - hooks must always run
   useEffect(() => {
     if (user && user.role === "driver") {
       notificationService.subscribe(setContextReservation);
