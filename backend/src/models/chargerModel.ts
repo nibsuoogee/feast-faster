@@ -18,6 +18,17 @@ export const ChargingDTO = {
 
     return updatedReservation ?? null;
   },
+  updateChargingStartTime: async (
+    reservation_id: number,
+    charge_start_time: Date
+  ): Promise<Reservation | null> => {
+    const [updatedReservation] = await sql`
+      UPDATE reservations SET ${sql({ charge_start_time: charge_start_time })}
+      WHERE reservation_id = ${reservation_id} RETURNING *
+    `;
+
+    return updatedReservation ?? null;
+  },
   getUserIdByChargerId: async (charger_id: number): Promise<number | null> => {
     const [reservation] = await sql`
     SELECT o.customer_id

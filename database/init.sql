@@ -112,7 +112,8 @@ CREATE TABLE "reservations" (
   "time_of_payment" timestamp DEFAULT null,
   "current_soc" int DEFAULT null,
   "cumulative_price_of_charge" float DEFAULT null,
-  "cumulative_power" float DEFAULT null
+  "cumulative_power" float DEFAULT null,
+  "charge_start_time" timestamp DEFAULT null
 );
 
 CREATE TABLE "order_items" (

@@ -30,6 +30,14 @@ export const chargerRouter = new Elysia()
         // If the session does not exist yet, create one,
         // and send the driver a notification that charging was started
 
+        // Update charging start time
+        const [startTime, errStartTime] = await tryCatch(
+          ChargingDTO.updateChargingStartTime(body.charger_id, new Date())
+        );
+        if (errStartTime) return status(500, errStartTime.message);
+        if (!startTime)
+          return status(500, "Failed to update charging start time");
+
         const [driverId, errDriverId] = await tryCatch(
           ChargingDTO.getUserIdByChargerId(body.charger_id)
         );

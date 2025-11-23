@@ -14,4 +14,5 @@ export const reservationModel = z.object({
   current_soc: z.number().nullable(),
   cumulative_price_of_charge: z.number().nullable(),
   cumulative_power: z.number().nullable(),
+  charge_start_time: z.coerce.date().nullable(),
 });

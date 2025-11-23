@@ -1,11 +1,15 @@
 import { BACKEND_URL } from "@/lib/urls";
 import { reservationModel } from "@/models";
+import { ChargingStatus } from "@/types/driver";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { Reservation } from "@types";
 import { toast } from "sonner";
 
 export const notificationService = {
-  subscribe: async (setReservation: (value: Reservation) => void) => {
+  subscribe: async (
+    setReservation: (value: Reservation) => void,
+    setChargingState: (value: ChargingStatus) => void
+  ) => {
     const token = localStorage.getItem("access_token");
 
     fetchEventSource(`${BACKEND_URL}/notifications`, {
@@ -17,10 +21,12 @@ export const notificationService = {
 
         switch (ev.event) {
           case "charging_started":
+            setChargingState("active");
             toast.info("Your vehicle is now charging");
             console.log("Charging was started");
             break;
           case "charging_stopped":
+            setChargingState("finished");
             toast.info("Your vehicle is no longer charging");
             console.log("Charging has ended");
             break;

@@ -1,3 +1,4 @@
+import { ChargingStatus } from "@/types/driver";
 import { Order, OrderItem, Reservation, RestaurantModel } from "@types";
 import { createContext, ReactNode, useContext, useState } from "react";
 
@@ -21,6 +22,9 @@ type StateContextType = {
   // StationName
   contextStationName: string | undefined;
   setContextStationName: (value: string | undefined) => void;
+  // ChargingState
+  contextChargingState: ChargingStatus;
+  setContextChargingState: (value: ChargingStatus) => void;
 };
 
 const StateContext = createContext<StateContextType | undefined>(undefined);
@@ -57,6 +61,9 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
   const [contextStationName, setContextStationName] = useState<
     string | undefined
   >(undefined);
+  // Notification based charging active state
+  const [contextChargingState, setContextChargingState] =
+    useState<ChargingStatus>("not_started");
 
   return (
     <StateContext.Provider
@@ -76,6 +83,9 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
         // StationName
         contextStationName,
         setContextStationName,
+        // ChargingState
+        contextChargingState,
+        setContextChargingState,
       }}
     >
       {children}

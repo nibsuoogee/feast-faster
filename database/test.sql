@@ -106,7 +106,8 @@ INSERT INTO reservations (
     time_of_payment,
     current_soc,
     cumulative_price_of_charge,
-    cumulative_power
+    cumulative_power,
+    charge_start_time
 )
 SELECT
     (SELECT order_id FROM orders ORDER BY order_id LIMIT 1),  -- reuse a valid order
@@ -116,6 +117,7 @@ SELECT
     NULL,
     20,
     0.0,
-    0.0
+    0.0,
+    NULL
 FROM chargers c
 ON CONFLICT DO NOTHING;

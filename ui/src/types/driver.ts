@@ -1,4 +1,5 @@
 import { MenuItem, StationWithMenusModel } from "@types";
+import z from "zod";
 
 export type RestaurantWithMenu = {
   restaurant_id: number;
@@ -47,3 +48,6 @@ export type RestaurantOrder = {
   status: "pending" | "cooking" | "ready" | "completed";
   pickupTime?: Date;
 };
+
+export const chargingStatusEnum = z.enum(["not_started", "active", "finished"]);
+export type ChargingStatus = z.infer<typeof chargingStatusEnum>;

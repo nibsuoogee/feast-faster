@@ -11,6 +11,7 @@ export const reservationModel = t.Object({
   cumulative_power: t.Nullable(t.Number()),
   cumulative_price_of_charge: t.Nullable(t.Number()),
   current_soc: t.Nullable(t.Number()),
+  charge_start_time: t.Nullable(t.Date()),
 });
 export type Reservation = typeof reservationModel.static;
 
