@@ -60,4 +60,4 @@ def calculate_eta(
     # Get ETA and distance
     station_with_eta = get_driving_etas(body.current_location, [destination_station])
 
-    return station_with_eta
+    return station_with_eta[0]
