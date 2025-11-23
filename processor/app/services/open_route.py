@@ -24,8 +24,8 @@ def get_location_range(current_location, destination):
     try:
         route = client.directions(
             coordinates=coords,
-            profile='driving-car',
-            format='geojson'
+            profile="driving-car",
+            format="geojson"
         )
     except exceptions.ApiError as e:
         raise RoutingServiceError(f"OpenRouteService API error: {str(e)}")
@@ -33,7 +33,7 @@ def get_location_range(current_location, destination):
         raise RoutingServiceError(f"Unexpected error: {str(e)}")
 
     # Extract coordinates of the route (as (lon, lat))
-    route_coords = route['features'][0]['geometry']['coordinates']
+    route_coords = route["features"][0]["geometry"]["coordinates"]
 
     # Convert route to a LineString
     line = LineString(route_coords)
@@ -51,15 +51,15 @@ def get_location_range(current_location, destination):
 
 
 def get_driving_etas(current_location, stations):
-    locations = [current_location] + [tuple(st['location']) for st in stations]
+    locations = [current_location] + [tuple(st["location"]) for st in stations]  # todo refactor " -> ""
 
     # Call ORS Matrix API (driving duration in seconds)
     try:
         matrix = client.distance_matrix(
             locations=locations,
-            profile='driving-car',
-            metrics=['duration', 'distance'],
-            units='km',
+            profile="driving-car",
+            metrics=["duration", "distance"],
+            units="km",
             sources=[0],  # only from current_location
             destinations=list(range(1, len(stations) + 1))
         )
@@ -68,11 +68,11 @@ def get_driving_etas(current_location, stations):
     except Exception as e:
         raise RoutingServiceError(f"Unexpected error: {str(e)}")
 
-    durations = matrix['durations'][0]
-    distances = matrix['distances'][0]
+    durations = matrix["durations"][0]
+    distances = matrix["distances"][0]
 
     for i, r in enumerate(stations):
-        r['travel_time_min'] = round(durations[i] / 60)
-        r['distance_km'] = round(distances[i], 2)
+        r["travel_time_min"] = round(durations[i] / 60)
+        r["distance_km"] = round(distances[i], 2)
 
     return stations

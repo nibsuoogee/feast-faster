@@ -19,20 +19,20 @@ def get_estimate_charging_time(ev_model, current_soc, current_car_range, desired
     for st in stations:
         st.pop("location", None)  # Remove location as we no longer need it
         # Calculate SoC at arrival
-        soc_at_arrival = round(current_soc - soc_rate * st['distance_km'])
+        soc_at_arrival = round(current_soc - soc_rate * st["distance_km"])
 
         # If soc_at_arrival is less than minimum, continue MINIMUM_SOC_AT_ARRIVAL
         if soc_at_arrival < MINIMUM_SOC_AT_ARRIVAL:
             continue
 
-        st['soc_at_arrival'] = soc_at_arrival
+        st["soc_at_arrival"] = soc_at_arrival
         available_stations.append(st)
 
     test_data = [{
         "EVModel": ev_model,
-        "min_soc": st['soc_at_arrival'],
-        "soc_diff": desired_soc - st['soc_at_arrival'],
-        "max_power": st['chargers'][0]['max_power'] * 1000,
+        "min_soc": st["soc_at_arrival"],
+        "soc_diff": desired_soc - st["soc_at_arrival"],
+        "max_power": st["chargers"][0]["max_power"] * 1000,
         "mean_temp": TEMPERATURE
     } for st in available_stations]
 
@@ -41,6 +41,6 @@ def get_estimate_charging_time(ev_model, current_soc, current_car_range, desired
     predictions = pd.Series(predicted_sample_time)
 
     for station, pred in zip(available_stations, predictions.tolist()):
-        station['estimate_charging_time_min'] = round(pred / 60)
+        station["estimate_charging_time_min"] = round(pred / 60)
 
     return available_stations
