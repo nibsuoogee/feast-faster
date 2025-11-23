@@ -20,7 +20,6 @@ export type OrderItem = typeof orderItemModel.static;
 export const orderItemModelForCreation = t.Object({
   order_id: t.Number(),
   menu_item_id: t.Number(),
-  created_at: t.Date(),
   name: t.String(),
   details: t.String(),
   price: t.Number(),
@@ -31,9 +30,7 @@ export type OrderItemForCreation = typeof orderItemModelForCreation.static;
 // order_item DTO
 
 export const OrderItemDTO = {
-  createOrderItem: async (
-    item: OrderItemForCreation
-  ): Promise<OrderItem> => {
+  createOrderItem: async (item: OrderItemForCreation): Promise<OrderItem> => {
     const [newItem] = await sql`
       INSERT INTO order_items ${sql(item)}
       RETURNING *

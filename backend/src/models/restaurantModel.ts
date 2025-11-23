@@ -50,10 +50,18 @@ export const RestaurantDTO = {
 
     return results;
   },
+  getRestaurant: async (restaurant_id: number): Promise<RestaurantModel> => {
+    const [result] = await sql`
+      SELECT * FROM restaurants
+      WHERE restaurant_id = ${restaurant_id};
+    `;
+    return result;
+  },
 };
 
 export const restaurantModel = t.Object({
   restaurant_id: t.Number(),
+  station_id: t.Number(),
   name: t.String(),
   address: t.String(),
   cuisines: t.Array(t.String()),
@@ -62,6 +70,7 @@ export type RestaurantModel = typeof restaurantModel.static;
 
 export const restaurantWithMenuModel = t.Object({
   restaurant_id: t.Number(),
+  station_id: t.Number(),
   name: t.String(),
   address: t.String(),
   cuisines: t.Array(t.String()),

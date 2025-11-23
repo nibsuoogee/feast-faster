@@ -1,14 +1,10 @@
+import { MenuItemsDTO } from "@models/menuItemModel";
+import { stationWithMenusModel } from "@models/stationModel";
+import { StationsDTO, stationsFilterModel } from "@models/stationsModel";
+import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
-import {
-  stationsFilterModel,
-  stationsModel,
-  StationsDTO,
-} from "@models/stationsModel";
-import { tryCatch } from "@utils/tryCatch";
-import { MenuItemsDTO } from "@models/menuItemModel";
-import { stationWithMenusModel } from "@models/stationModel";
 
 export const stationsRouter = new Elysia()
   .use(jwtConfig)
@@ -65,8 +61,6 @@ export const stationsRouter = new Elysia()
                 };
               })
             );
-
-            console.log(stations);
 
             return stationsWithMenuItems;
           },

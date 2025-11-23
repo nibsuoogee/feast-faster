@@ -37,6 +37,7 @@ def get_stations_from_db(session, buffer_geojson, cuisines, connector_type):
         filtered_restaurants = [
             {
                 "restaurant_id": r.restaurant_id,
+                "station_id": r.station_id,
                 "name": r.name,
                 "address": r.address,
                 "cuisines": r.cuisines

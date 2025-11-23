@@ -60,7 +60,6 @@ export const orderModelForCreation = t.Object({
   customer_id: t.Number(),
   restaurant_id: t.Number(),
   total_price: t.Number(),
-  created_at: t.Date(),
   customer_eta: t.Date(),
 });
 export type OrderModelForCreation = typeof orderModelForCreation.static;

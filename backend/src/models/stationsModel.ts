@@ -1,7 +1,7 @@
-import { t } from "elysia";
-import { stationModel } from "./stationModel";
-import { PROCESSOR_URL } from "../lib/urls";
 import { sql } from "bun";
+import { t } from "elysia";
+import { PROCESSOR_URL } from "../lib/urls";
+import { stationModel } from "./stationModel";
 
 export const StationsDTO = {
   getFilteredStations: async (

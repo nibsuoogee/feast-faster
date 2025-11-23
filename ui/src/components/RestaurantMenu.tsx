@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { toast } from "sonner";
+import { useStateContext } from "@/contexts/StateContext";
 
 type RestaurantMenuProps = {
   restaurant: RestaurantWithMenu;
@@ -32,6 +33,12 @@ export function RestaurantMenu({
   onClose,
   onPlaceOrder,
 }: RestaurantMenuProps) {
+  const {
+    setContextReservation,
+    setContextOrder,
+    setContextOrderItems,
+    setContextRestaurant,
+  } = useStateContext();
   const [cart, setCart] = useState<{ menuItem: MenuItem; quantity: number }[]>(
     []
   );
@@ -88,7 +95,6 @@ export function RestaurantMenu({
       items: cart,
       totalCost,
       status: "pending",
-      orderTime: new Date(),
     };
 
     try {
@@ -97,6 +103,13 @@ export function RestaurantMenu({
       if (response) {
         toast.success("Order placed successfully! Payment processed.");
         console.log("Order response:", response);
+
+        // Save the order response in context
+        setContextReservation(response.reservation);
+        setContextOrder(response.order);
+        setContextOrderItems(response.order_items);
+        setContextRestaurant(response.restaurant);
+
         //onPlaceOrder(response.order); // update UI state if needed
         onClose();
       } else {

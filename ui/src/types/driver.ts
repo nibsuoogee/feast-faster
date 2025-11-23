@@ -40,11 +40,10 @@ export type RestaurantOrder = {
   id: string;
   restaurant_id: number;
   restaurantName: string;
-  station_id: number;
+  station_id: number; // not needed for charging session
   stationName: string;
   items: { menuItem: MenuItem; quantity: number }[];
   totalCost: number;
   status: "pending" | "cooking" | "ready" | "completed";
-  orderTime: Date;
   pickupTime?: Date;
 };

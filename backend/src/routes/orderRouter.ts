@@ -24,6 +24,8 @@ import {
   ReservationForCreation,
   reservationModel,
 } from "@models/reservationModel";
+import { RestaurantDTO, restaurantModel } from "@models/restaurantModel";
+import { StationDTO } from "@models/stationModel";
 
 const foodStatusMessage: Record<FoodStatus, string> = {
   pending: "Your meal is not being cooked yet.",
@@ -32,9 +34,7 @@ const foodStatusMessage: Record<FoodStatus, string> = {
   picked_up: "Your meal was successfully picked up.",
 };
 
-// schema that is expected (runtime validation)
-
-const createOrderBody = t.Object({
+export const createOrderBody = t.Object({
   restaurant_id: t.Number(),
   station_id: t.Number(),
   items: t.Array(
@@ -52,17 +52,18 @@ const createOrderBody = t.Object({
   reservationStart: t.Optional(t.String()),
   reservationEnd: t.Optional(t.String()),
   currentSoc: t.Optional(t.Number()),
-  orderTime: t.Optional(t.String()),
 });
+export type CreateOrderBody = typeof createOrderBody.static;
 
-// response schema
-
-const createOrderResponse = t.Object({
+export const createOrderResponse = t.Object({
   message: t.String(),
   order: orderModel,
-  items: t.Array(orderItemModel),
+  order_items: t.Array(orderItemModel),
   reservation: reservationModel,
+  restaurant: restaurantModel,
+  station_name: t.String(),
 });
+export type CreateOrderResponse = typeof createOrderResponse.static;
 
 export const orderRouter = new Elysia()
   .use(jwtConfig)
@@ -80,11 +81,6 @@ export const orderRouter = new Elysia()
           "/orders",
           async ({ body, user, status }) => {
             // create Order
-
-            const createdAt = body.orderTime
-              ? new Date(body.orderTime)
-              : new Date();
-
             const orderData: OrderModelForCreation = {
               customer_id: user.user_id,
               restaurant_id: body.restaurant_id,
@@ -96,7 +92,6 @@ export const orderRouter = new Elysia()
                   )
                   .toFixed(2)
               ),
-              created_at: createdAt,
               // add 30 mins as estimated arrival time if received eta is empty.
               customer_eta: body.customerEta
                 ? new Date(body.customerEta)
@@ -111,8 +106,7 @@ export const orderRouter = new Elysia()
             if (!order) return status(500, "Failed to create order");
 
             // create order_items
-
-            const createdItems: (typeof orderItemModel.static)[] = [];
+            const order_items: (typeof orderItemModel.static)[] = [];
 
             for (const i of body.items) {
               const itemData: OrderItemForCreation = {
@@ -122,7 +116,6 @@ export const orderRouter = new Elysia()
                 details: i.menuItem.description ?? "",
                 price: i.menuItem.price,
                 quantity: i.quantity,
-                created_at: createdAt,
               };
 
               const [createdItem, errItem] = await tryCatch(
@@ -130,11 +123,10 @@ export const orderRouter = new Elysia()
               );
 
               if (errItem) return status(500, errItem.message);
-              createdItems.push(createdItem);
+              order_items.push(createdItem);
             }
 
             // create reservation
-
             const reservationStart = body.reservationStart
               ? new Date(body.reservationStart)
               : new Date(new Date().getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready
@@ -158,13 +150,28 @@ export const orderRouter = new Elysia()
             if (!reservation)
               return status(500, "Failed to create reservation");
 
-            // final response
+            // Get restaurant
+            const [restaurant, errRestaurant] = await tryCatch(
+              RestaurantDTO.getRestaurant(order.restaurant_id)
+            );
+            if (errRestaurant) return status(500, errRestaurant.message);
+            if (!restaurant) return status(500, "Failed to get restaurant");
 
+            // Get station_name
+            const [station, errStation] = await tryCatch(
+              StationDTO.getStation(restaurant.station_id)
+            );
+            if (errStation) return status(500, errStation.message);
+            if (!station) return status(500, "Failed to get station name");
+
+            // final response
             return {
               message: "Order and reservation created successfully",
               order,
-              items: createdItems,
+              order_items,
               reservation,
+              restaurant,
+              station_name: station.name,
             };
           },
           {

@@ -20,6 +20,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useStateContext } from "@/contexts/StateContext";
 
 type ChargingSessionProps = {
   activeSession: ChargingSessionType | null;
@@ -43,57 +44,52 @@ export function ChargingSession({
   plannedJourney = null,
 }: // onStartCharging,
 ChargingSessionProps) {
-  const [energyDelivered, setEnergyDelivered] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [batteryLevel, setBatteryLevel] = useState(45);
+  // const [energyDelivered, setEnergyDelivered] = useState(0);
+  // const [elapsedTime, setElapsedTime] = useState(0);
+  // const [batteryLevel, setBatteryLevel] = useState(45);
+  const {
+    contextReservation,
+    contextOrder,
+    contextOrderItems,
+    contextRestaurant,
+    contextStationName,
+  } = useStateContext();
 
-  useEffect(() => {
-    if (activeSession?.status === "active") {
-      const interval = setInterval(() => {
-        setEnergyDelivered((prev) => Math.min(prev + 0.5, 60));
-        setElapsedTime((prev) => prev + 1);
-        setBatteryLevel((prev) => Math.min(prev + 0.2, 100));
-      }, 1000);
+  // const handleStartCharging = () => {
+  //   // if (plannedJourney && onStartCharging) {
+  //   //   onStartCharging(plannedJourney.stops[0].station);
+  //   // }
+  // };
 
-      return () => clearInterval(interval);
-    }
-  }, [activeSession]);
+  // // Simulate order status updates
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     restaurantOrders.forEach((order) => {
+  //       const timeSinceOrder = Date.now() - order.orderTime.getTime();
 
-  const handleStartCharging = () => {
-    // if (plannedJourney && onStartCharging) {
-    //   onStartCharging(plannedJourney.stops[0].station);
-    // }
-  };
+  //       if (order.status === "pending" && timeSinceOrder > 30000) {
+  //         onUpdateOrderStatus(order.id, "cooking");
+  //       } else if (order.status === "cooking" && timeSinceOrder > 60000) {
+  //         onUpdateOrderStatus(order.id, "ready");
+  //       }
+  //     });
+  //   }, 5000);
 
-  // Simulate order status updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      restaurantOrders.forEach((order) => {
-        const timeSinceOrder = Date.now() - order.orderTime.getTime();
+  //   return () => clearInterval(interval);
+  // }, [restaurantOrders, onUpdateOrderStatus]);
 
-        if (order.status === "pending" && timeSinceOrder > 30000) {
-          onUpdateOrderStatus(order.id, "cooking");
-        } else if (order.status === "cooking" && timeSinceOrder > 60000) {
-          onUpdateOrderStatus(order.id, "ready");
-        }
-      });
-    }, 5000);
+  // const formatTime = (seconds: number) => {
+  //   const hrs = Math.floor(seconds / 3600);
+  //   const mins = Math.floor((seconds % 3600) / 60);
+  //   const secs = seconds % 60;
+  //   return `${hrs.toString().padStart(2, "0")}:${mins
+  //     .toString()
+  //     .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  // };
 
-    return () => clearInterval(interval);
-  }, [restaurantOrders, onUpdateOrderStatus]);
-
-  const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, "0")}:${mins
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const currentCost = energyDelivered * 0.35;
-  const chargingSpeed = 45; // kW
-  const estimatedTimeRemaining = ((100 - batteryLevel) / 100) * 60 * 60; // seconds
+  // const currentCost = energyDelivered * 0.35;
+  // const chargingSpeed = 45; // kW
+  // const estimatedTimeRemaining = ((100 - batteryLevel) / 100) * 60 * 60; // seconds
 
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50">
@@ -119,7 +115,7 @@ ChargingSessionProps) {
 
         <TabsContent value="active" className="m-0">
           <div className="p-4 space-y-4">
-            {activeSession?.status === "active" ? (
+            {contextReservation ? (
               <>
                 <Card className="p-4 bg-green-50 border-green-200">
                   <div className="flex items-center justify-between mb-2">
@@ -128,7 +124,7 @@ ChargingSessionProps) {
                         <Zap className="w-5 h-5 text-white fill-white" />
                       </div>
                       <div>
-                        <h3>{activeSession.stationName}</h3>
+                        <h3>{contextStationName}</h3>
                         <Badge className="bg-green-600 mt-1">
                           Charging in Progress
                         </Badge>
@@ -145,13 +141,13 @@ ChargingSessionProps) {
                       <div>
                         <p className="text-sm text-gray-600">
                           Your charger reservation ends at{" "}
-                          {new Date(
-                            plannedJourney.stops[0].estimatedArrivalTime.getTime() +
-                              Math.floor(estimatedTimeRemaining * 1000)
-                          ).toLocaleTimeString("en-GB", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
+                          {contextReservation?.reservation_end &&
+                            new Date(
+                              contextReservation?.reservation_end
+                            ).toLocaleTimeString("en-GB", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
                         </p>
                       </div>
                     </div>
@@ -164,11 +160,16 @@ ChargingSessionProps) {
                       <Battery className="w-12 h-12 text-green-600" />
                     </div>
                     <span className="text-4xl mb-1">
-                      {batteryLevel.toFixed(0)}%
+                      {contextReservation?.current_soc &&
+                        contextReservation?.current_soc.toFixed(0)}
+                      %
                     </span>
                     <p className="text-gray-600">Battery Level</p>
                   </div>
-                  <Progress value={batteryLevel} className="h-3" />
+                  <Progress
+                    value={contextReservation?.current_soc}
+                    className="h-3"
+                  />
                 </Card>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -178,7 +179,8 @@ ChargingSessionProps) {
                       <span className="text-sm">Energy Delivered</span>
                     </div>
                     <div className="text-2xl">
-                      {energyDelivered.toFixed(1)}{" "}
+                      {contextReservation?.cumulative_power &&
+                        contextReservation?.cumulative_power.toFixed(1)}{" "}
                       <span className="text-sm text-gray-600">kWh</span>
                     </div>
                   </Card>
@@ -189,20 +191,23 @@ ChargingSessionProps) {
                       <span className="text-sm">Current Cost</span>
                     </div>
                     <div className="text-2xl">
-                      ${currentCost.toFixed(2)}{" "}
+                      $
+                      {contextReservation?.cumulative_price_of_charge?.toFixed(
+                        2
+                      )}{" "}
                       <span className="text-sm text-gray-600">USD</span>
                     </div>
                   </Card>
 
-                  <Card className="p-4">
+                  {/* <Card className="p-4">
                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm">Elapsed Time</span>
                     </div>
                     <div className="text-2xl">{formatTime(elapsedTime)}</div>
-                  </Card>
+                  </Card> */}
 
-                  <Card className="p-4">
+                  {/* <Card className="p-4">
                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                       <TrendingUp className="w-4 h-4" />
                       <span className="text-sm">Charging Speed</span>
@@ -211,15 +216,15 @@ ChargingSessionProps) {
                       {chargingSpeed}{" "}
                       <span className="text-sm text-gray-600">kW</span>
                     </div>
-                  </Card>
+                  </Card> */}
                 </div>
 
-                <Card className="p-4">
+                {/* <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Est. Time to Full</span>
                     <span>{Math.floor(estimatedTimeRemaining / 60)} min</span>
                   </div>
-                </Card>
+                </Card> */}
 
                 <Button
                   variant="destructive"
@@ -249,13 +254,13 @@ ChargingSessionProps) {
                   </div>
                   <h3 className="mb-2">No Active Charging Session</h3>
 
-                  <Button
+                  {/* <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     size="lg"
                     onClick={handleStartCharging}
                   >
                     Start charging
-                  </Button>
+                  </Button> */}
                 </Card>
               </>
             )}

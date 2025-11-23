@@ -10,8 +10,18 @@ export type {
   StationModel,
   StationWithMenusModel,
 } from "../backend/dist/models/StationModel";
+
 export type { StationsModel } from "../backend/dist/models/StationsModel";
 
 export type { MenuItem } from "../backend/dist/models/MenuItemModel";
 
-export type { FoodStatus } from "../backend/dist/models/orderModel";
+export type {
+  Order,
+  FoodStatus,
+  CreateOrderBody,
+  CreateOrderResponse,
+} from "../backend/dist/models/orderModel";
+
+export type { OrderItem } from "../backend/dist/models/orderItemModel";
+
+export type { RestaurantModel } from "../backend/dist/models/restaurantModel";

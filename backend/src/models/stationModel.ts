@@ -1,6 +1,17 @@
 import { t } from "elysia";
 import { chargerModel } from "./chargerModel";
 import { restaurantModel, restaurantWithMenuModel } from "./restaurantModel";
+import { sql } from "bun";
+
+export const StationDTO = {
+  getStation: async (station_id: number): Promise<StationModel> => {
+    const [result] = await sql`
+        SELECT name FROM stations
+        WHERE station_id = ${station_id};
+      `;
+    return result;
+  },
+};
 
 export const stationModel = t.Object({
   station_id: t.Number(),
