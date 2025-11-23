@@ -140,4 +140,74 @@ export const reservationRouter = new Elysia()
             },
           }
         )
+      .patch(
+        "/reservations/extend/:reservation_id",
+        async ({ params, status, user }) => {
+          const { reservation_id } = params;
+
+          // fetch reservation
+          const [reservation, errReservation] = await tryCatch(
+            ReservationDTO.getReservationById(Number(reservation_id))
+          );
+          if (errReservation) return status(500, errReservation.message);
+          if (!reservation) return status(404, "Reservation not found");
+
+          const { charger_id, reservation_end } = reservation;
+
+          // check conflicting reservations
+          const TEN_MIN = 10 * 60 * 1000;
+
+          const [isConflicted, err] = await tryCatch(
+            ReservationDTO.hasConflictingReservation(
+              charger_id,
+              reservation_end,
+              TEN_MIN
+            )
+          );
+
+          if (err) return status(500, err.message);
+
+          if (isConflicted) {
+            sendToUser(user.user_id, "reservation_extension_not_allowed", {
+              time: new Date().toISOString(),
+            });
+
+            return status(200, {
+              message: "Extension not allowed",
+              extended: false,
+            });
+          }
+
+          // extend reservation by 10 minutes
+          const [updatedReservation, errShift] = await tryCatch(
+            ReservationDTO.extendReservationEnd(Number(reservation_id), 10)
+          );
+
+          if (errShift) return status(500, errShift.message);
+          if (!updatedReservation) return status(500, "Failed to update reservation");
+
+          // notify user via SSE
+          sendToUser(user.user_id, "reservation_extension_success", {
+            reservation_id,
+            new_end: updatedReservation.reservation_end,
+          });
+
+          return {
+            message: "Reservation extended by 10 minutes",
+            extended: true,
+            reservation: updatedReservation,
+          };
+        },
+        {
+          response: {
+            200: t.Object({
+              message: t.String(),
+              extended: t.Boolean(),
+              reservation: t.Optional(reservationModel),
+            }),
+            404: t.String(),
+            500: t.String(),
+          },
+        }
+      )
   );

@@ -95,4 +95,36 @@ export const ReservationDTO = {
 
     return updatedReservation ?? null;
   },
+
+  /**
+   * extends reservation_end forward by a given number of minutes.
+   * Returns the updated reservation, or null if not found.
+   */
+  extendReservationEnd: async (
+    reservation_id: number,
+    minutes: number
+  ): Promise<Reservation | null> => {
+    // fetch existing reservation
+    const reservation =
+      await sql`SELECT * FROM reservations WHERE reservation_id = ${reservation_id}`;
+
+    if (reservation.length === 0) return null;
+
+    const r = reservation[0];
+
+    // calculate new end time
+    const ms = minutes * 60 * 1000; // convert minutes → milliseconds
+    const newEnd = new Date(new Date(r.reservation_end).getTime() + ms);
+
+    // update only the end time
+    const [updatedReservation] = await sql`
+      UPDATE reservations
+      SET reservation_end = ${newEnd}
+      WHERE reservation_id = ${reservation_id}
+      RETURNING *
+    `;
+
+    return updatedReservation ?? null;
+  },
+
 };
