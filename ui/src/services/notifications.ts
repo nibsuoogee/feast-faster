@@ -62,7 +62,7 @@ export const notificationService = {
             console.log("Reservation extended by 10 minutes");
             break;
           case "reservation_extension_not_allowed":
-            toast.error("Your reservation cannot be extended.");
+            toast.info("Your reservation cannot be extended.");
             console.log("Reservation cannot be extended.");
             break;
           default:
