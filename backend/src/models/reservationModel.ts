@@ -20,7 +20,6 @@ export type Reservation = typeof reservationModel.static;
 export const reservationForCreation = t.Object({
   order_id: t.Number(),
   charger_id: t.Number(),
-  created_at: t.Date(),
   reservation_start: t.Date(),
   reservation_end: t.Date(),
 });

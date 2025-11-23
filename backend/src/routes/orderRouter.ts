@@ -26,6 +26,8 @@ import {
 } from "@models/reservationModel";
 import { RestaurantDTO, restaurantModel } from "@models/restaurantModel";
 import { StationDTO } from "@models/stationModel";
+import { StationsDTO } from "@models/stationsModel";
+import { convertToHelsinki } from "../lib/timezone";
 
 const foodStatusMessage: Record<FoodStatus, string> = {
   pending: "Your meal is not being cooked yet.",
@@ -80,6 +82,28 @@ export const orderRouter = new Elysia()
         .post(
           "/orders",
           async ({ body, user, status }) => {
+            // Convert "now" to Helsinki time
+            const nowHelsinki = convertToHelsinki(new Date());
+
+            const reservationStart = body.reservationStart
+              ? convertToHelsinki(new Date(body.reservationStart))
+              : new Date(nowHelsinki.getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready
+
+            const reservationEnd = body.reservationEnd
+              ? convertToHelsinki(new Date(body.reservationEnd))
+              : new Date(reservationStart.getTime() + 30 * 60 * 1000); // 30 mins after start
+
+            const [availableChargerIds, err] = await tryCatch(
+              StationsDTO.getAvailableChargers(
+                body.station_id,
+                reservationStart,
+                reservationEnd
+              )
+            );
+            if (err) return status(500, err.message);
+            if (!availableChargerIds)
+              return status(409, "No suitable chargers available");
+
             // create Order
             const orderData: OrderModelForCreation = {
               customer_id: user.user_id,
@@ -126,26 +150,15 @@ export const orderRouter = new Elysia()
               order_items.push(createdItem);
             }
 
-            // create reservation
-            const reservationStart = body.reservationStart
-              ? new Date(body.reservationStart)
-              : new Date(new Date().getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready
-
-            const reservationEnd = body.reservationEnd
-              ? new Date(body.reservationEnd)
-              : new Date(reservationStart.getTime() + 30 * 60 * 1000); // 30 mins after start
-
             const reservationData: ReservationForCreation = {
               order_id: order.order_id,
-              charger_id: body.station_id,
-              created_at: new Date(),
+              charger_id: availableChargerIds[0],
               reservation_start: reservationStart,
               reservation_end: reservationEnd,
             };
             const [reservation, errReservation] = await tryCatch(
               ReservationDTO.createReservation(reservationData)
             );
-
             if (errReservation) return status(500, errReservation.message);
             if (!reservation)
               return status(500, "Failed to create reservation");
@@ -179,6 +192,7 @@ export const orderRouter = new Elysia()
             response: {
               200: createOrderResponse,
               400: t.String(),
+              409: t.String(),
               401: t.String(),
               500: t.String(),
             },
