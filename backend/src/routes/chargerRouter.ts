@@ -16,15 +16,15 @@ export const chargerRouter = new Elysia()
   .patch(
     "/charging",
     async ({ query, body, status }) => {
-      const { charger_id, ...chargingData } = body;
+      const { charger_id, user_id, ...chargingData } = body;
       // 1) Update the reservation's charging details
       const [reservation, errReservation] = await tryCatch(
-        ChargingDTO.updateCharging(body.charger_id, chargingData)
+        ChargingDTO.updateCharging(charger_id, user_id, chargingData)
       );
       if (errReservation) return status(500, errReservation.message);
       if (!reservation) return status(500, "Failed to update reservation");
 
-      const session = chargingSessions.get(body.charger_id);
+      const session = chargingSessions.get(charger_id);
 
       if (!session) {
         // If the session does not exist yet, create one,
@@ -32,21 +32,18 @@ export const chargerRouter = new Elysia()
 
         // Update charging start time
         const [startTime, errStartTime] = await tryCatch(
-          ChargingDTO.updateChargingStartTime(body.charger_id, new Date())
+          ChargingDTO.updateChargingStartTime(
+            reservation.reservation_id,
+            new Date()
+          )
         );
         if (errStartTime) return status(500, errStartTime.message);
         if (!startTime)
           return status(500, "Failed to update charging start time");
 
-        const [driverId, errDriverId] = await tryCatch(
-          ChargingDTO.getUserIdByChargerId(body.charger_id)
-        );
-        if (errDriverId) return status(500, errDriverId.message);
-        if (!driverId) return status(500, "Failed to get driver ID");
+        chargingSessions.set(charger_id, user_id);
 
-        chargingSessions.set(charger_id, driverId);
-
-        sendToUser(driverId, "charging_started", {
+        sendToUser(user_id, "charging_started", {
           time: new Date().toISOString(),
         });
       }
@@ -91,22 +88,17 @@ export const chargerRouter = new Elysia()
     }
   )
   .get(
-    "/desired-soc/:charger_id",
+    "/desired-soc/:charger_id/:user_id",
     async ({ params, status }) => {
-      const { charger_id } = params;
+      const { charger_id, user_id } = params;
       const chargerId = Number(charger_id);
       if (!chargerId) return status(400, "Charger ID not provided");
+      const userId = Number(user_id);
+      if (!userId) return status(400, "User ID not provided");
 
-      // 1) Get the driver ID
-      const [driverId, errDriverId] = await tryCatch(
-        ChargingDTO.getUserIdByChargerId(chargerId)
-      );
-      if (errDriverId) return status(500, errDriverId.message);
-      if (!driverId) return status(500, "Failed to get driver ID");
-
-      // 2) Get the driver's settings
+      // 1) Get the driver's settings
       const [settings, err] = await tryCatch(
-        SettingsDTO.findSettingsByCustomerId(driverId)
+        SettingsDTO.findSettingsByCustomerId(userId)
       );
       if (err) return status(500, err.message);
       if (!settings) return status(500, "Failed to get settings");

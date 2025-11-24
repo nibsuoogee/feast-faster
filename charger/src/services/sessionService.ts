@@ -11,16 +11,26 @@ async function sendChargingUpdate(body: ChargingUpdateModel) {
   });
 }
 
-export async function getDesiredSocWithChargerId(charger_id: number) {
-  return await fetch(`http://backend:3000/desired-soc/${charger_id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+export async function getDesiredSocWithChargerId(
+  charger_id: number,
+  user_id: number
+) {
+  return await fetch(
+    `http://backend:3000/desired-soc/${charger_id}/${user_id}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
 
-export async function startSession(charger_id: number, desired_soc: number) {
+export async function startSession(
+  charger_id: number,
+  user_id: number,
+  desired_soc: number
+) {
   const session = sessions.get(charger_id);
 
   if (!session) {
@@ -32,6 +42,7 @@ export async function startSession(charger_id: number, desired_soc: number) {
   let current_soc = session.current_soc;
   const update: ChargingUpdateModel = {
     charger_id,
+    user_id,
     current_soc,
     cumulative_price_of_charge: 0,
     cumulative_power: 0,

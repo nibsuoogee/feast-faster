@@ -14,7 +14,10 @@ export const sessionRouter = new Elysia()
       sessions.set(body.charger_id, body);
 
       // Get the driver's desired SoC
-      const socResponse = await getDesiredSocWithChargerId(body.charger_id);
+      const socResponse = await getDesiredSocWithChargerId(
+        body.charger_id,
+        body.user_id
+      );
 
       if (!socResponse.ok) {
         console.error(`Remote service error: ${await socResponse.text()}`);
@@ -23,7 +26,7 @@ export const sessionRouter = new Elysia()
 
       const socData = await socResponse.json();
 
-      startSession(body.charger_id, socData.desired_soc);
+      startSession(body.charger_id, body.user_id, socData.desired_soc);
 
       return "Charging started";
     },

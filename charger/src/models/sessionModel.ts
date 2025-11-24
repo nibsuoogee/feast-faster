@@ -2,6 +2,7 @@ import { t } from "elysia";
 
 export const sessionModel = t.Object({
   charger_id: t.Number(),
+  user_id: t.Number(),
   current_soc: t.Number(),
   rate_of_charge: t.Number(),
 });
@@ -12,6 +13,7 @@ export type SessionStartModel = typeof sessionStartModel.static;
 
 export const chargingUpdateModel = t.Object({
   charger_id: t.Number(),
+  user_id: t.Number(),
   current_soc: t.Number(),
   cumulative_price_of_charge: t.Number(),
   cumulative_power: t.Number(),
