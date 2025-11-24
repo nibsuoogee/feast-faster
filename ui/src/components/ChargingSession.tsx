@@ -361,52 +361,53 @@ ChargingSessionProps) {
                 </Card>
               )}
 
-              {restaurantOrders.filter((o) =>
-                ["pending", "cooking", "ready"].includes(o.status)
-              ).length > 0 && (
-                <Card className="p-4 bg-orange-50 border-orange-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <UtensilsCrossed className="w-5 h-5 text-orange-600" />
-                    <h3>Food Orders</h3>
-                  </div>
-                  {restaurantOrders
-                    .filter((o) =>
-                      ["pending", "cooking", "ready"].includes(o.status)
-                    )
-                    .map((order) => (
-                      <div key={order.id} className="mb-2 last:mb-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span>{order.restaurantName}</span>
-                          <Badge
-                            variant={
-                              order.status === "ready" ? "default" : "secondary"
-                            }
-                            className={
-                              order.status === "ready" ? "bg-green-600" : ""
-                            }
-                          >
-                            {order.status === "ready"
-                              ? "Ready for Pickup!"
-                              : order.status === "cooking"
-                              ? "Preparing..."
-                              : "Order Placed"}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {order.items.reduce(
-                            (sum, item) => sum + item.quantity,
-                            0
-                          )}{" "}
-                          {order.items.length === 1 ? "item" : "items"} • $
-                          {order.totalCost.toFixed(2)}
-                        </div>
-                        <div>
-                          <span>Your order number is 574</span>
-                        </div>
+              {contextOrder &&
+                ["pending", "cooking", "ready"].includes(
+                  contextOrder.food_status
+                ) && (
+                  <Card className="p-4 bg-orange-50 border-orange-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <UtensilsCrossed className="w-5 h-5 text-orange-600" />
+                      <h3>Food Orders</h3>
+                    </div>
+                    <div className="mb-2 last:mb-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span>{contextRestaurant?.name}</span>
+                        <Badge
+                          variant={
+                            contextOrder.food_status === "ready"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            contextOrder.food_status === "ready"
+                              ? "bg-green-600"
+                              : ""
+                          }
+                        >
+                          {contextOrder.food_status === "ready"
+                            ? "Ready for Pickup!"
+                            : contextOrder.food_status === "cooking"
+                            ? "Preparing..."
+                            : "Order Placed"}
+                        </Badge>
                       </div>
-                    ))}
-                </Card>
-              )}
+                      <div className="text-sm text-gray-600">
+                        {contextOrderItems?.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0
+                        )}{" "}
+                        {contextOrderItems?.length === 1 ? "item" : "items"} • $
+                        {contextOrder.total_price.toFixed(2)}
+                      </div>
+                      <div>
+                        <span>
+                          Your order number is {contextOrder.order_id}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                )}
             </div>
           </TabsContent>
         )}
