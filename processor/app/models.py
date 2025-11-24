@@ -19,7 +19,7 @@ class Station(SQLModel, table=True):
         sa_column=Column(Geography(geometry_type="POINT", srid=4326), nullable=False)
     )
     address: str = Field(nullable=False)
-    # Relationship to restaurants
+    # Relationships
     restaurants: List["Restaurant"] = Relationship(back_populates="station")
     chargers: List["Charger"] = Relationship(back_populates="station")
 
@@ -39,7 +39,7 @@ class Restaurant(SQLModel, table=True):
         sa_column=Column(ARRAY(String), default=list)
     )
     address: str = Field(nullable=False)
-    # Relationship to station
+    # Relationships
     station: Station = Relationship(back_populates="restaurants")
 
 
@@ -51,8 +51,18 @@ class Charger(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     connector_type: str
     power: int
-    # Relationship to station
+    # Relationships
     station: Station = Relationship(back_populates="chargers")
+    reservations: List["Reservation"] = Relationship(back_populates="charger")
+
+
+class Reservation(SQLModel, table=True):
+    __tablename__ = "reservations"
+
+    reservation_id: int = Field(primary_key=True)
+    charger_id: int = Field(foreign_key="chargers.charger_id", nullable=False)
+    # Relationships
+    charger: Charger = Relationship(back_populates="reservations")
 
 
 class StationRequest(BaseModel):
@@ -64,3 +74,8 @@ class StationRequest(BaseModel):
     desired_soc: float
     connector_type: str
     cuisines: list[str]
+
+
+class ETACalculationRequest(BaseModel):
+    current_location: tuple[float, float]
+    reservation_id: int

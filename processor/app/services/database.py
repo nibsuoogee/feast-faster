@@ -1,4 +1,5 @@
-from app.models import Station
+from app.models import Station, Charger, Reservation
+from sqlalchemy import select, join
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from geoalchemy2 import functions as func
@@ -70,3 +71,23 @@ def get_stations_from_db(session, buffer_geojson, cuisines, connector_type):
         })
 
     return filtered_stations
+
+
+def get_destination(session, reservation_id):
+    stmt = (
+        select(Station.location)
+        .select_from(
+            join(Reservation, Charger, Reservation.charger_id == Charger.charger_id)
+            .join(Station, Charger.station_id == Station.station_id)
+        )
+        .where(Reservation.reservation_id == reservation_id)
+    )
+
+    location = session.execute(stmt).scalar_one()
+
+    if not location:
+        return None
+
+    return {
+        "location": (to_shape(location).x, to_shape(location).y)  # To match further call from OpenRouteService
+    }
