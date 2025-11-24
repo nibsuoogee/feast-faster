@@ -18,10 +18,10 @@ export const createOrderBody = t.Object({
       quantity: t.Number(),
     })
   ),
-  customerEta: t.Optional(t.String()),
-  reservationStart: t.Optional(t.String()),
-  reservationEnd: t.Optional(t.String()),
-  currentSoc: t.Optional(t.Number()),
+  total_price: t.Number(),
+  customer_eta: t.Optional(t.Date()),
+  reservation_start: t.Optional(t.Date()),
+  reservation_end: t.Optional(t.Date()),
 });
 export type CreateOrderBody = typeof createOrderBody.static;
 

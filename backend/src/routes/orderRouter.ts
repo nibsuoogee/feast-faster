@@ -59,12 +59,12 @@ export const orderRouter = new Elysia()
             // Convert "now" to Helsinki time
             const nowHelsinki = convertToHelsinki(new Date());
 
-            const reservationStart = body.reservationStart
-              ? convertToHelsinki(new Date(body.reservationStart))
+            const reservationStart = body.reservation_start
+              ? convertToHelsinki(new Date(body.reservation_start))
               : new Date(nowHelsinki.getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready
 
-            const reservationEnd = body.reservationEnd
-              ? convertToHelsinki(new Date(body.reservationEnd))
+            const reservationEnd = body.reservation_end
+              ? convertToHelsinki(new Date(body.reservation_end))
               : new Date(reservationStart.getTime() + 30 * 60 * 1000); // 30 mins after start
 
             const [availableChargerIds, err] = await tryCatch(
@@ -82,18 +82,11 @@ export const orderRouter = new Elysia()
             const orderData: OrderModelForCreation = {
               customer_id: user.user_id,
               restaurant_id: body.restaurant_id,
-              total_price: Number(
-                body.items
-                  .reduce(
-                    (total, i) => total + i.menuItem.price * i.quantity,
-                    0
-                  )
-                  .toFixed(2)
-              ),
+              total_price: body.total_price,
               // add 30 mins as estimated arrival time if received eta is empty.
-              customer_eta: body.customerEta
-                ? new Date(body.customerEta)
-                : new Date(Date.now() + 30 * 60 * 1000),
+              customer_eta: body.customer_eta
+                ? convertToHelsinki(new Date(body.customer_eta))
+                : new Date(nowHelsinki.getTime() + 30 * 60 * 1000),
             };
 
             const [order, errOrder] = await tryCatch(

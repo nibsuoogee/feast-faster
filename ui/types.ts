@@ -15,12 +15,12 @@ export type { StationsModel } from "../backend/dist/models/StationsModel";
 
 export type { MenuItem } from "../backend/dist/models/MenuItemModel";
 
+export type { Order, FoodStatus } from "../backend/dist/models/orderModel";
+
 export type {
-  Order,
-  FoodStatus,
   CreateOrderBody,
   CreateOrderResponse,
-} from "../backend/dist/models/orderModel";
+} from "../backend/dist/models/orderRequestModel";
 
 export type { OrderItem } from "../backend/dist/models/orderItemModel";
 

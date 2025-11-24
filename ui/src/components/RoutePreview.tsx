@@ -205,8 +205,10 @@ export function RoutePreview({
       {selectedRestaurant && (
         <RestaurantMenu
           restaurant={selectedRestaurant.restaurant}
-          station_id={selectedRestaurant.stop.station.station_id}
+          stationId={selectedRestaurant.stop.station.station_id}
           stationName={selectedRestaurant.stop.station.name}
+          customerEta={selectedRestaurant.stop.estimatedArrivalTime}
+          chargingDuration={selectedRestaurant.stop.chargingDuration}
           onClose={() => setSelectedRestaurant(null)}
           onPlaceOrder={(order) => {
             onPlaceOrder(order);
