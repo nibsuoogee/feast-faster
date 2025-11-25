@@ -1,5 +1,9 @@
+import axios from "axios";
+import { handleApiRequest } from "@/lib/requests";
+import { BACKEND_URL } from "@/lib/urls";
 import { Order, Restaurant } from "@/types/restaurant";
-import { orders, restaurants } from "@/data/restaurantMockData";
+import { RestaurantListItem } from "@types";
+import { orders } from "@/data/restaurantMockData";
 
 /**
  * Order service for restaurant dashboard
@@ -10,7 +14,16 @@ export const orderService = {
    * Get all restaurants
    */
   getRestaurants: async (): Promise<Restaurant[]> => {
-    return restaurants;
+    const data = await handleApiRequest<{ restaurants: RestaurantListItem[] }>(
+      () => axios.get(`${BACKEND_URL}/restaurants`)
+    );
+
+    if (!data) return [];
+    // Map backend response to dashboard type
+    return data.restaurants.map((restaurant) => ({
+      id: String(restaurant.restaurant_id),
+      name: restaurant.name,
+    }));
   },
 
   /**
