@@ -1,8 +1,8 @@
 from app.dependencies.database import get_session
-from app.services.open_route import get_location_range, get_driving_etas, RoutingServiceError
+from app.services.open_route import get_location_range, get_driving_etas, get_route_locations, RoutingServiceError
 from app.services.charging_estimation import get_estimate_charging_time
 from app.services.database import get_stations_from_db, get_destination
-from app.models import StationRequest, ETACalculationRequest
+from app.models import StationRequest, ETACalculationRequest, RouteRequest
 from app.config import logger
 from sqlmodel import Session
 from fastapi import APIRouter, Depends, HTTPException
@@ -61,3 +61,13 @@ def calculate_eta(
     station_with_eta = get_driving_etas(body.current_location, [destination_station])
 
     return station_with_eta[0]
+
+
+@router.post("/get-route")
+def get_route(body: RouteRequest):
+    try:
+        locations = get_route_locations(body.source, body.destination, body.interval)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return locations

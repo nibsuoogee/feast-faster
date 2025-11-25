@@ -76,3 +76,63 @@ def get_driving_etas(current_location, stations):
         r["distance_km"] = round(distances[i], 2)
 
     return stations
+
+
+def get_route_locations(source, destination, interval_min):
+    # source: (lon, lat)
+    # destination: (lon, lat)
+    coords = [source, destination]
+
+    # Request the route geometry
+    try:
+        route = client.directions(
+            coordinates=coords,
+            profile="driving-car",
+            format="geojson"
+        )
+    except exceptions.ApiError as e:
+        raise RoutingServiceError(f"OpenRouteService API error: {str(e)}")
+    except Exception as e:
+        raise RoutingServiceError(f"Unexpected error: {str(e)}")
+    
+    geometry = route["features"][0]["geometry"]["coordinates"]
+    steps = route["features"][0]["properties"]["segments"][0]["steps"]
+    interval_sec = interval_min * 60
+    current_time = 0
+    next_sample_time = 0
+    # Expand geometry into a time-stamped polyline
+    expanded = []  # items in form (lon, lat, cumulative_time_sec)
+    for step in steps:
+        start_idx, end_idx = step["way_points"]
+        step_coords = geometry[start_idx:end_idx + 1]
+        duration = step["duration"]  # seconds
+
+        # Evenly distribute time across step geometry
+        if len(step_coords) > 1:
+            per_segment_time = duration / (len(step_coords) - 1)
+        else:
+            per_segment_time = duration
+
+        for _, (lon, lat) in enumerate(step_coords):
+            expanded.append((lon, lat, current_time))
+            current_time += per_segment_time
+
+    # Now sample every X minutes
+    samples = []
+    ptr = 0
+
+    while next_sample_time <= expanded[-1][2]:
+        # Move pointer until reaching time >= next_sample_time
+        while ptr < len(expanded) - 1 and expanded[ptr][2] < next_sample_time:
+            ptr += 1
+
+        lon, lat, _ = expanded[ptr]
+        samples.append({
+            "lat": lat,
+            "lon": lon,
+            "time_min": round(next_sample_time / 60)
+        })
+
+        next_sample_time += interval_sec
+
+    return samples

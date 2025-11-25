@@ -79,3 +79,9 @@ class StationRequest(BaseModel):
 class ETACalculationRequest(BaseModel):
     current_location: tuple[float, float]
     reservation_id: int
+
+
+class RouteRequest(BaseModel):
+    source: tuple[float, float]
+    destination: tuple[float, float]
+    interval: int
