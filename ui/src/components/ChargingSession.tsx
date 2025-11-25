@@ -20,13 +20,11 @@ import { Progress } from "./ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 type ChargingSessionProps = {
-  onEndSession: () => void;
   isJourneyActive?: boolean;
   plannedJourney?: PlannedJourney | null;
 };
 
 export function ChargingSession({
-  onEndSession,
   isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
@@ -36,6 +34,7 @@ export function ChargingSession({
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [canExtend, setCanExtend] = useState<boolean>(false);
   const [isCheckingExtension, setIsCheckingExtension] = useState(false);
+  const [isStoppingCharging, setIsStoppingCharging] = useState(false);
   const {
     contextReservation,
     contextOrder,
@@ -129,6 +128,21 @@ export function ChargingSession({
 
     checkExtension();
   }, [contextReservation?.reservation_id, timeRemaining]);
+
+  const handleStopCharging = async () => {
+    if (!contextReservation?.charger_id) return;
+
+    setIsStoppingCharging(true);
+    try {
+      await reservationService.finishCharging(contextReservation.charger_id);
+      // The charging_paid event from SSE will update the UI
+    } catch (error) {
+      console.error("Failed to stop charging:", error);
+    } finally {
+      setIsStoppingCharging(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50">
       <Tabs defaultValue="active" className="w-full">
@@ -274,15 +288,18 @@ export function ChargingSession({
                   </div>
                 </Card> */}
 
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  className="w-full"
-                  onClick={onEndSession}
-                >
-                  <StopCircle className="w-5 h-5 mr-2" />
-                  Stop Charging
-                </Button>
+                {contextChargingState === "active" && (
+                  <Button
+                    variant="destructive"
+                    size="lg"
+                    className="w-full"
+                    onClick={handleStopCharging}
+                    disabled={isStoppingCharging}
+                  >
+                    <StopCircle className="w-5 h-5 mr-2" />
+                    {isStoppingCharging ? "Stopping..." : "Stop Charging"}
+                  </Button>
+                )}
                 {timeRemaining !== null && timeRemaining < 10 && (
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700"
