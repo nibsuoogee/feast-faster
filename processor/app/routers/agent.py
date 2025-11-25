@@ -29,6 +29,9 @@ def get_filtered_stations(
     # Get stations from database within a route
     stations = get_stations_from_db(session, buffer_geojson, body.cuisines, body.connector_type)
 
+    if not len(stations):
+        return []
+
     # Get ETAs - by OpenRouteService
     try:
         stations_with_eta = get_driving_etas(current_location, stations)

@@ -28,6 +28,9 @@ def get_estimate_charging_time(ev_model, current_soc, current_car_range, desired
         st["soc_at_arrival"] = soc_at_arrival
         available_stations.append(st)
 
+    if not len(available_stations):
+        return []
+
     test_data = [{
         "EVModel": ev_model,
         "min_soc": st["soc_at_arrival"],
