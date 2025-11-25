@@ -43,6 +43,7 @@ export function RestaurantMenu({
     setContextOrder,
     setContextOrderItems,
     setContextRestaurant,
+    setContextStationName,
   } = useStateContext();
   const [cart, setCart] = useState<{ menuItem: MenuItem; quantity: number }[]>(
     []
@@ -126,6 +127,7 @@ export function RestaurantMenu({
         setContextOrder(response.order);
         setContextOrderItems(response.order_items);
         setContextRestaurant(response.restaurant);
+        setContextStationName(response.station_name);
 
         //onPlaceOrder(response.order); // update UI state if needed // TODO Check after monitoring view is ready
         onClose();

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { reservationService } from "@/services/reservations";
+import { useUserLocation } from "@/services/geocode";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -43,6 +44,8 @@ export function ChargingSession({
     contextStationName,
     contextChargingState,
   } = useStateContext();
+
+  const currentUserLocation = useUserLocation();
 
   // Auto-switch to Order view when an order is placed
   useEffect(() => {
@@ -201,14 +204,27 @@ export function ChargingSession({
                       <Navigation className="w-4 h-4 text-gray-400 mt-1" />
                       <div>
                         <div className="text-xs text-gray-500">From</div>
-                        <div className="font-medium">Current Location</div>
+                        <div className="font-medium">
+                          {currentUserLocation?.address || "Current Location"}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
                       <Navigation className="w-4 h-4 text-green-600 mt-1" />
                       <div>
                         <div className="text-xs text-gray-500">To</div>
-                        <div className="font-medium">{contextStationName}</div>
+                        <div className="font-medium">
+                          {contextStationName || "Station"}
+                          {plannedJourney?.stops?.[0] && (
+                            <span className="text-sm text-gray-500 ml-2">
+                              (
+                              {plannedJourney.stops[0].distanceFromStart.toFixed(
+                                1
+                              )}{" "}
+                              km)
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -217,7 +233,9 @@ export function ChargingSession({
                   <div className="space-y-2 pt-3 border-t">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Station</span>
-                      <span className="font-medium">{contextStationName}</span>
+                      <span className="font-medium">
+                        {contextStationName || "—"}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Charger</span>
@@ -225,6 +243,15 @@ export function ChargingSession({
                         #{contextReservation.charger_id}
                       </span>
                     </div>
+                    {plannedJourney?.stops?.[0] && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Distance</span>
+                        <span className="font-medium">
+                          {plannedJourney.stops[0].distanceFromStart.toFixed(1)}{" "}
+                          km
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Reservation Time</span>
                       <span className="font-medium">
@@ -243,6 +270,19 @@ export function ChargingSession({
                         })}
                       </span>
                     </div>
+                    {contextOrder?.customer_eta && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">ETA</span>
+                        <span className="font-medium">
+                          {new Date(
+                            contextOrder.customer_eta
+                          ).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </Card>
               )}
