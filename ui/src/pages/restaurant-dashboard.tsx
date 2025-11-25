@@ -3,7 +3,7 @@ import { DashboardHeader } from '@/components/restaurant/DashboardHeader';
 import { OrderColumn } from '@/components/restaurant/OrderColumn';
 import { Restaurant, Order } from '@/types/restaurant';
 import { Package } from 'lucide-react';
-import { orderService } from '@/services/orders';
+import { orderService } from '@/services/restaurantOrdersService';
 
 // Column configuration
 const ORDER_COLUMNS = [
