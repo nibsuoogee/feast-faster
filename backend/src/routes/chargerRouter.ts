@@ -6,6 +6,7 @@ import Elysia, { t } from "elysia";
 import { CHARGER_URL } from "../lib/urls";
 import { authorizationMiddleware } from "../middleware/authorization";
 import { jwtConfig } from "../config/jwtConfig";
+import { convertToHelsinki } from "../lib/timezone";
 
 export const chargingSessions = new Map<number, number>();
 const chargingTimeouts = new Map<number, NodeJS.Timeout>(); // charger_id -> timeout
@@ -62,12 +63,24 @@ export const chargerRouter = new Elysia()
         });
       }
 
-      // Set a new 5-second timeout
-      const timeout = setTimeout(() => {
+      const timeout = setTimeout(async () => {
         if (driverId) {
           sendToUser(driverId, "charging_stopped", {
             time: new Date().toISOString(),
           });
+
+          // Pay for charging
+          const now = convertToHelsinki(new Date());
+          const [updatedReservation, errUpdatedReservation] = await tryCatch(
+            ChargingDTO.updateReservationTimeOfPayment(
+              reservation.reservation_id,
+              now
+            )
+          );
+          if (errUpdatedReservation)
+            return status(500, errUpdatedReservation.message);
+          if (!updatedReservation)
+            return status(500, "Failed to set time of payment");
 
           // Clean up the session
           chargingSessions.delete(charger_id);
@@ -128,7 +141,7 @@ export const chargerRouter = new Elysia()
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ charger_id: body.charger_id }),
       });
 
       if (!response.ok) {
@@ -137,9 +150,9 @@ export const chargerRouter = new Elysia()
       }
 
       // 2) Update payment time
-      const now = new Date();
+      const now = convertToHelsinki(new Date());
       const [reservation, errReservation] = await tryCatch(
-        ChargingDTO.updateReservationTimeOfPayment(body.charger_id, now)
+        ChargingDTO.updateReservationTimeOfPayment(body.reservation_id, now)
       );
       if (errReservation) return status(500, errReservation.message);
       if (!reservation) return status(500, "Failed to set time of payment");
@@ -153,6 +166,7 @@ export const chargerRouter = new Elysia()
     {
       body: t.Object({
         charger_id: t.Number(),
+        reservation_id: t.Number(),
       }),
       response: {
         200: t.String(),
