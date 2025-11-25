@@ -421,13 +421,8 @@ export const Home = () => {
 
             <TabsContent value="session" className="m-0">
               <ChargingSession
-                activeSession={activeSession}
-                onEndSession={endChargingSession}
-                restaurantOrders={restaurantOrders}
-                onUpdateOrderStatus={updateOrderStatus}
                 isJourneyActive={isJourneyActive}
                 plannedJourney={plannedJourney}
-                // onStartCharging={startChargingSession}
               />
             </TabsContent>
 
