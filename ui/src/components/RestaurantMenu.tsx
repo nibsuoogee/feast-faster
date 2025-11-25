@@ -6,15 +6,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Separator } from "./ui/separator";
 import { MenuItem } from "@types";
-import {
-  Check,
-  Clock,
-  DollarSign,
-  Minus,
-  Plus,
-  ShoppingCart,
-  X,
-} from "lucide-react";
+import { Check, Clock, Euro, Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { toast } from "sonner";
 import { useStateContext } from "@/contexts/StateContext";
@@ -167,11 +159,11 @@ export function RestaurantMenu({
                     <div className="flex-1">
                       <div>{item.menuItem.name}</div>
                       <div className="text-sm text-gray-600">
-                        ${item.menuItem.price.toFixed(2)} × {item.quantity}
+                        €{item.menuItem.price.toFixed(2)} × {item.quantity}
                       </div>
                     </div>
                     <div>
-                      ${(item.menuItem.price * item.quantity).toFixed(2)}
+                      €{(item.menuItem.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 ))}
@@ -179,14 +171,14 @@ export function RestaurantMenu({
               <Separator className="my-3" />
               <div className="flex justify-between items-center">
                 <span>Total</span>
-                <span className="text-xl">${totalCost.toFixed(2)}</span>
+                <span className="text-xl">€{totalCost.toFixed(2)}</span>
               </div>
             </Card>
 
             {/* Payment Info */}
             <Card className="p-4 bg-blue-50 border-blue-200">
               <div className="flex items-start gap-2">
-                <DollarSign className="w-5 h-5 text-blue-600 mt-0.5" />
+                <Euro className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
                   <p>Payment will be processed immediately</p>
                   <p className="text-sm text-gray-600 mt-1">
@@ -228,7 +220,7 @@ export function RestaurantMenu({
               onClick={handlePlaceOrder}
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Place Order & Pay ${totalCost.toFixed(2)}
+              Place Order & Pay €{totalCost.toFixed(2)}
             </Button>
 
             <p className="text-xs text-center text-gray-500">
@@ -291,7 +283,7 @@ export function RestaurantMenu({
                                 {item.details}
                               </p>
                               <div className="flex items-center gap-3">
-                                <span>${item.price.toFixed(2)}</span>
+                                <span>€{item.price.toFixed(2)}</span>
                                 <span className="text-sm text-gray-600 flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {item.minutes_to_prepare} min
@@ -352,7 +344,7 @@ export function RestaurantMenu({
                   {cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
                   {cart.length === 1 ? "item" : "items"}
                 </div>
-                <div className="text-xl">${totalCost.toFixed(2)}</div>
+                <div className="text-xl">€{totalCost.toFixed(2)}</div>
               </div>
               <Button
                 size="lg"

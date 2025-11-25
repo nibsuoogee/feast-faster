@@ -3,7 +3,7 @@ import { PlannedJourney } from "@/types/driver";
 import {
   Battery,
   Clock,
-  DollarSign,
+  Euro,
   Navigation,
   Route,
   StopCircle,
@@ -446,7 +446,7 @@ export function ChargingSession({
 
                     <Card className="p-4">
                       <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <DollarSign className="w-4 h-4" />
+                        <Euro className="w-4 h-4" />
                         <span className="text-sm">Current Cost</span>
                       </div>
                       <div className="text-2xl">
