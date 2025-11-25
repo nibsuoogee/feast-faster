@@ -73,7 +73,7 @@ def get_stations_from_db(session, buffer_geojson, cuisines, connector_type):
     return filtered_stations
 
 
-def get_destination(session, reservation_id):
+def get_destination_by_reservation_id(session, reservation_id):
     stmt = (
         select(Station.location)
         .select_from(
@@ -88,9 +88,7 @@ def get_destination(session, reservation_id):
     if not location:
         return None
 
-    return {
-        "location": (to_shape(location).x, to_shape(location).y)  # To match further call from OpenRouteService
-    }
+    return to_shape(location).x, to_shape(location).y
 
 
 def get_destination_by_station_id(session, station_id):

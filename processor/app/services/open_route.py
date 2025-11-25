@@ -51,7 +51,7 @@ def get_location_range(current_location, destination):
 
 
 def get_driving_etas(current_location, stations):
-    locations = [current_location] + [tuple(st["location"]) for st in stations]  # todo refactor " -> ""
+    locations = [current_location] + [tuple(st["location"]) for st in stations]
 
     # Call ORS Matrix API (driving duration in seconds)
     try:
