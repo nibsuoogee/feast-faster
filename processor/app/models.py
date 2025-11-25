@@ -83,5 +83,5 @@ class ETACalculationRequest(BaseModel):
 
 class RouteRequest(BaseModel):
     source: tuple[float, float]
-    destination: tuple[float, float]
+    station_id: int
     interval: int

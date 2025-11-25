@@ -91,3 +91,17 @@ def get_destination(session, reservation_id):
     return {
         "location": (to_shape(location).x, to_shape(location).y)  # To match further call from OpenRouteService
     }
+
+
+def get_destination_by_station_id(session, station_id):
+    stmt = (
+        select(Station.location)
+        .where(Station.station_id == station_id)
+    )
+
+    location = session.execute(stmt).scalar_one()
+    
+    if not location:
+        return None
+
+    return to_shape(location).x, to_shape(location).y
