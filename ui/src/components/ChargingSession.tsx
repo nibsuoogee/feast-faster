@@ -130,11 +130,15 @@ export function ChargingSession({
   }, [contextReservation?.reservation_id, timeRemaining]);
 
   const handleStopCharging = async () => {
-    if (!contextReservation?.charger_id) return;
+    if (!contextReservation?.charger_id || !contextReservation?.reservation_id)
+      return;
 
     setIsStoppingCharging(true);
     try {
-      await reservationService.finishCharging(contextReservation.charger_id);
+      await reservationService.finishCharging(
+        contextReservation.charger_id,
+        contextReservation.reservation_id
+      );
       // The charging_paid event from SSE will update the UI
     } catch (error) {
       console.error("Failed to stop charging:", error);
@@ -292,7 +296,7 @@ export function ChargingSession({
                   <Button
                     variant="destructive"
                     size="lg"
-                    className="w-full"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold"
                     onClick={handleStopCharging}
                     disabled={isStoppingCharging}
                   >

@@ -9,10 +9,11 @@ export const reservationService = {
     );
   },
 
-  finishCharging: async (chargerId: number) => {
+  finishCharging: async (chargerId: number, reservationId: number) => {
     return handleApiRequest<string>(() =>
       axios.post(`${BACKEND_URL}/finish-charging`, {
         charger_id: chargerId,
+        reservation_id: reservationId,
       })
     );
   },
