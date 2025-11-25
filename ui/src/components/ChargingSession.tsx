@@ -1,9 +1,5 @@
 import { useStateContext } from "@/contexts/StateContext";
-import {
-  ChargingSessionType,
-  PlannedJourney,
-  RestaurantOrder,
-} from "@/types/driver";
+import { PlannedJourney } from "@/types/driver";
 import {
   Battery,
   Clock,
@@ -16,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { reservationService } from "@/services/reservations";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -23,30 +20,22 @@ import { Progress } from "./ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 type ChargingSessionProps = {
-  activeSession: ChargingSessionType | null;
   onEndSession: () => void;
-  restaurantOrders: RestaurantOrder[];
-  onUpdateOrderStatus: (
-    orderId: string,
-    status: RestaurantOrder["status"]
-  ) => void;
   isJourneyActive?: boolean;
   plannedJourney?: PlannedJourney | null;
-  // onStartCharging?: (station: ChargingStation) => void | null;
 };
 
 export function ChargingSession({
-  activeSession,
   onEndSession,
-  restaurantOrders,
-  onUpdateOrderStatus,
   isJourneyActive = false,
   plannedJourney = null,
-}: // onStartCharging,
-ChargingSessionProps) {
+}: ChargingSessionProps) {
   // const [energyDelivered, setEnergyDelivered] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   // const [batteryLevel, setBatteryLevel] = useState(45);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [canExtend, setCanExtend] = useState<boolean>(false);
+  const [isCheckingExtension, setIsCheckingExtension] = useState(false);
   const {
     contextReservation,
     contextOrder,
@@ -89,6 +78,57 @@ ChargingSessionProps) {
 
     return () => clearInterval(interval);
   }, [contextReservation?.charge_start_time, contextChargingState]);
+
+  // Calculate time remaining until reservation ends
+  useEffect(() => {
+    if (!contextReservation?.reservation_end) {
+      setTimeRemaining(null);
+      return;
+    }
+
+    const updateTimeRemaining = () => {
+      const endTime = new Date(contextReservation.reservation_end).getTime();
+      const currentTime = new Date().getTime();
+      const remainingMs = endTime - currentTime;
+      const remainingMinutes = Math.floor(remainingMs / 1000 / 60);
+
+      setTimeRemaining(Math.max(0, remainingMinutes));
+    };
+
+    updateTimeRemaining();
+    const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [contextReservation?.reservation_end]);
+
+  // Check if reservation can be extended when time is low
+  useEffect(() => {
+    const checkExtension = async () => {
+      if (
+        !contextReservation?.reservation_id ||
+        timeRemaining === null ||
+        timeRemaining > 10
+      ) {
+        setCanExtend(false);
+        return;
+      }
+
+      setIsCheckingExtension(true);
+      try {
+        const response = await reservationService.canExtendReservation(
+          contextReservation.reservation_id
+        );
+        setCanExtend(response?.can_extend ?? false);
+      } catch (error) {
+        console.error("Failed to check extension eligibility:", error);
+        setCanExtend(false);
+      } finally {
+        setIsCheckingExtension(false);
+      }
+    };
+
+    checkExtension();
+  }, [contextReservation?.reservation_id, timeRemaining]);
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50">
       <Tabs defaultValue="active" className="w-full">
@@ -113,8 +153,10 @@ ChargingSessionProps) {
 
         <TabsContent value="active" className="m-0">
           <div className="p-4 space-y-4">
-            {contextChargingState === "active" ||
-            contextChargingState === "finished" ? (
+            {contextReservation &&
+            (contextChargingState === "active" ||
+              contextChargingState === "finished" ||
+              contextReservation.charge_start_time !== null) ? (
               <>
                 <Card className="p-4 bg-green-50 border-green-200">
                   <div className="flex items-center justify-between mb-2">
@@ -197,11 +239,11 @@ ChargingSessionProps) {
                       <span className="text-sm">Current Cost</span>
                     </div>
                     <div className="text-2xl">
-                      $
+                      €
                       {contextReservation?.cumulative_price_of_charge?.toFixed(
                         2
                       )}{" "}
-                      <span className="text-sm text-gray-600">USD</span>
+                      <span className="text-sm text-gray-600">EUR</span>
                     </div>
                   </Card>
 
@@ -241,12 +283,19 @@ ChargingSessionProps) {
                   <StopCircle className="w-5 h-5 mr-2" />
                   Stop Charging
                 </Button>
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  size="lg"
-                >
-                  Add 10 minutes to Reservation
-                </Button>
+                {timeRemaining !== null && timeRemaining < 10 && (
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    size="lg"
+                    disabled={!canExtend || isCheckingExtension}
+                  >
+                    {isCheckingExtension
+                      ? "Checking availability..."
+                      : !canExtend
+                      ? "Extension unavailable"
+                      : `Add 10 minutes to Reservation (${timeRemaining} min left)`}
+                  </Button>
+                )}
 
                 <p className="text-xs text-center text-gray-500">
                   You will be charged for the energy delivered up to this point
@@ -361,52 +410,53 @@ ChargingSessionProps) {
                 </Card>
               )}
 
-              {restaurantOrders.filter((o) =>
-                ["pending", "cooking", "ready"].includes(o.status)
-              ).length > 0 && (
-                <Card className="p-4 bg-orange-50 border-orange-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <UtensilsCrossed className="w-5 h-5 text-orange-600" />
-                    <h3>Food Orders</h3>
-                  </div>
-                  {restaurantOrders
-                    .filter((o) =>
-                      ["pending", "cooking", "ready"].includes(o.status)
-                    )
-                    .map((order) => (
-                      <div key={order.id} className="mb-2 last:mb-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span>{order.restaurantName}</span>
-                          <Badge
-                            variant={
-                              order.status === "ready" ? "default" : "secondary"
-                            }
-                            className={
-                              order.status === "ready" ? "bg-green-600" : ""
-                            }
-                          >
-                            {order.status === "ready"
-                              ? "Ready for Pickup!"
-                              : order.status === "cooking"
-                              ? "Preparing..."
-                              : "Order Placed"}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {order.items.reduce(
-                            (sum, item) => sum + item.quantity,
-                            0
-                          )}{" "}
-                          {order.items.length === 1 ? "item" : "items"} • $
-                          {order.totalCost.toFixed(2)}
-                        </div>
-                        <div>
-                          <span>Your order number is 574</span>
-                        </div>
+              {contextOrder &&
+                ["pending", "cooking", "ready"].includes(
+                  contextOrder.food_status
+                ) && (
+                  <Card className="p-4 bg-orange-50 border-orange-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <UtensilsCrossed className="w-5 h-5 text-orange-600" />
+                      <h3>Food Orders</h3>
+                    </div>
+                    <div className="mb-2 last:mb-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span>{contextRestaurant?.name}</span>
+                        <Badge
+                          variant={
+                            contextOrder.food_status === "ready"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            contextOrder.food_status === "ready"
+                              ? "bg-green-600"
+                              : ""
+                          }
+                        >
+                          {contextOrder.food_status === "ready"
+                            ? "Ready for Pickup!"
+                            : contextOrder.food_status === "cooking"
+                            ? "Preparing..."
+                            : "Order Placed"}
+                        </Badge>
                       </div>
-                    ))}
-                </Card>
-              )}
+                      <div className="text-sm text-gray-600">
+                        {contextOrderItems?.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0
+                        )}{" "}
+                        {contextOrderItems?.length === 1 ? "item" : "items"} • $
+                        {contextOrder.total_price.toFixed(2)}
+                      </div>
+                      <div>
+                        <span>
+                          Your order number is {contextOrder.order_id}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                )}
             </div>
           </TabsContent>
         )}
