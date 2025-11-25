@@ -10,8 +10,8 @@ export const RestaurantListDTO = {
         name,
         address,
         cuisines,
-        ST_X(location) AS lng,
-        ST_Y(location) AS lat
+        ST_X(location::geometry) AS lng,
+        ST_Y(location::geometry) AS lat
       FROM restaurants
       ORDER BY restaurant_id ASC;
     `;
