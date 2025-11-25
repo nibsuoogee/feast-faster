@@ -57,14 +57,6 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         )
         logger.info(f"Token verified successfully. Payload: {payload}")
 
-        # # Check if the payload.permissions includes recommend:read
-        # if "recommend:read" not in payload.get("permissions", []):
-        #     logger.error("User does not have permission to read recommendations")
-        #     raise HTTPException(
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #         detail="Insufficient permissions",
-        #     )
-
         return payload
     except JWTError as e:
         logger.error(f"JWT verification failed: {str(e)}")

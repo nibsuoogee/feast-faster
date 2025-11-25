@@ -1,4 +1,4 @@
-from app.models import Station, Charger, Reservation
+from app.models.database_models import Station, Charger, Reservation
 from sqlalchemy import select, join
 from sqlalchemy.orm import selectinload
 from sqlmodel import select

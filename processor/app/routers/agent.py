@@ -2,7 +2,7 @@ from app.dependencies.database import get_session
 from app.services.open_route import get_location_range, get_driving_etas, get_route_locations, RoutingServiceError
 from app.services.charging_estimation import get_estimate_charging_time
 from app.services.database import get_stations_from_db, get_destination_by_reservation_id, get_destination_by_station_id
-from app.models import StationRequest, ETACalculationRequest, RouteRequest
+from app.models.request_models import StationRequest, ETACalculationRequest, RouteRequest
 from app.config import logger
 from sqlmodel import Session
 from fastapi import APIRouter, Depends, HTTPException
