@@ -153,8 +153,10 @@ export function ChargingSession({
 
         <TabsContent value="active" className="m-0">
           <div className="p-4 space-y-4">
-            {contextChargingState === "active" ||
-            contextChargingState === "finished" ? (
+            {contextReservation &&
+            (contextChargingState === "active" ||
+              contextChargingState === "finished" ||
+              contextReservation.charge_start_time !== null) ? (
               <>
                 <Card className="p-4 bg-green-50 border-green-200">
                   <div className="flex items-center justify-between mb-2">
