@@ -95,6 +95,10 @@ export function RestaurantMenu({
   const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
 
+    const maxMinutes = Math.max(
+      ...cart.map((i) => i.menuItem.minutes_to_prepare)
+    );
+
     const order: CreateOrderBody = {
       restaurant_id: restaurant.restaurant_id,
       station_id: stationId,
@@ -104,6 +108,9 @@ export function RestaurantMenu({
       reservation_start: new Date(customerEta.getTime() - TEN_MIN),
       reservation_end: new Date(
         customerEta.getTime() + chargingDuration * 60 * 1000 + TEN_MIN
+      ),
+      start_cooking_time: new Date(
+        customerEta.getTime() - maxMinutes * 60 * 1000
       ),
     };
 

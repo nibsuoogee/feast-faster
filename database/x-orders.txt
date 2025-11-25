@@ -11,47 +11,47 @@ FROM restaurants LIMIT 1;
 -- ===========================================
 --  TEST DATA: ORDERS
 -- ===========================================
-INSERT INTO orders (customer_id, restaurant_id, total_price, customer_eta, food_status)
+INSERT INTO orders (customer_id, restaurant_id, total_price, customer_eta, food_status, start_cooking_time)
 VALUES
   ((SELECT user_id FROM users WHERE username='test_user_1'),
    (SELECT restaurant_id FROM restaurants WHERE name ILIKE '%Sandwich%' LIMIT 1),
-   15.40, now() + interval '15 minutes', 'pending'),
+   15.40, now() + interval '15 minutes', 'pending', now()),
 
   ((SELECT user_id FROM users WHERE username='test_user_2'),
    (SELECT restaurant_id FROM restaurants WHERE name ILIKE '%China Wall%' LIMIT 1),
-   22.90, now() + interval '25 minutes', 'pending'),
+   22.90, now() + interval '25 minutes', 'pending', now() + interval '10 minutes'),
 
   ((SELECT user_id FROM users WHERE username='test_user_3'),
    (SELECT restaurant_id FROM restaurants WHERE name ILIKE '%Pancho Villa%' LIMIT 1),
-   12.30, now() + interval '20 minutes', 'pending'),
+   12.30, now() + interval '20 minutes', 'pending', now() + interval '10 minutes'),
 
   ((SELECT user_id FROM users WHERE username='test_user_4'),
    (SELECT restaurant_id FROM restaurants WHERE name ILIKE '%Fatboy%' LIMIT 1),
-   30.00, now() + interval '30 minutes', 'pending'),
+   30.00, now() + interval '30 minutes', 'pending', now() + interval '15 minutes'),
 
   ((SELECT user_id FROM users WHERE username='test_user_5'),
    (SELECT restaurant_id FROM restaurants WHERE name ILIKE '%Momento%' LIMIT 1),
-   18.70, now() + interval '22 minutes', 'pending'),
+   18.70, now() + interval '22 minutes', 'pending', now() + interval '15 minutes'),
 
   ((SELECT user_id FROM users WHERE username='test_user_6'),
    (SELECT restaurant_id FROM restaurants LIMIT 1),
-   9.99, now() + interval '18 minutes', 'pending'),
+   9.99, now() + interval '18 minutes', 'pending', now() + interval '10 minutes'),
 
   ((SELECT user_id FROM users WHERE username='test_user_7'),
    (SELECT restaurant_id FROM restaurants LIMIT 1 OFFSET 1),
-   14.50, now() + interval '16 minutes', 'pending'),
+   14.50, now() + interval '16 minutes', 'pending', now() + interval '5 minutes'),
 
   ((SELECT user_id FROM users WHERE username='test_user_8'),
    (SELECT restaurant_id FROM restaurants LIMIT 1 OFFSET 2),
-   11.25, now() + interval '12 minutes', 'pending'),
+   11.25, now() + interval '12 minutes', 'pending', now()),
 
   ((SELECT user_id FROM users WHERE username='test_user_9'),
    (SELECT restaurant_id FROM restaurants LIMIT 1 OFFSET 3),
-   7.80, now() + interval '10 minutes', 'pending'),
+   7.80, now() + interval '10 minutes', 'pending', now()),
 
   ((SELECT user_id FROM users WHERE username='rm_1'),
    (SELECT restaurant_id FROM restaurants LIMIT 1 OFFSET 4),
-   50.00, now() + interval '40 minutes', 'pending');
+   50.00, now() + interval '40 minutes', 'pending', now() + interval '20 minutes');
 
 
 -- ===========================================

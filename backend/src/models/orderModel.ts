@@ -49,8 +49,9 @@ export const orderModel = t.Object({
   restaurant_id: t.Number(),
   total_price: t.Number(),
   created_at: t.Date(),
-  customer_eta: t.Optional(t.Date()),
+  customer_eta: t.Date(),
   food_status: foodStatusEnum,
+  start_cooking_time: t.Date(),
 });
 export type Order = typeof orderModel.static;
 
@@ -61,6 +62,7 @@ export const orderModelForCreation = t.Object({
   restaurant_id: t.Number(),
   total_price: t.Number(),
   customer_eta: t.Date(),
+  start_cooking_time: t.Date(),
 });
 export type OrderModelForCreation = typeof orderModelForCreation.static;
 

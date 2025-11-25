@@ -19,9 +19,10 @@ export const createOrderBody = t.Object({
     })
   ),
   total_price: t.Number(),
-  customer_eta: t.Optional(t.Date()),
-  reservation_start: t.Optional(t.Date()),
-  reservation_end: t.Optional(t.Date()),
+  customer_eta: t.Date(),
+  reservation_start: t.Date(),
+  reservation_end: t.Date(),
+  start_cooking_time: t.Date(),
 });
 export type CreateOrderBody = typeof createOrderBody.static;
 

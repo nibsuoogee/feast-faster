@@ -99,7 +99,8 @@ CREATE TABLE "orders" (
   "total_price" float NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "customer_eta" timestamp NOT NULL DEFAULT (now()),
-  "food_status" food_status NOT NULL DEFAULT 'pending'
+  "food_status" food_status NOT NULL DEFAULT 'pending',
+  "start_cooking_time" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "reservations" (

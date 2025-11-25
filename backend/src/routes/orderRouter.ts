@@ -56,16 +56,13 @@ export const orderRouter = new Elysia()
         .post(
           "/orders",
           async ({ body, user, status }) => {
-            // Convert "now" to Helsinki time
-            const nowHelsinki = convertToHelsinki(new Date());
+            const reservationStart = convertToHelsinki(
+              new Date(body.reservation_start)
+            );
 
-            const reservationStart = body.reservation_start
-              ? convertToHelsinki(new Date(body.reservation_start))
-              : new Date(nowHelsinki.getTime() + 30 * 60 * 1000); // 30 mins from reservation created syncing with food ready
-
-            const reservationEnd = body.reservation_end
-              ? convertToHelsinki(new Date(body.reservation_end))
-              : new Date(reservationStart.getTime() + 30 * 60 * 1000); // 30 mins after start
+            const reservationEnd = convertToHelsinki(
+              new Date(body.reservation_end)
+            );
 
             const [availableChargerIds, err] = await tryCatch(
               StationsDTO.getAvailableChargers(
@@ -83,10 +80,8 @@ export const orderRouter = new Elysia()
               customer_id: user.user_id,
               restaurant_id: body.restaurant_id,
               total_price: body.total_price,
-              // add 30 mins as estimated arrival time if received eta is empty.
-              customer_eta: body.customer_eta
-                ? convertToHelsinki(new Date(body.customer_eta))
-                : new Date(nowHelsinki.getTime() + 30 * 60 * 1000),
+              customer_eta: convertToHelsinki(body.customer_eta),
+              start_cooking_time: convertToHelsinki(body.start_cooking_time),
             };
 
             const [order, errOrder] = await tryCatch(
