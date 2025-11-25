@@ -239,11 +239,11 @@ export function ChargingSession({
                       <span className="text-sm">Current Cost</span>
                     </div>
                     <div className="text-2xl">
-                      $
+                      €
                       {contextReservation?.cumulative_price_of_charge?.toFixed(
                         2
                       )}{" "}
-                      <span className="text-sm text-gray-600">USD</span>
+                      <span className="text-sm text-gray-600">EUR</span>
                     </div>
                   </Card>
 
