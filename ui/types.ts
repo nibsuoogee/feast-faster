@@ -25,3 +25,7 @@ export type {
 export type { OrderItem } from "../backend/dist/models/orderItemModel";
 
 export type { RestaurantModel } from "../backend/dist/models/restaurantModel";
+
+export type { RestaurantListItem } from "../backend/dist/models/restaurantList";
+
+export type { RestaurantOrder } from "../backend/dist/models/restaurantModel";
