@@ -15,8 +15,24 @@ const formatTime = (date: Date): string => {
 
 const getMinutesFromNow = (date: Date): number => {
   const now = new Date();
-  const diff = Math.floor((date.getTime() - now.getTime()) / 1000 / 60);
-  return diff;
+  return Math.floor((date.getTime() - now.getTime()) / 1000 / 60);
+};
+
+// formating the eta into more readable string like "2 hrs 15 mins" instead of minutes.
+const formatEtaDifference = (minutesFromNow: number): string => {
+  const isFuture = minutesFromNow >= 0;
+  const absoluteMinutes = Math.abs(minutesFromNow);
+  const hours = Math.floor(absoluteMinutes / 60);
+  const minutes = absoluteMinutes % 60;
+
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours} hr${hours === 1 ? "" : "s"}`);
+  if (minutes > 0) parts.push(`${minutes} min${minutes === 1 ? "" : "s"}`);
+
+  if (parts.length === 0) return "now";
+
+  const formatted = parts.join(" ");
+  return isFuture ? `in ${formatted}` : `${formatted} ago`;
 };
 
 // Component helpers
@@ -94,10 +110,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
   startCookingTime.setMinutes(startCookingTime.getMinutes() - maxPrepTime);
 
   const etaMinutes = getMinutesFromNow(order.customerETA);
-  const etaText =
-    etaMinutes >= 0
-      ? `in ${etaMinutes} min`
-      : `${Math.abs(etaMinutes)} min ago`;
+  const etaText = formatEtaDifference(etaMinutes);
 
   return (
     <Card className="p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300 bg-white">
