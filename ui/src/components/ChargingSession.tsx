@@ -487,13 +487,13 @@ export function ChargingSession({
 
                   {contextChargingState === "active" && (
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="lg"
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold"
+                      className="w-full"
                       onClick={handleStopCharging}
                       disabled={isStoppingCharging}
                     >
-                      <StopCircle className="w-5 h-5 mr-2" />
+                      <StopCircle className="w-4 h-4 mr-2" />
                       {isStoppingCharging ? "Stopping..." : "Stop Charging"}
                     </Button>
                   )}
