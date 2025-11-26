@@ -1,8 +1,8 @@
 from app.dependencies.database import get_session
-from app.services.open_route import get_location_range, get_driving_etas, RoutingServiceError
+from app.services.open_route import get_location_range, get_driving_etas, get_route_locations, RoutingServiceError
 from app.services.charging_estimation import get_estimate_charging_time
-from app.services.database import get_stations_from_db, get_destination
-from app.models import StationRequest, ETACalculationRequest
+from app.services.database import get_stations_from_db, get_destination_by_reservation_id, get_destination_by_station_id
+from app.models.request_models import StationRequest, ETACalculationRequest, RouteRequest
 from app.config import logger
 from sqlmodel import Session
 from fastapi import APIRouter, Depends, HTTPException
@@ -29,6 +29,9 @@ def get_filtered_stations(
     # Get stations from database within a route
     stations = get_stations_from_db(session, buffer_geojson, body.cuisines, body.connector_type)
 
+    if not len(stations):
+        return []
+
     # Get ETAs - by OpenRouteService
     try:
         stations_with_eta = get_driving_etas(current_location, stations)
@@ -52,12 +55,39 @@ def calculate_eta(
     session: Session = Depends(get_session)
 ):
     # Get destination station location
-    destination_station = get_destination(session, body.reservation_id)
+    destination_station = get_destination_by_reservation_id(session, body.reservation_id)
 
     if not destination_station:
         raise HTTPException(status_code=404, detail=f"Station not found for reservation with reservation_id {body.reservation_id}")
+    
+    destination_locations = [
+        {
+            "location": destination_station  # To match further call from OpenRouteService
+        }
+    ]
 
     # Get ETA and distance
-    station_with_eta = get_driving_etas(body.current_location, [destination_station])
+    try:
+        station_with_eta = get_driving_etas(body.current_location, destination_locations)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     return station_with_eta[0]
+
+
+@router.post("/get-route")
+def get_route(
+    body: RouteRequest,
+    session: Session = Depends(get_session)
+):
+    destination_station = get_destination_by_station_id(session, body.station_id)
+
+    if not destination_station:
+        raise HTTPException(status_code=404, detail=f"Station not found for reservation with station_id {body.station_id}")
+    
+    try:
+        locations = get_route_locations(body.source, destination_station, body.interval)
+    except RoutingServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return locations

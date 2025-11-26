@@ -5,7 +5,6 @@ from sqlalchemy import String
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ARRAY
 from geoalchemy2 import Geography
-from pydantic import BaseModel
 
 
 class Station(SQLModel, table=True):
@@ -63,19 +62,3 @@ class Reservation(SQLModel, table=True):
     charger_id: int = Field(foreign_key="chargers.charger_id", nullable=False)
     # Relationships
     charger: Charger = Relationship(back_populates="reservations")
-
-
-class StationRequest(BaseModel):
-    current_location: tuple[float, float]
-    destination: tuple[float, float]
-    ev_model: str
-    current_car_range: float
-    current_soc: float
-    desired_soc: float
-    connector_type: str
-    cuisines: list[str]
-
-
-class ETACalculationRequest(BaseModel):
-    current_location: tuple[float, float]
-    reservation_id: int
