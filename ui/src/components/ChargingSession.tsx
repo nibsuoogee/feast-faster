@@ -3,7 +3,7 @@ import { PlannedJourney } from "@/types/driver";
 import {
   Battery,
   Clock,
-  DollarSign,
+  Euro,
   Navigation,
   Route,
   StopCircle,
@@ -13,20 +13,18 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { reservationService } from "@/services/reservations";
+import { useUserLocation } from "@/services/geocode";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 type ChargingSessionProps = {
-  onEndSession: () => void;
   isJourneyActive?: boolean;
   plannedJourney?: PlannedJourney | null;
 };
 
 export function ChargingSession({
-  onEndSession,
   isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
@@ -36,6 +34,8 @@ export function ChargingSession({
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [canExtend, setCanExtend] = useState<boolean>(false);
   const [isCheckingExtension, setIsCheckingExtension] = useState(false);
+  const [isStoppingCharging, setIsStoppingCharging] = useState(false);
+  const [activeView, setActiveView] = useState<"order" | "charging">("order");
   const {
     contextReservation,
     contextOrder,
@@ -44,6 +44,15 @@ export function ChargingSession({
     contextStationName,
     contextChargingState,
   } = useStateContext();
+
+  const currentUserLocation = useUserLocation();
+
+  // Auto-switch to Order view when an order is placed
+  useEffect(() => {
+    if (contextOrder?.order_id) {
+      setActiveView("order");
+    }
+  }, [contextOrder?.order_id]);
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -129,338 +138,414 @@ export function ChargingSession({
 
     checkExtension();
   }, [contextReservation?.reservation_id, timeRemaining]);
+
+  const handleStopCharging = async () => {
+    if (!contextReservation?.charger_id || !contextReservation?.reservation_id)
+      return;
+
+    setIsStoppingCharging(true);
+    try {
+      await reservationService.finishCharging(
+        contextReservation.charger_id,
+        contextReservation.reservation_id
+      );
+      // The charging_paid event from SSE will update the UI
+    } catch (error) {
+      console.error("Failed to stop charging:", error);
+    } finally {
+      setIsStoppingCharging(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50">
-      <Tabs defaultValue="active" className="w-full">
-        <div className="bg-white border-b">
-          <TabsList className="w-full justify-start rounded-none bg-transparent p-0">
-            {isJourneyActive && (
-              <TabsTrigger
-                value="journey"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-600"
+      {contextReservation || contextOrder ? (
+        <>
+          {/* Toggle buttons for Order/Charging views */}
+          <div className="bg-white border-b">
+            <div className="flex">
+              <button
+                onClick={() => setActiveView("order")}
+                className={`flex-1 py-3 text-center border-b-2 transition-colors ${
+                  activeView === "order"
+                    ? "border-green-600 text-green-600 font-semibold"
+                    : "border-transparent text-gray-600"
+                }`}
               >
                 Order
-              </TabsTrigger>
-            )}
-            <TabsTrigger
-              value="active"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-600"
-            >
-              Charging
-            </TabsTrigger>
-          </TabsList>
-        </div>
+              </button>
+              <button
+                onClick={() => setActiveView("charging")}
+                className={`flex-1 py-3 text-center border-b-2 transition-colors ${
+                  activeView === "charging"
+                    ? "border-green-600 text-green-600 font-semibold"
+                    : "border-transparent text-gray-600"
+                }`}
+              >
+                Charging
+              </button>
+            </div>
+          </div>
 
-        <TabsContent value="active" className="m-0">
-          <div className="p-4 space-y-4">
-            {contextReservation &&
-            (contextChargingState === "active" ||
-              contextChargingState === "finished" ||
-              contextReservation.charge_start_time !== null) ? (
-              <>
-                <Card className="p-4 bg-green-50 border-green-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-white fill-white" />
-                      </div>
-                      <div>
-                        <h3>{contextStationName}</h3>
-                        {contextChargingState === "active" && (
-                          <Badge className="bg-green-600 mt-1">
-                            Charging in Progress
-                          </Badge>
-                        )}
-                        {contextChargingState === "finished" && (
-                          <Badge className="bg-gray-100 mt-1">
-                            Charging finished
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse" />
+          {/* Order View */}
+          {activeView === "order" && (
+            <div className="p-4 space-y-4">
+              {/* Journey in Progress */}
+              {contextReservation && (
+                <Card className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Route className="w-5 h-5 text-green-600" />
+                    <h3 className="font-semibold">Journey in Progress</h3>
                   </div>
-                </Card>
 
-                {plannedJourney && (
-                  <Card className="p-4 bg-blue-50 border-blue-200">
+                  {/* From/To */}
+                  <div className="space-y-2 mb-4">
                     <div className="flex items-start gap-2">
-                      <Navigation className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <Navigation className="w-4 h-4 text-gray-400 mt-1" />
                       <div>
-                        <p className="text-sm text-gray-600">
-                          Your charger reservation ends at{" "}
-                          {contextReservation?.reservation_end &&
-                            new Date(
-                              contextReservation?.reservation_end
-                            ).toLocaleTimeString("en-GB", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}
-                        </p>
+                        <div className="text-xs text-gray-500">From</div>
+                        <div className="font-medium">
+                          {currentUserLocation?.address || "Current Location"}
+                        </div>
                       </div>
                     </div>
-                  </Card>
-                )}
-
-                <Card className="p-6">
-                  <div className="text-center flex justify-between mb-4">
-                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 mb-3">
-                      <Battery className="w-12 h-12 text-green-600" />
+                    <div className="flex items-start gap-2">
+                      <Navigation className="w-4 h-4 text-green-600 mt-1" />
+                      <div>
+                        <div className="text-xs text-gray-500">To</div>
+                        <div className="font-medium">
+                          {contextStationName || "Station"}
+                          {plannedJourney?.stops?.[0] && (
+                            <span className="text-sm text-gray-500 ml-2">
+                              (
+                              {plannedJourney.stops[0].distanceFromStart.toFixed(
+                                1
+                              )}{" "}
+                              km)
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-4xl mb-1">
-                      {contextReservation?.current_soc &&
-                        contextReservation?.current_soc.toFixed(0)}
-                      %
-                    </span>
-                    <p className="text-gray-600">Battery Level</p>
                   </div>
-                  <Progress
-                    value={contextReservation?.current_soc}
-                    className="h-3"
-                  />
+
+                  {/* Reservation Details */}
+                  <div className="space-y-2 pt-3 border-t">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Station</span>
+                      <span className="font-medium">
+                        {contextStationName || "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Charger</span>
+                      <span className="font-medium">
+                        #{contextReservation.charger_id}
+                      </span>
+                    </div>
+                    {plannedJourney?.stops?.[0] && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Distance</span>
+                        <span className="font-medium">
+                          {plannedJourney.stops[0].distanceFromStart.toFixed(1)}{" "}
+                          km
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Reservation Time</span>
+                      <span className="font-medium">
+                        {new Date(
+                          contextReservation.reservation_start
+                        ).toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        -{" "}
+                        {new Date(
+                          contextReservation.reservation_end
+                        ).toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    {contextOrder?.customer_eta && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">ETA</span>
+                        <span className="font-medium">
+                          {new Date(
+                            contextOrder.customer_eta
+                          ).toLocaleTimeString("en-GB", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </Card>
+              )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Card className="p-4">
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
-                      <Zap className="w-4 h-4" />
-                      <span className="text-sm">Energy Delivered</span>
+              {/* Order Details */}
+              {contextOrder && contextRestaurant && contextOrderItems && (
+                <Card className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <UtensilsCrossed className="w-5 h-5 text-green-600" />
+                      <h3 className="font-semibold">Order Details</h3>
                     </div>
-                    <div className="text-2xl">
-                      {contextReservation?.cumulative_power &&
-                        contextReservation?.cumulative_power.toFixed(1)}{" "}
-                      <span className="text-sm text-gray-600">kWh</span>
+                    <Badge
+                      variant={
+                        contextOrder.food_status === "ready"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className={
+                        contextOrder.food_status === "ready"
+                          ? "bg-green-600"
+                          : ""
+                      }
+                    >
+                      {contextOrder.food_status === "ready"
+                        ? "Ready for Pickup!"
+                        : contextOrder.food_status === "cooking"
+                        ? "Preparing..."
+                        : "Order Placed"}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Restaurant</span>
+                      <span className="font-medium">
+                        {contextRestaurant.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Order Number</span>
+                      <span className="font-medium">
+                        #{contextOrder.order_id}
+                      </span>
+                    </div>
+
+                    {/* Order Items */}
+                    <div className="pt-3 border-t">
+                      <div className="text-sm font-medium mb-2">Items:</div>
+                      <div className="space-y-2">
+                        {contextOrderItems.map((item) => (
+                          <div
+                            key={item.order_item_id}
+                            className="flex justify-between text-sm"
+                          >
+                            <span>
+                              {item.quantity}x {item.name}
+                            </span>
+                            <span className="font-medium">
+                              €{(item.price * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between text-sm pt-3 border-t font-semibold">
+                      <span>Total</span>
+                      <span className="text-green-600">
+                        €{contextOrder.total_price.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Charging View */}
+          {activeView === "charging" && (
+            <div className="p-4 space-y-4">
+              {contextReservation &&
+              (contextChargingState === "active" ||
+                contextChargingState === "finished" ||
+                contextReservation.charge_start_time !== null) ? (
+                <>
+                  <Card className="p-4 bg-green-50 border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-white fill-white" />
+                        </div>
+                        <div>
+                          <h3>{contextStationName}</h3>
+                          {contextChargingState === "active" && (
+                            <Badge className="bg-green-600 mt-1">
+                              Charging in Progress
+                            </Badge>
+                          )}
+                          {contextChargingState === "finished" && (
+                            <Badge className="bg-gray-100 mt-1">
+                              Charging finished
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse" />
                     </div>
                   </Card>
 
-                  <Card className="p-4">
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
-                      <DollarSign className="w-4 h-4" />
-                      <span className="text-sm">Current Cost</span>
+                  {plannedJourney && (
+                    <Card className="p-4 bg-blue-50 border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <Navigation className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-600">
+                            Your charger reservation ends at{" "}
+                            {contextReservation?.reservation_end &&
+                              new Date(
+                                contextReservation?.reservation_end
+                              ).toLocaleTimeString("en-GB", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  <Card className="p-6">
+                    <div className="text-center flex justify-between mb-4">
+                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 mb-3">
+                        <Battery className="w-12 h-12 text-green-600" />
+                      </div>
+                      <span className="text-4xl mb-1">
+                        {contextReservation?.current_soc &&
+                          contextReservation?.current_soc.toFixed(0)}
+                        %
+                      </span>
+                      <p className="text-gray-600">Battery Level</p>
                     </div>
-                    <div className="text-2xl">
-                      €
-                      {contextReservation?.cumulative_price_of_charge?.toFixed(
-                        2
-                      )}{" "}
-                      <span className="text-sm text-gray-600">EUR</span>
-                    </div>
+                    <Progress
+                      value={contextReservation?.current_soc}
+                      className="h-3"
+                    />
                   </Card>
 
-                  <Card className="p-4">
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">Elapsed Time</span>
-                    </div>
-                    <div className="text-2xl">{formatTime(elapsedTime)}</div>
-                  </Card>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card className="p-4">
+                      <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <Zap className="w-4 h-4" />
+                        <span className="text-sm">Energy Delivered</span>
+                      </div>
+                      <div className="text-2xl">
+                        {contextReservation?.cumulative_power &&
+                          contextReservation?.cumulative_power.toFixed(1)}{" "}
+                        <span className="text-sm text-gray-600">kWh</span>
+                      </div>
+                    </Card>
 
-                  <Card className="p-4">
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
-                      <TrendingUp className="w-4 h-4" />
-                      <span className="text-sm">Charging Speed</span>
-                    </div>
-                    <div className="text-2xl">
-                      {chargingSpeed}{" "}
-                      <span className="text-sm text-gray-600">kW</span>
-                    </div>
-                  </Card>
-                </div>
+                    <Card className="p-4">
+                      <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <Euro className="w-4 h-4" />
+                        <span className="text-sm">Current Cost</span>
+                      </div>
+                      <div className="text-2xl">
+                        €
+                        {contextReservation?.cumulative_price_of_charge?.toFixed(
+                          2
+                        )}{" "}
+                        <span className="text-sm text-gray-600">EUR</span>
+                      </div>
+                    </Card>
 
-                {/* <Card className="p-4">
+                    <Card className="p-4">
+                      <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">Elapsed Time</span>
+                      </div>
+                      <div className="text-2xl">{formatTime(elapsedTime)}</div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-sm">Charging Speed</span>
+                      </div>
+                      <div className="text-2xl">
+                        {chargingSpeed}{" "}
+                        <span className="text-sm text-gray-600">kW</span>
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Est. Time to Full</span>
                     <span>{Math.floor(estimatedTimeRemaining / 60)} min</span>
                   </div>
                 </Card> */}
 
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  className="w-full"
-                  onClick={onEndSession}
-                >
-                  <StopCircle className="w-5 h-5 mr-2" />
-                  Stop Charging
-                </Button>
-                {timeRemaining !== null && timeRemaining < 10 && (
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    size="lg"
-                    disabled={!canExtend || isCheckingExtension}
-                  >
-                    {isCheckingExtension
-                      ? "Checking availability..."
-                      : !canExtend
-                      ? "Extension unavailable"
-                      : `Add 10 minutes to Reservation (${timeRemaining} min left)`}
-                  </Button>
-                )}
+                  {contextChargingState === "active" && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleStopCharging}
+                      disabled={isStoppingCharging}
+                    >
+                      <StopCircle className="w-4 h-4 mr-2" />
+                      {isStoppingCharging ? "Stopping..." : "Stop Charging"}
+                    </Button>
+                  )}
+                  {timeRemaining !== null && timeRemaining < 10 && (
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      size="lg"
+                      disabled={!canExtend || isCheckingExtension}
+                    >
+                      {isCheckingExtension
+                        ? "Checking availability..."
+                        : !canExtend
+                        ? "Extension unavailable"
+                        : `Add 10 minutes to Reservation (${timeRemaining} min left)`}
+                    </Button>
+                  )}
 
-                <p className="text-xs text-center text-gray-500">
-                  You will be charged for the energy delivered up to this point
-                </p>
-              </>
-            ) : (
-              <>
-                <Card className="p-8 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                    <Zap className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="mb-2">No Active Charging Session</h3>
+                  <p className="text-xs text-center text-gray-500">
+                    You will be charged for the energy delivered up to this
+                    point
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Card className="p-8 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                      <Zap className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="mb-2">No Active Charging Session</h3>
 
-                  {/* <Button
+                    {/* <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     size="lg"
                     onClick={handleStartCharging}
                   >
                     Start charging
                   </Button> */}
-                </Card>
-              </>
-            )}
-          </div>
-        </TabsContent>
-
-        {isJourneyActive && plannedJourney && (
-          <TabsContent value="journey" className="m-0">
-            <div className="p-4 space-y-4">
-              <Card className="p-4 bg-green-50 border-green-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Route className="w-5 h-5 text-green-600" />
-                  <h3>Journey in Progress</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">From</span>
-                    <span>{plannedJourney.startLocation}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">To</span>
-                    <span>{plannedJourney.stops[0].station.name}</span>
-                    <p className="text-sm text-gray-600">
-                      {plannedJourney.stops[0].station.address}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-                    <div>
-                      <div className="text-gray-600 mb-1">Distance</div>
-                      <div>{plannedJourney.stops[0].distanceFromStart} km</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600 mb-1">ETA</div>
-                      <div>
-                        {plannedJourney.stops[0].estimatedArrivalTime.toLocaleTimeString(
-                          "en-GB",
-                          {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      A CCS charger number 2 is reserved for you for{" "}
-                      {plannedJourney.stops[0].estimatedArrivalTime.toLocaleTimeString(
-                        "en-GB",
-                        {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        }
-                      )}
-                      -
-                      {new Date(
-                        plannedJourney.stops[0].estimatedArrivalTime.getTime() +
-                          30 * 60 * 1000
-                      ).toLocaleTimeString("en-GB", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                    <div className="flex justify-between"></div>
-                  </div>
-                </div>
-              </Card>
-
-              {true && (
-                <Card className="p-4 bg-blue-50 border-blue-200">
-                  <div className="flex items-start gap-2">
-                    <Navigation className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        Your charger reservation has been pushed forward to{" "}
-                        {new Date(
-                          plannedJourney.stops[0].estimatedArrivalTime.getTime() +
-                            10 * 60 * 1000
-                        ).toLocaleTimeString("en-GB", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                        -
-                        {new Date(
-                          plannedJourney.stops[0].estimatedArrivalTime.getTime() +
-                            40 * 60 * 1000
-                        ).toLocaleTimeString("en-GB", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              )}
-
-              {contextOrder &&
-                ["pending", "cooking", "ready"].includes(
-                  contextOrder.food_status
-                ) && (
-                  <Card className="p-4 bg-orange-50 border-orange-200">
-                    <div className="flex items-center gap-2 mb-3">
-                      <UtensilsCrossed className="w-5 h-5 text-orange-600" />
-                      <h3>Food Orders</h3>
-                    </div>
-                    <div className="mb-2 last:mb-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span>{contextRestaurant?.name}</span>
-                        <Badge
-                          variant={
-                            contextOrder.food_status === "ready"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className={
-                            contextOrder.food_status === "ready"
-                              ? "bg-green-600"
-                              : ""
-                          }
-                        >
-                          {contextOrder.food_status === "ready"
-                            ? "Ready for Pickup!"
-                            : contextOrder.food_status === "cooking"
-                            ? "Preparing..."
-                            : "Order Placed"}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {contextOrderItems?.reduce(
-                          (sum, item) => sum + item.quantity,
-                          0
-                        )}{" "}
-                        {contextOrderItems?.length === 1 ? "item" : "items"} • $
-                        {contextOrder.total_price.toFixed(2)}
-                      </div>
-                      <div>
-                        <span>
-                          Your order number is {contextOrder.order_id}
-                        </span>
-                      </div>
-                    </div>
                   </Card>
-                )}
+                </>
+              )}
             </div>
-          </TabsContent>
-        )}
-      </Tabs>
+          )}
+        </>
+      ) : (
+        <div className="p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+            <Zap className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="mb-2">No Active Session</h3>
+          <p className="text-gray-600 text-sm">Plan a journey to get started</p>
+        </div>
+      )}
     </div>
   );
 }
