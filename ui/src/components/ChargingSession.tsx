@@ -257,14 +257,14 @@ export function ChargingSession({
                       <span className="font-medium">
                         {new Date(
                           contextReservation.reservation_start
-                        ).toLocaleTimeString("en-US", {
+                        ).toLocaleTimeString("en-GB", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}{" "}
                         -{" "}
                         {new Date(
                           contextReservation.reservation_end
-                        ).toLocaleTimeString("en-US", {
+                        ).toLocaleTimeString("en-GB", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -276,7 +276,7 @@ export function ChargingSession({
                         <span className="font-medium">
                           {new Date(
                             contextOrder.customer_eta
-                          ).toLocaleTimeString("en-US", {
+                          ).toLocaleTimeString("en-GB", {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -404,7 +404,7 @@ export function ChargingSession({
                               new Date(
                                 contextReservation?.reservation_end
                               ).toLocaleTimeString("en-GB", {
-                                hour: "numeric",
+                                hour: "2-digit",
                                 minute: "2-digit",
                               })}
                           </p>
