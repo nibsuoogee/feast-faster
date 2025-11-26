@@ -1,13 +1,49 @@
 import axios from "axios";
 import { handleApiRequest } from "@/lib/requests";
 import { BACKEND_URL } from "@/lib/urls";
-import { Order, Restaurant } from "@/types/restaurant";
-import { RestaurantListItem } from "@types";
-import { orders } from "@/data/restaurantMockData";
+import { Order, OrderItem, Restaurant } from "@/types/restaurant";
+import {
+  Order as BackendOrder,
+  RestaurantListItem,
+  RestaurantOrder as BackendRestaurantOrder,
+} from "@types";
+
+const formatOrderNumber = (orderId: number): string =>
+  `ORD-${orderId.toString().padStart(4, "0")}`;
+
+const mapOrderItems = (items: BackendRestaurantOrder["items"]): OrderItem[] => {
+  const DEFAULT_PREPARATION_MINUTES = 15;
+
+  return items.map((item) => ({
+    name: item.name,
+    quantity: item.quantity,
+    // Backend order_items table does not store prep minutes which is required for start cookingtime ,
+    //  so fall back to a default to keep current ui functional.
+    preparationTime: DEFAULT_PREPARATION_MINUTES,
+  }));
+};
+
+const mapOrdersToUi = (orders: BackendRestaurantOrder[]): Order[] =>
+  orders.map(({ order, items, reservation }) => {
+    const etaSource = order.customer_eta ?? order.created_at;
+
+    return {
+      id: String(order.order_id),
+      orderNumber: formatOrderNumber(order.order_id),
+      restaurant_id: String(order.restaurant_id),
+      status: order.food_status,
+      customerETA: new Date(etaSource),
+      items: mapOrderItems(items),
+      chargePercentage:
+        reservation && reservation.current_soc != null
+          ? reservation.current_soc
+          : undefined,
+    };
+  });
 
 /**
  * Order service for restaurant dashboard
- * Uses mock data (cached automatically by JavaScript module system)
+ * Bridges backend DTOs to the lightweight UI types.
  */
 export const orderService = {
   /**
@@ -30,23 +66,26 @@ export const orderService = {
    * Get orders for a specific restaurant
    */
   getOrdersByRestaurant: async (restaurant_id: string): Promise<Order[]> => {
-    return orders.filter((order) => order.restaurant_id === restaurant_id);
+    const data = await handleApiRequest<BackendRestaurantOrder[]>(() =>
+      axios.get(`${BACKEND_URL}/restaurants/${restaurant_id}/orders`)
+    );
+    if (!data) return [];
+    return mapOrdersToUi(data);
   },
 
   /**
    * Update order status
-   * Modifies the mock data in place (persists across calls due to module caching)
    */
   updateOrderStatus: async (
     orderId: string,
     newStatus: "cooking" | "ready" | "picked_up"
   ): Promise<boolean> => {
-    const order = orders.find((o) => o.id === orderId);
-    if (order) {
-      order.status = newStatus;
-      console.log(`Updated order ${orderId} to status ${newStatus}`);
-      return true;
-    }
-    return false;
+    const response = await handleApiRequest<BackendOrder>(() =>
+      axios.patch(`${BACKEND_URL}/order-status`, {
+        order_id: Number(orderId),
+        food_status: newStatus,
+      })
+    );
+    return Boolean(response);
   },
 };
