@@ -1,3 +1,4 @@
+import { CreateOrderBody } from "@types";
 import { RestaurantOrder, RestaurantWithMenu } from "@/types/driver";
 import { orderService } from "@/services/order";
 import { useState } from "react";
@@ -20,16 +21,20 @@ import { useStateContext } from "@/contexts/StateContext";
 
 type RestaurantMenuProps = {
   restaurant: RestaurantWithMenu;
-  station_id: number;
+  stationId: number;
   stationName: string;
+  customerEta: Date;
+  chargingDuration: number;
   onClose: () => void;
   onPlaceOrder: (order: RestaurantOrder) => void;
 };
 
 export function RestaurantMenu({
   restaurant,
-  station_id,
+  stationId,
   stationName,
+  customerEta,
+  chargingDuration,
   onClose,
   onPlaceOrder,
 }: RestaurantMenuProps) {
@@ -83,18 +88,30 @@ export function RestaurantMenu({
 
   const categories = [...new Set(restaurant.menu.map((item) => item.category))];
 
+  // The charger will be reserve starting 10 min before ETA
+  // and until the estimated time of charge + 10 min after
+  const TEN_MIN = 10 * 60 * 1000;
+
   const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
 
-    const order: RestaurantOrder = {
-      id: Date.now().toString(),
+    const maxMinutes = Math.max(
+      ...cart.map((i) => i.menuItem.minutes_to_prepare)
+    );
+
+    const order: CreateOrderBody = {
       restaurant_id: restaurant.restaurant_id,
-      restaurantName: restaurant.name,
-      station_id,
-      stationName,
+      station_id: stationId,
       items: cart,
-      totalCost,
-      status: "pending",
+      total_price: totalCost,
+      customer_eta: customerEta,
+      reservation_start: new Date(customerEta.getTime() - TEN_MIN),
+      reservation_end: new Date(
+        customerEta.getTime() + chargingDuration * 60 * 1000 + TEN_MIN
+      ),
+      start_cooking_time: new Date(
+        customerEta.getTime() - maxMinutes * 60 * 1000
+      ),
     };
 
     try {
@@ -110,7 +127,7 @@ export function RestaurantMenu({
         setContextOrderItems(response.order_items);
         setContextRestaurant(response.restaurant);
 
-        //onPlaceOrder(response.order); // update UI state if needed
+        //onPlaceOrder(response.order); // update UI state if needed // TODO Check after monitoring view is ready
         onClose();
       } else {
         toast.success("Failed to place order.");
