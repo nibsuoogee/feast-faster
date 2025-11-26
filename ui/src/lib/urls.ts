@@ -10,3 +10,4 @@ export const getServiceUrl = (servicePrefix: string): string => {
 export const AUTH_URL = getServiceUrl("auth");
 export const BACKEND_URL = getServiceUrl("backend");
 export const PROCESSOR_URL = getServiceUrl("processor");
+export const CHARGER_URL = getServiceUrl("charger");

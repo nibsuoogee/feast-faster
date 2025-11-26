@@ -1,4 +1,5 @@
 import { useStateContext } from "@/contexts/StateContext";
+import { reservationService } from "@/services/reservations";
 import { PlannedJourney } from "@/types/driver";
 import {
   Battery,
@@ -12,12 +13,12 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { reservationService } from "@/services/reservations";
 import { useUserLocation } from "@/services/geocode";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
+import { chargingService } from "@/services/charger";
 
 type ChargingSessionProps = {
   isJourneyActive?: boolean;
@@ -36,6 +37,7 @@ export function ChargingSession({
   const [isCheckingExtension, setIsCheckingExtension] = useState(false);
   const [isStoppingCharging, setIsStoppingCharging] = useState(false);
   const [activeView, setActiveView] = useState<"order" | "charging">("order");
+  const [socAtArrival, setSocAtArrival] = useState<number>(0);
   const {
     contextReservation,
     contextOrder,
@@ -46,6 +48,23 @@ export function ChargingSession({
   } = useStateContext();
 
   const currentUserLocation = useUserLocation();
+
+  useEffect(() => {
+    if (!plannedJourney || !contextRestaurant?.station_id) return;
+
+    // Find the stop that matches the contextRestaurant's station_id
+    const matchingStop = plannedJourney.stops.find(
+      (stop) => stop.station.station_id === contextRestaurant.station_id
+    );
+
+    if (matchingStop) {
+      setSocAtArrival(matchingStop.station.soc_at_arrival);
+    } else {
+      console.warn(
+        `No matching station found for station_id: ${contextRestaurant.station_id}`
+      );
+    }
+  }, [plannedJourney, contextRestaurant?.station_id]);
 
   // Auto-switch to Order view when an order is placed
   useEffect(() => {
@@ -62,6 +81,17 @@ export function ChargingSession({
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  async function startCharging() {
+    if (!contextReservation || !contextOrder) return;
+
+    chargingService.startCharging({
+      charger_id: contextReservation.charger_id,
+      current_soc: socAtArrival,
+      user_id: contextOrder.customer_id,
+      rate_of_charge: 0.5,
+    });
+  }
 
   const chargingSpeed = 45;
   // const estimatedTimeRemaining = ((100 - batteryLevel) / 100) * 60 * 60; // seconds
@@ -524,13 +554,13 @@ export function ChargingSession({
                     </div>
                     <h3 className="mb-2">No Active Charging Session</h3>
 
-                    {/* <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    size="lg"
-                    onClick={handleStartCharging}
-                  >
-                    Start charging
-                  </Button> */}
+                    <Button
+                      className="w-full bg-green-100 hover:bg-green-700 border-1 border-green-500"
+                      size="lg"
+                      onClick={startCharging}
+                    >
+                      Start charging
+                    </Button>
                   </Card>
                 </>
               )}
