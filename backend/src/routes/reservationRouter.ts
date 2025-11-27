@@ -69,18 +69,30 @@ export const reservationRouter = new Elysia()
             // 1) Calculate new ETA using processor
             // fetch PROCESSOR_URL/calculate-eta ... body.location ...
 
+            const [order, errOrder] = await tryCatch(
+              OrderDTO.getOrder(reservation.order_id)
+            );
+            if (errOrder) return status(500, errOrder.message);
+            if (!order) return status(500, "Failed to get order");
+
             // Mock ETA
             const SIXTEEN_MIN = 19 * 60 * 1000;
             const newETA = new Date(
               reservation.reservation_start.getTime() + SIXTEEN_MIN
             );
+            const newCookingTime = new Date(
+              order.start_cooking_time.getTime() + SIXTEEN_MIN
+            );
 
             // 3) Save the new eta in the order
-            const [order, errOrder] = await tryCatch(
-              OrderDTO.updateOrderETA(reservation.order_id, newETA)
+            const [newOrder, newErrOrder] = await tryCatch(
+              OrderDTO.updateOrderETA(reservation.order_id, {
+                customer_eta: newETA,
+                start_cooking_time: newCookingTime,
+              })
             );
-            if (errOrder) return status(500, errOrder.message);
-            if (!order) return status(500, "Failed to update order ETA");
+            if (newErrOrder) return status(500, newErrOrder.message);
+            if (!newOrder) return status(500, "Failed to update ETA");
 
             // 4) Check whether the driver is on schedule
             const FIFTEEN_MIN = 15 * 60 * 1000;
@@ -140,74 +152,75 @@ export const reservationRouter = new Elysia()
             },
           }
         )
-      .patch(
-        "/reservations/extend/:reservation_id",
-        async ({ params, status, user }) => {
-          const { reservation_id } = params;
+        .patch(
+          "/reservations/extend/:reservation_id",
+          async ({ params, status, user }) => {
+            const { reservation_id } = params;
 
-          // fetch reservation
-          const [reservation, errReservation] = await tryCatch(
-            ReservationDTO.getReservationById(Number(reservation_id))
-          );
-          if (errReservation) return status(500, errReservation.message);
-          if (!reservation) return status(404, "Reservation not found");
+            // fetch reservation
+            const [reservation, errReservation] = await tryCatch(
+              ReservationDTO.getReservationById(Number(reservation_id))
+            );
+            if (errReservation) return status(500, errReservation.message);
+            if (!reservation) return status(404, "Reservation not found");
 
-          const { charger_id, reservation_end } = reservation;
+            const { charger_id, reservation_end } = reservation;
 
-          // check conflicting reservations
-          const TEN_MIN = 10 * 60 * 1000;
+            // check conflicting reservations
+            const TEN_MIN = 10 * 60 * 1000;
 
-          const [isConflicted, err] = await tryCatch(
-            ReservationDTO.hasConflictingReservation(
-              charger_id,
-              reservation_end,
-              TEN_MIN
-            )
-          );
+            const [isConflicted, err] = await tryCatch(
+              ReservationDTO.hasConflictingReservation(
+                charger_id,
+                reservation_end,
+                TEN_MIN
+              )
+            );
 
-          if (err) return status(500, err.message);
+            if (err) return status(500, err.message);
 
-          if (isConflicted) {
-            sendToUser(user.user_id, "reservation_extension_not_allowed", {
-              time: new Date().toISOString(),
+            if (isConflicted) {
+              sendToUser(user.user_id, "reservation_extension_not_allowed", {
+                time: new Date().toISOString(),
+              });
+
+              return status(200, {
+                message: "Extension not allowed",
+                extended: false,
+              });
+            }
+
+            // extend reservation by 10 minutes
+            const [updatedReservation, errShift] = await tryCatch(
+              ReservationDTO.extendReservationEnd(Number(reservation_id), 10)
+            );
+
+            if (errShift) return status(500, errShift.message);
+            if (!updatedReservation)
+              return status(500, "Failed to update reservation");
+
+            // notify user via SSE
+            sendToUser(user.user_id, "reservation_extension_success", {
+              reservation_id,
+              new_end: updatedReservation.reservation_end,
             });
 
-            return status(200, {
-              message: "Extension not allowed",
-              extended: false,
-            });
-          }
-
-          // extend reservation by 10 minutes
-          const [updatedReservation, errShift] = await tryCatch(
-            ReservationDTO.extendReservationEnd(Number(reservation_id), 10)
-          );
-
-          if (errShift) return status(500, errShift.message);
-          if (!updatedReservation) return status(500, "Failed to update reservation");
-
-          // notify user via SSE
-          sendToUser(user.user_id, "reservation_extension_success", {
-            reservation_id,
-            new_end: updatedReservation.reservation_end,
-          });
-
-          return {
-            message: "Reservation extended by 10 minutes",
-            extended: true,
-            reservation: updatedReservation,
-          };
-        },
-        {
-          response: {
-            200: t.Object({
-              message: t.String(),
-              extended: t.Boolean(),
-              reservation: t.Optional(reservationModel),
-            }),
-            404: t.String(),
-            500: t.String(),
+            return {
+              message: "Reservation extended by 10 minutes",
+              extended: true,
+              reservation: updatedReservation,
+            };
           },
-        }
-      )
+          {
+            response: {
+              200: t.Object({
+                message: t.String(),
+                extended: t.Boolean(),
+                reservation: t.Optional(reservationModel),
+              }),
+              404: t.String(),
+              500: t.String(),
+            },
+          }
+        )
   );
