@@ -15,6 +15,7 @@ import {
   Euro,
   Navigation,
   Route,
+  SkipBack,
   StopCircle,
   TestTube2,
   TrendingUp,
@@ -27,6 +28,8 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Slider } from "./ui/slider";
+import { orderService } from "@/services/order";
+import { toast } from "sonner";
 
 type ChargingSessionProps = {
   isJourneyActive?: boolean;
@@ -54,6 +57,7 @@ export function ChargingSession({
     contextChargingState,
     setContextReservation,
     setContextOrder,
+    resetContext,
   } = useStateContext();
   const [route, setRoute] = useState<RouteResponseModel | undefined>(undefined);
   const [routeStep, setRouteStep] = useState<number>(0);
@@ -255,6 +259,19 @@ export function ChargingSession({
     }
   };
 
+  async function cancelOrder() {
+    if (!contextOrder?.order_id) return;
+
+    const result = await orderService.deleteOrder(contextOrder.order_id);
+    if (result?.success) {
+      toast.success(
+        "Your order was cancelled and you were successfully refunded."
+      );
+
+      resetContext();
+    }
+  }
+
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50">
       {contextReservation || contextOrder ? (
@@ -425,6 +442,17 @@ export function ChargingSession({
                         </span>
                       </div>
                     </div>
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full hover:bg-red-400"
+                      onClick={cancelOrder}
+                      disabled={undefined}
+                    >
+                      <SkipBack className="w-4 h-4 mr-2" />
+                      Cancel order
+                    </Button>
                   </div>
                 </Card>
               )}
@@ -487,7 +515,7 @@ export function ChargingSession({
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full mt-4 bg-green-100 hover:bg-green-700 border-1 border-green-500"
+                    className="w-full hover:bg-gray-300"
                     onClick={myEta}
                     disabled={undefined}
                   >

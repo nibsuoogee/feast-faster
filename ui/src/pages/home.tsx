@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Toaster } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserProfile } from "@/components/UserProfile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -138,12 +139,15 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <Toaster position="top-center" />
       <main className="h-full">
         {showRoutePreview && plannedJourney ? (
           <RoutePreview
             journey={plannedJourney}
             onStartJourney={startJourney}
             onBack={() => setShowRoutePreview(false)}
+            setCurrentTab={setCurrentTab}
+            setShowRoutePreview={setShowRoutePreview}
           />
         ) : (
           <Tabs

@@ -9,4 +9,9 @@ export const orderService = {
       axios.post(`${BACKEND_URL}/orders`, orderData, {})
     );
   },
+  deleteOrder: async (order_id: number) => {
+    return handleApiRequest<{ success: boolean }>(() =>
+      axios.delete(`${BACKEND_URL}/order/${order_id}`)
+    );
+  },
 };

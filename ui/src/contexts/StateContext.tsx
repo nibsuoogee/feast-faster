@@ -25,6 +25,8 @@ type StateContextType = {
   // ChargingState
   contextChargingState: ChargingStatus;
   setContextChargingState: (value: ChargingStatus) => void;
+
+  resetContext: () => void;
 };
 
 const StateContext = createContext<StateContextType | undefined>(undefined);
@@ -65,6 +67,15 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
   const [contextChargingState, setContextChargingState] =
     useState<ChargingStatus>("not_started");
 
+  async function resetContext() {
+    setContextReservation(undefined);
+    setContextOrder(undefined);
+    setContextOrderItems(undefined);
+    setContextRestaurant(undefined);
+    setContextStationName(undefined);
+    setContextChargingState("not_started");
+  }
+
   return (
     <StateContext.Provider
       value={{
@@ -86,6 +97,8 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
         // ChargingState
         contextChargingState,
         setContextChargingState,
+
+        resetContext,
       }}
     >
       {children}

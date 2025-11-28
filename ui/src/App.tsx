@@ -41,7 +41,6 @@ function App() {
 
   return (
     <>
-      <Toaster />
       <Router>
         <AuthProvider>
           <StateProvider>

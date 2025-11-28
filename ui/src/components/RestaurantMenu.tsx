@@ -19,6 +19,8 @@ type RestaurantMenuProps = {
   chargingDuration: number;
   onClose: () => void;
   onPlaceOrder: (order: RestaurantOrder) => void;
+  setCurrentTab: (value: string) => void;
+  setShowRoutePreview: (value: boolean) => void;
 };
 
 export function RestaurantMenu({
@@ -29,6 +31,8 @@ export function RestaurantMenu({
   chargingDuration,
   onClose,
   onPlaceOrder,
+  setCurrentTab,
+  setShowRoutePreview,
 }: RestaurantMenuProps) {
   const {
     setContextReservation,
@@ -120,6 +124,9 @@ export function RestaurantMenu({
         setContextOrderItems(response.order_items);
         setContextRestaurant(response.restaurant);
         setContextStationName(response.station_name);
+
+        setShowRoutePreview(false);
+        setCurrentTab("session");
 
         //onPlaceOrder(response.order); // update UI state if needed // TODO Check after monitoring view is ready
         onClose();

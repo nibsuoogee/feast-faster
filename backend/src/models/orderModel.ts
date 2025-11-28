@@ -17,6 +17,24 @@ export const OrderDTO = {
     `;
     return result;
   },
+  delete: async (order_id: number): Promise<Order> => {
+    const [deleted] = await sql`
+      DELETE FROM orders
+      WHERE order_id = ${order_id}
+      RETURNING *`;
+    return deleted;
+  },
+  userOwnsOrder: async (
+    user_id: number,
+    order_id: number
+  ): Promise<boolean> => {
+    const [isOwner] = await sql`
+    SELECT EXISTS(SELECT 1 FROM orders 
+      WHERE order_id = ${order_id}
+      AND customer_id = ${user_id});
+    `;
+    return isOwner;
+  },
   createOrder: async (order: OrderModelForCreation): Promise<Order> => {
     const [newOrder] = await sql`
       INSERT INTO orders ${sql(order)}

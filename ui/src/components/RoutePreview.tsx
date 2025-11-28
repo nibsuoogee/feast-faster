@@ -26,12 +26,16 @@ type RoutePreviewProps = {
   journey: PlannedJourney;
   onStartJourney: () => void;
   onBack: () => void;
+  setCurrentTab: (value: string) => void;
+  setShowRoutePreview: (value: boolean) => void;
 };
 
 export function RoutePreview({
   journey,
   onStartJourney,
   onBack,
+  setCurrentTab,
+  setShowRoutePreview,
 }: RoutePreviewProps) {
   const [selectedRestaurant, setSelectedRestaurant] = useState<{
     stop: JourneyStop;
@@ -224,6 +228,8 @@ export function RoutePreview({
               onStartJourney();
             }, 500);
           }}
+          setCurrentTab={setCurrentTab}
+          setShowRoutePreview={setShowRoutePreview}
         />
       )}
     </div>

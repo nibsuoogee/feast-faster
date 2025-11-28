@@ -180,4 +180,37 @@ export const orderRouter = new Elysia()
             },
           }
         )
+        .delete(
+          "/order/:order_id",
+          async ({ user, params, status }) => {
+            const orderId = Number(params.order_id);
+            if (!orderId) return status(400, "Order ID not provided");
+
+            // 1) Check user owns the order
+            const [order, errOrder] = await tryCatch(
+              OrderDTO.userOwnsOrder(user.user_id, orderId)
+            );
+            if (errOrder) return status(500, errOrder.message);
+            if (!order) return status(401, "User does not own the order");
+
+            // 2) Delete the order
+            const [deleted, errDelete] = await tryCatch(
+              OrderDTO.delete(orderId)
+            );
+            if (errDelete) return status(500, errDelete.message);
+            if (!deleted) return status(400, "Order deletion failed");
+
+            return {
+              success: true,
+            };
+          },
+          {
+            response: {
+              200: t.Object({ success: t.Boolean() }),
+              400: t.String(),
+              401: t.String(),
+              500: t.String(),
+            },
+          }
+        )
   );
