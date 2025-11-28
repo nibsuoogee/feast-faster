@@ -1,5 +1,6 @@
 import { t } from "elysia";
 import { sql } from "bun";
+import { PROCESSOR_URL } from "../lib/urls";
 
 export const reservationModel = t.Object({
   reservation_id: t.Number(),
@@ -126,5 +127,40 @@ export const ReservationDTO = {
 
     return updatedReservation ?? null;
   },
+  calculateEta: async (
+    body: EtaRequestModel
+  ): Promise<EtaResponseModel | null> => {
+    try {
+      const response = await fetch(`${PROCESSOR_URL}/api/calculate-eta`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
+      if (!response.ok) {
+        console.error("Processor error: ", await response.text());
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error contacting processor: ", error);
+      return null;
+    }
+  },
 };
+
+export const etaRequestModel = t.Object({
+  reservation_id: t.Number(),
+  location: t.Tuple([t.Number(), t.Number()]),
+});
+export type EtaRequestModel = typeof etaRequestModel.static;
+
+export const etaResponseModel = t.Object({
+  location: t.Tuple([t.Number(), t.Number()]),
+  travel_time_min: t.Number(),
+  distance_km: t.Number(),
+});
+export type EtaResponseModel = typeof etaResponseModel.static;

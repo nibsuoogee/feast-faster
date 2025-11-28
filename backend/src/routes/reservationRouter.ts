@@ -1,4 +1,8 @@
-import { ReservationDTO, reservationModel } from "@models/reservationModel";
+import {
+  etaRequestModel,
+  ReservationDTO,
+  reservationModel,
+} from "@models/reservationModel";
 import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
@@ -67,7 +71,11 @@ export const reservationRouter = new Elysia()
             if (!reservation) return status(500, "Failed to get reservation");
 
             // 1) Calculate new ETA using processor
-            // fetch PROCESSOR_URL/calculate-eta ... body.location ...
+            const [etaResponse, errEtaResponse] = await tryCatch(
+              ReservationDTO.calculateEta(body)
+            );
+            if (errEtaResponse) return status(500, errEtaResponse.message);
+            if (!etaResponse) return status(500, "Failed to calculate ETA");
 
             const [order, errOrder] = await tryCatch(
               OrderDTO.getOrder(reservation.order_id)
@@ -75,19 +83,23 @@ export const reservationRouter = new Elysia()
             if (errOrder) return status(500, errOrder.message);
             if (!order) return status(500, "Failed to get order");
 
-            // Mock ETA
-            const SIXTEEN_MIN = 19 * 60 * 1000;
-            const newETA = new Date(
-              reservation.reservation_start.getTime() + SIXTEEN_MIN
-            );
+            // Calculate new ETA: current time + travel time
+            const currentTime = new Date();
+            const travelTimeMs = etaResponse.travel_time_min * 60 * 1000;
+            const newEta = new Date(currentTime.getTime() + travelTimeMs);
+
+            // Calculate delta between old and new ETA
+            const etaDelta = newEta.getTime() - order.customer_eta.getTime();
+
+            // Apply the same delta to the start_cooking_time
             const newCookingTime = new Date(
-              order.start_cooking_time.getTime() + SIXTEEN_MIN
+              order.start_cooking_time.getTime() + etaDelta
             );
 
             // 3) Save the new eta in the order
             const [newOrder, newErrOrder] = await tryCatch(
               OrderDTO.updateOrderETA(reservation.order_id, {
-                customer_eta: newETA,
+                customer_eta: newEta,
                 start_cooking_time: newCookingTime,
               })
             );
@@ -97,7 +109,7 @@ export const reservationRouter = new Elysia()
             // 4) Check whether the driver is on schedule
             const FIFTEEN_MIN = 15 * 60 * 1000;
             const isMoreThan15MinAfter =
-              newETA.getTime() - reservation.reservation_start.getTime() >
+              newEta.getTime() - reservation.reservation_start.getTime() >
               FIFTEEN_MIN;
             if (!isMoreThan15MinAfter) return "Driver on schedule";
 
@@ -139,10 +151,7 @@ export const reservationRouter = new Elysia()
             };
           },
           {
-            body: t.Object({
-              reservation_id: t.Number(),
-              location: t.Tuple([t.Number(), t.Number()]),
-            }),
+            body: etaRequestModel,
             response: {
               200: t.Object({
                 order: orderModel,
