@@ -331,7 +331,7 @@ export function ChargingSession({
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Distance</span>
                           <span className="font-medium">
-                            {distanceToStation.toFixed(1)} km
+                            {distanceToStation.toFixed(0)} km
                           </span>
                         </div>
                       )}
