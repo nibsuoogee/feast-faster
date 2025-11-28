@@ -11,7 +11,7 @@ export type FoodStatus = typeof foodStatusEnum.static;
 
 export const OrderDTO = {
   getOrder: async (order_id: number) => {
-    const result = await sql`
+    const [result] = await sql`
       SELECT * FROM orders
       WHERE order_id = ${order_id};
     `;

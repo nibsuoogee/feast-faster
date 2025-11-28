@@ -4,7 +4,11 @@ export type {
   AccessToken,
 } from "../auth/dist/models/userModel";
 
-export type { Reservation } from "../backend/dist/models/reservationModel";
+export type {
+  Reservation,
+  EtaRequestModel,
+  EtaResponseModel,
+} from "../backend/dist/models/reservationModel";
 
 export type {
   StationModel,

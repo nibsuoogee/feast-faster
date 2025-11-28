@@ -1,6 +1,7 @@
 import { t } from "elysia";
 import { sql } from "bun";
 import { PROCESSOR_URL } from "../lib/urls";
+import { orderModel } from "./orderModel";
 
 export const reservationModel = t.Object({
   reservation_id: t.Number(),
@@ -128,8 +129,8 @@ export const ReservationDTO = {
     return updatedReservation ?? null;
   },
   calculateEta: async (
-    body: EtaRequestModel
-  ): Promise<EtaResponseModel | null> => {
+    body: ProcessorEtaRequestModel
+  ): Promise<ProcessorEtaResponseModel | null> => {
     try {
       const response = await fetch(`${PROCESSOR_URL}/api/calculate-eta`, {
         method: "POST",
@@ -153,14 +154,27 @@ export const ReservationDTO = {
 };
 
 export const etaRequestModel = t.Object({
+  lateness_in_minutes: t.Number(),
   reservation_id: t.Number(),
-  location: t.Tuple([t.Number(), t.Number()]),
+  order_id: t.Number(),
 });
 export type EtaRequestModel = typeof etaRequestModel.static;
 
 export const etaResponseModel = t.Object({
+  order: orderModel,
+  reservation: reservationModel,
+});
+export type EtaResponseModel = typeof etaResponseModel.static;
+
+export const processorEtaRequestModel = t.Object({
+  reservation_id: t.Number(),
+  location: t.Tuple([t.Number(), t.Number()]),
+});
+export type ProcessorEtaRequestModel = typeof processorEtaRequestModel.static;
+
+export const processorEtaResponseModel = t.Object({
   location: t.Tuple([t.Number(), t.Number()]),
   travel_time_min: t.Number(),
   distance_km: t.Number(),
 });
-export type EtaResponseModel = typeof etaResponseModel.static;
+export type ProcessorEtaResponseModel = typeof processorEtaResponseModel.static;

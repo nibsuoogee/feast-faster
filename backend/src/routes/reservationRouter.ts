@@ -1,5 +1,6 @@
 import {
   etaRequestModel,
+  etaResponseModel,
   ReservationDTO,
   reservationModel,
 } from "@models/reservationModel";
@@ -70,41 +71,16 @@ export const reservationRouter = new Elysia()
             if (errReservation) return status(500, errReservation.message);
             if (!reservation) return status(500, "Failed to get reservation");
 
-            // 1) Calculate new ETA using processor
-            const [etaResponse, errEtaResponse] = await tryCatch(
-              ReservationDTO.calculateEta(body)
-            );
-            if (errEtaResponse) return status(500, errEtaResponse.message);
-            if (!etaResponse) return status(500, "Failed to calculate ETA");
-
+            // Get order
             const [order, errOrder] = await tryCatch(
-              OrderDTO.getOrder(reservation.order_id)
+              OrderDTO.getOrder(body.order_id)
             );
             if (errOrder) return status(500, errOrder.message);
             if (!order) return status(500, "Failed to get order");
 
-            // Calculate new ETA: current time + travel time
-            const currentTime = new Date();
-            const travelTimeMs = etaResponse.travel_time_min * 60 * 1000;
-            const newEta = new Date(currentTime.getTime() + travelTimeMs);
+            const latenessMs = body.lateness_in_minutes * 60 * 1000;
 
-            // Calculate delta between old and new ETA
-            const etaDelta = newEta.getTime() - order.customer_eta.getTime();
-
-            // Apply the same delta to the start_cooking_time
-            const newCookingTime = new Date(
-              order.start_cooking_time.getTime() + etaDelta
-            );
-
-            // 3) Save the new eta in the order
-            const [newOrder, newErrOrder] = await tryCatch(
-              OrderDTO.updateOrderETA(reservation.order_id, {
-                customer_eta: newEta,
-                start_cooking_time: newCookingTime,
-              })
-            );
-            if (newErrOrder) return status(500, newErrOrder.message);
-            if (!newOrder) return status(500, "Failed to update ETA");
+            const newEta = new Date(order.customer_eta.getTime() + latenessMs);
 
             // 4) Check whether the driver is on schedule
             const FIFTEEN_MIN = 15 * 60 * 1000;
@@ -114,12 +90,11 @@ export const reservationRouter = new Elysia()
             if (!isMoreThan15MinAfter) return "Driver on schedule";
 
             // 5) Check conflicts
-            const FIVE_MIN = 5 * 60 * 1000; // Default extension time
             const [isConflicted, err] = await tryCatch(
               ReservationDTO.hasConflictingReservation(
                 reservation.charger_id,
                 reservation.reservation_end,
-                FIVE_MIN
+                latenessMs
               )
             );
             if (err) return status(500, err.message);
@@ -145,18 +120,30 @@ export const reservationRouter = new Elysia()
               time: new Date().toISOString(),
             });
 
+            const FIVE_MINUTES_MS = 5 * 60 * 1000;
+            const newCookingTime = new Date(
+              order.start_cooking_time.getTime() + FIVE_MINUTES_MS
+            );
+
+            // 3) Save the new eta in the order
+            const [newOrder, newErrOrder] = await tryCatch(
+              OrderDTO.updateOrderETA(reservation.order_id, {
+                customer_eta: newEta,
+                start_cooking_time: newCookingTime,
+              })
+            );
+            if (newErrOrder) return status(500, newErrOrder.message);
+            if (!newOrder) return status(500, "Failed to update ETA");
+
             return {
-              order: order,
+              order: newOrder,
               reservation: shiftedReservation,
             };
           },
           {
             body: etaRequestModel,
             response: {
-              200: t.Object({
-                order: orderModel,
-                reservation: reservationModel,
-              }),
+              200: etaResponseModel,
               500: t.String(),
             },
           }

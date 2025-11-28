@@ -1,5 +1,11 @@
 import { useStateContext } from "@/contexts/StateContext";
-import { reservationService } from "@/services/reservations";
+import { chargingService } from "@/services/charger";
+import { useUserLocation } from "@/services/geocode";
+import {
+  reservationService,
+  RouteResponseModel,
+  routeResponseModel,
+} from "@/services/reservations";
 import { PlannedJourney } from "@/types/driver";
 import {
   Battery,
@@ -8,17 +14,18 @@ import {
   Navigation,
   Route,
   StopCircle,
+  TestTube2,
   TrendingUp,
   UtensilsCrossed,
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useUserLocation } from "@/services/geocode";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
-import { chargingService } from "@/services/charger";
+import { Slider } from "./ui/slider";
+import { orderModel, reservationModel } from "@/models";
 
 type ChargingSessionProps = {
   isJourneyActive?: boolean;
@@ -45,8 +52,12 @@ export function ChargingSession({
     contextRestaurant,
     contextStationName,
     contextChargingState,
+    setContextReservation,
+    setContextOrder,
   } = useStateContext();
-
+  const [route, setRoute] = useState<RouteResponseModel | undefined>(undefined);
+  const [routeStep, setRouteStep] = useState<number>(0);
+  const [lateness, setLateness] = useState<number>(0);
   const currentUserLocation = useUserLocation();
 
   useEffect(() => {
@@ -72,6 +83,56 @@ export function ChargingSession({
       setActiveView("order");
     }
   }, [contextOrder?.order_id]);
+
+  async function getNewRoute() {
+    if (!contextRestaurant?.station_id) return;
+    if (!currentUserLocation) return;
+    const { latitude, longitude } = currentUserLocation;
+    if (!latitude || !longitude) return;
+
+    const response = await reservationService.getRoute({
+      station_id: contextRestaurant.station_id,
+      source: [longitude, latitude],
+      interval: 1,
+    });
+
+    const result = routeResponseModel.safeParse(response);
+    if (!result.success) {
+      console.error("Failed to parse route: ", result.error);
+    } else {
+      setRoute(result.data);
+      console.log("result.data: ", result.data);
+    }
+  }
+
+  useEffect(() => {
+    getNewRoute();
+  }, [currentUserLocation, contextRestaurant?.station_id]);
+
+  async function myEta() {
+    if (!contextReservation?.reservation_id) return;
+    if (!contextOrder?.order_id) return;
+
+    const response = await reservationService.myEta({
+      reservation_id: contextReservation?.reservation_id,
+      order_id: contextOrder?.order_id,
+      lateness_in_minutes: lateness,
+    });
+
+    const orderResult = orderModel.safeParse(response?.order);
+    if (!orderResult.success) {
+      console.error("Failed to parse order: ", orderResult.error);
+    } else {
+      setContextOrder(orderResult.data);
+    }
+
+    const reservationResult = reservationModel.safeParse(response?.reservation);
+    if (!reservationResult.success) {
+      console.error("Failed to parse order: ", reservationResult.error);
+    } else {
+      setContextReservation(reservationResult.data);
+    }
+  }
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -386,6 +447,73 @@ export function ChargingSession({
                       </span>
                     </div>
                   </div>
+                </Card>
+              )}
+
+              {route && (
+                <Card className="p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TestTube2 className="w-5 h-5 text-green-600" />
+                    <h3 className="font-semibold">Mock driver progress</h3>
+                  </div>
+
+                  {/* Route Progress Slider */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16">Start</div>
+                      <Slider
+                        value={[routeStep]}
+                        onValueChange={(value) => setRouteStep(value[0])}
+                        min={0}
+                        max={route?.length - 1}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <div className="w-16 text-right">Station</div>
+                    </div>
+
+                    {/* Lateness Slider */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-16">On time</div>
+                      <Slider
+                        value={[lateness]}
+                        onValueChange={(value) => setLateness(value[0])}
+                        min={0}
+                        max={20}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <div className="w-16 text-right">Late</div>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Driving time</span>
+                      <span className="font-medium">
+                        {route[routeStep]?.time_min} minutes
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Distance</span>
+                      <span className="font-medium">{"..."} km</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Lateness</span>
+                      <span className="font-medium">{lateness} minutes</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full mt-4 bg-green-100 hover:bg-green-700 border-1 border-green-500"
+                    onClick={myEta}
+                    disabled={undefined}
+                  >
+                    Send location update
+                  </Button>
                 </Card>
               )}
             </div>
