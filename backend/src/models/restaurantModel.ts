@@ -1,14 +1,17 @@
 import { sql } from "bun";
 import { t } from "elysia";
-import { OrderItem, orderItemModel } from "./orderItemModel";
+import { menuItemModel } from "./menuItemModel";
+import {
+  orderItemForRestaurant,
+  OrderItemForRestaurant,
+} from "./orderItemModel";
 import { Order, orderModel } from "./orderModel";
 import { Reservation, reservationModel } from "./reservationModel";
-import { menuItemModel } from "./menuItemModel";
 
 // Response type
 export const restaurantOrdersModel = t.Object({
   order: orderModel,
-  items: t.Array(orderItemModel),
+  items: t.Array(orderItemForRestaurant),
   reservation: reservationModel,
 });
 
@@ -28,8 +31,10 @@ export const RestaurantDTO = {
 
     for (const order of orders) {
       // Fetch order items with menu details
-      const items: OrderItem[] = await sql<OrderItem[]>`
-        SELECT oi.*, mi.name, mi.details, mi.price
+      const items: OrderItemForRestaurant[] = await sql<
+        OrderItemForRestaurant[]
+      >`
+        SELECT oi.*, mi.name, mi.details, mi.price, mi.minutes_to_prepare
         FROM order_items oi
         JOIN menu_items mi ON oi.menu_item_id = mi.menu_item_id
         WHERE oi.order_id = ${order.order_id}

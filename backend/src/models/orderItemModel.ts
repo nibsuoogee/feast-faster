@@ -15,6 +15,15 @@ export const orderItemModel = t.Object({
 });
 export type OrderItem = typeof orderItemModel.static;
 
+export const orderItemForRestaurant = t.Intersect([
+  orderItemModel,
+  t.Object({
+    minutes_to_prepare: t.Number(),
+  }),
+]);
+
+export type OrderItemForRestaurant = typeof orderItemForRestaurant.static;
+
 // order_item creation
 
 export const orderItemModelForCreation = t.Object({

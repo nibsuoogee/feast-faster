@@ -12,14 +12,10 @@ const formatOrderNumber = (orderId: number): string =>
   `ORD-${orderId.toString().padStart(4, "0")}`;
 
 const mapOrderItems = (items: BackendRestaurantOrder["items"]): OrderItem[] => {
-  const DEFAULT_PREPARATION_MINUTES = 15;
-
   return items.map((item) => ({
     name: item.name,
     quantity: item.quantity,
-    // Backend order_items table does not store prep minutes which is required for start cookingtime ,
-    //  so fall back to a default to keep current ui functional.
-    preparationTime: DEFAULT_PREPARATION_MINUTES,
+    preparationTime: item.minutes_to_prepare,
   }));
 };
 
