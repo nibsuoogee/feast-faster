@@ -20,12 +20,7 @@ import { UserProfile } from "@/components/UserProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { geocodeAddress, useUserLocation } from "@/services/geocode";
 import { getFilteredStations } from "@/services/stations";
-import {
-  ChargingSessionType,
-  PlannedJourney,
-  RestaurantOrder,
-} from "@/types/driver";
-import { StationModel } from "@types";
+import { PlannedJourney } from "@/types/driver";
 import {
   Battery,
   ChevronDown,
@@ -44,11 +39,6 @@ import { toast } from "sonner";
 export const Home = () => {
   const { settings, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState("journey");
-  const [activeSession, setActiveSession] =
-    useState<ChargingSessionType | null>(null);
-  const [restaurantOrders, setRestaurantOrders] = useState<RestaurantOrder[]>(
-    []
-  );
   const [plannedJourney, setPlannedJourney] = useState<PlannedJourney | null>(
     null
   );
@@ -59,7 +49,6 @@ export const Home = () => {
   const [currentSOC, setCurrentSOC] = useState([75]);
   const [currentRange, setCurrentRange] = useState([180]);
   const [desiredSOC, setDesiredSOC] = useState([80]);
-  // const [stations, setStations] = useState<StationModel | undefined>(undefined);
   const [connectorType, setConnectorType] = useState<string>("any");
   const [cuisinePreference, setCuisinePreference] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -141,44 +130,6 @@ export const Home = () => {
     }
   };
 
-  const startChargingSession = (station: StationModel) => {
-    const session: ChargingSessionType = {
-      id: Date.now().toString(),
-      station_id: station.station_id,
-      stationName: station.name,
-      startTime: new Date(),
-      energyDelivered: 0,
-      cost: 0,
-      status: "active",
-    };
-    setActiveSession(session);
-    setCurrentTab("session");
-  };
-
-  const endChargingSession = () => {
-    if (activeSession) {
-      setActiveSession({
-        ...activeSession,
-        endTime: new Date(),
-        status: "completed",
-      });
-      setTimeout(() => setActiveSession(null), 2000);
-    }
-  };
-
-  const placeRestaurantOrder = (order: RestaurantOrder) => {
-    setRestaurantOrders((prev) => [...prev, order]);
-  };
-
-  const updateOrderStatus = (
-    orderId: string,
-    status: RestaurantOrder["status"]
-  ) => {
-    setRestaurantOrders((prev) =>
-      prev.map((order) => (order.id === orderId ? { ...order, status } : order))
-    );
-  };
-
   const startJourney = () => {
     setIsJourneyActive(true);
     setShowRoutePreview(false);
@@ -192,7 +143,6 @@ export const Home = () => {
           <RoutePreview
             journey={plannedJourney}
             onStartJourney={startJourney}
-            onPlaceOrder={placeRestaurantOrder}
             onBack={() => setShowRoutePreview(false)}
           />
         ) : (
@@ -458,12 +408,6 @@ export const Home = () => {
               >
                 <Zap className="w-5 h-5" />
                 <span className="text-xs">Active</span>
-                {(activeSession?.status === "active" ||
-                  restaurantOrders.some((o) =>
-                    ["pending", "cooking", "ready"].includes(o.status)
-                  )) && (
-                  <span className="absolute top-2 right-3 w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                )}
               </TabsTrigger>
               <TabsTrigger
                 value="profile"

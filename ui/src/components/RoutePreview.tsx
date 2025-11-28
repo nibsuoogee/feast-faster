@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { PlannedJourney, JourneyStop, RestaurantOrder } from "@/types/driver";
 import { displayTimeInHelsinki } from "@/lib/timeDisplay";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { JourneyStop, PlannedJourney } from "@/types/driver";
+import { Clock, Flag, MapPin, UtensilsCrossed, Zap } from "lucide-react";
+import { useState } from "react";
 import { RestaurantMenu } from "./RestaurantMenu";
-import { MapPin, Zap, Clock, UtensilsCrossed, Flag } from "lucide-react";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
 
 const restaurantImages = [
   "https://images.unsplash.com/photo-1555057949-7e4a30956f1f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
@@ -25,14 +25,12 @@ const randomFromArray = (arr: string[]) => {
 type RoutePreviewProps = {
   journey: PlannedJourney;
   onStartJourney: () => void;
-  onPlaceOrder: (order: RestaurantOrder) => void;
   onBack: () => void;
 };
 
 export function RoutePreview({
   journey,
   onStartJourney,
-  onPlaceOrder,
   onBack,
 }: RoutePreviewProps) {
   const [selectedRestaurant, setSelectedRestaurant] = useState<{
@@ -205,8 +203,7 @@ export function RoutePreview({
           customerEta={selectedRestaurant.stop.estimatedArrivalTime}
           chargingDuration={selectedRestaurant.stop.chargingDuration}
           onClose={() => setSelectedRestaurant(null)}
-          onPlaceOrder={(order) => {
-            onPlaceOrder(order);
+          onPlaceOrder={() => {
             const stopIndex = journey.stops.findIndex(
               (s) =>
                 s.station.station_id ===
