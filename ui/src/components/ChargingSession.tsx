@@ -37,15 +37,14 @@ export function ChargingSession({
   isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
-  // const [energyDelivered, setEnergyDelivered] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
-  // const [batteryLevel, setBatteryLevel] = useState(45);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [canExtend, setCanExtend] = useState<boolean>(false);
   const [isCheckingExtension, setIsCheckingExtension] = useState(false);
   const [isStoppingCharging, setIsStoppingCharging] = useState(false);
   const [activeView, setActiveView] = useState<"order" | "charging">("order");
   const [socAtArrival, setSocAtArrival] = useState<number>(0);
+  const [distanceToStation, setDistanceToStation] = useState<number>(0);
   const {
     contextReservation,
     contextOrder,
@@ -71,6 +70,7 @@ export function ChargingSession({
 
     if (matchingStop) {
       setSocAtArrival(matchingStop.station.soc_at_arrival);
+      setDistanceToStation(matchingStop.distanceFromStart);
     } else {
       console.warn(
         `No matching station found for station_id: ${contextRestaurant.station_id}`
@@ -156,7 +156,6 @@ export function ChargingSession({
   }
 
   const chargingSpeed = 45;
-  // const estimatedTimeRemaining = ((100 - batteryLevel) / 100) * 60 * 60; // seconds
 
   useEffect(() => {
     if (!contextReservation?.charge_start_time) return;
@@ -307,13 +306,9 @@ export function ChargingSession({
                         <div className="text-xs text-gray-500">To</div>
                         <div className="font-medium">
                           {contextStationName || "Station"}
-                          {plannedJourney?.stops?.[0] && (
+                          {distanceToStation && (
                             <span className="text-sm text-gray-500 ml-2">
-                              (
-                              {plannedJourney.stops[0].distanceFromStart.toFixed(
-                                1
-                              )}{" "}
-                              km)
+                              ({distanceToStation.toFixed(1)} km)
                             </span>
                           )}
                         </div>
@@ -324,23 +319,16 @@ export function ChargingSession({
                   {/* Reservation Details */}
                   <div className="space-y-2 pt-3 border-t">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Station</span>
-                      <span className="font-medium">
-                        {contextStationName || "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Charger</span>
                       <span className="font-medium">
                         #{contextReservation.charger_id}
                       </span>
                     </div>
-                    {plannedJourney?.stops?.[0] && (
+                    {distanceToStation && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Distance</span>
                         <span className="font-medium">
-                          {plannedJourney.stops[0].distanceFromStart.toFixed(1)}{" "}
-                          km
+                          {distanceToStation.toFixed(1)} km
                         </span>
                       </div>
                     )}
@@ -625,13 +613,6 @@ export function ChargingSession({
                       </div>
                     </Card>
                   </div>
-
-                  {/* <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Est. Time to Full</span>
-                    <span>{Math.floor(estimatedTimeRemaining / 60)} min</span>
-                  </div>
-                </Card> */}
 
                   {contextChargingState === "active" && (
                     <Button
