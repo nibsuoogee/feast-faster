@@ -14,8 +14,6 @@ export type JourneyStop = {
   socAtArrival: number;
   chargingDuration: number;
   distanceFromStart: number;
-  selectedRestaurantId?: number;
-  isSelected: boolean;
 };
 
 export type PlannedJourney = {

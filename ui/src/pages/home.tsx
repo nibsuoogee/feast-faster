@@ -43,7 +43,6 @@ export const Home = () => {
     null
   );
   const [showRoutePreview, setShowRoutePreview] = useState(false);
-  const [isJourneyActive, setIsJourneyActive] = useState(false);
 
   // Journey Planner state
   const [currentSOC, setCurrentSOC] = useState([75]);
@@ -111,7 +110,6 @@ export const Home = () => {
             socAtArrival: station.soc_at_arrival,
             chargingDuration: station.estimate_charging_time_min,
             distanceFromStart: station.distance_km,
-            isSelected: false,
           })),
           createdAt: new Date(),
         };
@@ -131,7 +129,6 @@ export const Home = () => {
   };
 
   const startJourney = () => {
-    setIsJourneyActive(true);
     setShowRoutePreview(false);
     setCurrentTab("session");
   };
@@ -370,10 +367,7 @@ export const Home = () => {
             </TabsContent>
 
             <TabsContent value="session" className="m-0">
-              <ChargingSession
-                isJourneyActive={isJourneyActive}
-                plannedJourney={plannedJourney}
-              />
+              <ChargingSession plannedJourney={plannedJourney} />
             </TabsContent>
 
             <TabsContent value="profile" className="m-0">
@@ -398,9 +392,6 @@ export const Home = () => {
               >
                 <RouteIcon className="w-5 h-5" />
                 <span className="text-xs">Journey</span>
-                {isJourneyActive && (
-                  <span className="absolute top-2 right-3 w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                )}
               </TabsTrigger>
               <TabsTrigger
                 value="session"

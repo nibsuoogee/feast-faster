@@ -29,12 +29,10 @@ import { Progress } from "./ui/progress";
 import { Slider } from "./ui/slider";
 
 type ChargingSessionProps = {
-  isJourneyActive?: boolean;
   plannedJourney?: PlannedJourney | null;
 };
 
 export function ChargingSession({
-  isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
   const [elapsedTime, setElapsedTime] = useState(0);

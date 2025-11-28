@@ -18,7 +18,7 @@ type RestaurantMenuProps = {
   customerEta: Date;
   chargingDuration: number;
   onClose: () => void;
-  onPlaceOrder: (order: RestaurantOrder) => void;
+  onPlaceOrder: () => void;
 };
 
 export function RestaurantMenu({
@@ -121,7 +121,7 @@ export function RestaurantMenu({
         setContextRestaurant(response.restaurant);
         setContextStationName(response.station_name);
 
-        //onPlaceOrder(response.order); // update UI state if needed // TODO Check after monitoring view is ready
+        onPlaceOrder();
         onClose();
       } else {
         toast.success("Failed to place order.");
@@ -244,11 +244,6 @@ export function RestaurantMenu({
               {restaurant.cuisines.map((cuisine, index) => (
                 <span key={index}>{cuisine}</span>
               ))}
-
-              {/* <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {restaurant.prepTime}
-              </div> */}
             </div>
           </div>
           <button
