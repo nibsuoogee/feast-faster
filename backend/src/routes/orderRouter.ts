@@ -9,6 +9,7 @@ import {
   FoodStatus,
   OrderDTO,
   OrderModelForCreation,
+  foodStatusEnum,
   orderModel,
   orderUpdateStatusBody,
 } from "@models/orderModel";
@@ -167,6 +168,7 @@ export const orderRouter = new Elysia()
 
             sendToUser(order.customer_id, "food_status", {
               message: foodStatusMessage[order.food_status],
+              status: order.food_status,
               time: new Date().toISOString(),
             });
 

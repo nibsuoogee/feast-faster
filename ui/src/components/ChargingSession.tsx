@@ -448,7 +448,7 @@ export function ChargingSession({
                       size="lg"
                       className="w-full hover:bg-red-400"
                       onClick={cancelOrder}
-                      disabled={undefined}
+                      disabled={contextOrder?.food_status !== "pending"}
                     >
                       <SkipBack className="w-4 h-4 mr-2" />
                       Cancel order

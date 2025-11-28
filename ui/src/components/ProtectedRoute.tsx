@@ -11,14 +11,16 @@ export default function ProtectedRoute({
   children: React.ReactNode;
   requiredRole?: "driver" | "restaurant_manager";
 }) {
-  const { setContextReservation, setContextChargingState } = useStateContext();
+  const { setContextReservation, setContextChargingState, setContextOrder } =
+    useStateContext();
   const { user, loading } = useAuth();
 
   useEffect(() => {
     if (user && user.role === "driver") {
       notificationService.subscribe(
         setContextReservation,
-        setContextChargingState
+        setContextChargingState,
+        setContextOrder
       );
     }
   }, [user, setContextReservation]);

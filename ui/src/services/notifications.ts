@@ -2,13 +2,15 @@ import { BACKEND_URL } from "@/lib/urls";
 import { reservationModel } from "@/models";
 import { ChargingStatus } from "@/types/driver";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
-import { Reservation } from "@types";
+import { Order, Reservation } from "@types";
+import { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 
 export const notificationService = {
   subscribe: async (
     setReservation: (value: Reservation) => void,
-    setChargingState: (value: ChargingStatus) => void
+    setChargingState: (value: ChargingStatus) => void,
+    setOrder: Dispatch<SetStateAction<Order | undefined>>
   ) => {
     const token = localStorage.getItem("access_token");
 
@@ -42,6 +44,16 @@ export const notificationService = {
           case "food_status":
             toast.info(data.message);
             console.log("Food status update: ", data.message);
+
+            setOrder((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    food_status: data.status,
+                  }
+                : undefined
+            );
+
             break;
           case "charging_paid":
             toast.info("Your charging session was succesfully paid.");
@@ -58,7 +70,9 @@ export const notificationService = {
             console.log("Reservation cannot be postponed.");
             break;
           case "reservation_extension_success":
-            toast.success("Your reservation is successfully extended by 10 minutes.");
+            toast.success(
+              "Your reservation is successfully extended by 10 minutes."
+            );
             console.log("Reservation extended by 10 minutes");
             break;
           case "reservation_extension_not_allowed":

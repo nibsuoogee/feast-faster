@@ -1,6 +1,13 @@
 import { ChargingStatus } from "@/types/driver";
 import { Order, OrderItem, Reservation, RestaurantModel } from "@types";
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useContext,
+  useState,
+} from "react";
 
 /**
  * Add the state and setState types for a new global context variable
@@ -12,7 +19,7 @@ type StateContextType = {
   setContextReservation: (value: Reservation | undefined) => void;
   // Order
   contextOrder: Order | undefined;
-  setContextOrder: (value: Order | undefined) => void;
+  setContextOrder: Dispatch<SetStateAction<Order | undefined>>;
   // OrderItems
   contextOrderItems: OrderItem[] | undefined;
   setContextOrderItems: (value: OrderItem[] | undefined) => void;
