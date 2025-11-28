@@ -551,9 +551,9 @@ export function ChargingSession({
                   )}
 
                   <Card className="p-6">
-                    <div className="text-center flex justify-between mb-4">
-                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 mb-3">
-                        <Battery className="w-12 h-12 text-green-600" />
+                    <div className="text-center flex justify-between mb-4 items-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100">
+                        <Battery className="w-6 h-6 text-green-600" />
                       </div>
                       <span className="text-4xl mb-1">
                         {contextReservation?.current_soc &&
@@ -564,53 +564,65 @@ export function ChargingSession({
                     </div>
                     <Progress
                       value={contextReservation?.current_soc}
-                      className="h-3"
+                      className="h-3 bg-gray-300 [&>div]:bg-green-600"
                     />
                   </Card>
 
                   <div className="grid grid-cols-2 gap-3">
                     <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <Zap className="w-4 h-4" />
-                        <span className="text-sm">Energy Delivered</span>
-                      </div>
-                      <div className="text-2xl">
-                        {contextReservation?.cumulative_power &&
-                          contextReservation?.cumulative_power.toFixed(1)}{" "}
-                        <span className="text-sm text-gray-600">kWh</span>
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <Euro className="w-4 h-4" />
-                        <span className="text-sm">Current Cost</span>
-                      </div>
-                      <div className="text-2xl">
-                        €
-                        {contextReservation?.cumulative_price_of_charge?.toFixed(
-                          2
-                        )}{" "}
-                        <span className="text-sm text-gray-600">EUR</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Zap className="w-4 h-4" />
+                          <span className="text-sm">Energy Delivered</span>
+                        </div>
+                        <div className="text-2xl">
+                          {contextReservation?.cumulative_power &&
+                            contextReservation?.cumulative_power.toFixed(
+                              1
+                            )}{" "}
+                          <span className="text-sm text-gray-600">kWh</span>
+                        </div>
                       </div>
                     </Card>
 
                     <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">Elapsed Time</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Euro className="w-4 h-4" />
+                          <span className="text-sm">Current Cost</span>
+                        </div>
+                        <div className="text-2xl">
+                          €
+                          {contextReservation?.cumulative_price_of_charge?.toFixed(
+                            2
+                          )}{" "}
+                          <span className="text-sm text-gray-600">EUR</span>
+                        </div>
                       </div>
-                      <div className="text-2xl">{formatTime(elapsedTime)}</div>
                     </Card>
 
                     <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <TrendingUp className="w-4 h-4" />
-                        <span className="text-sm">Charging Speed</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm">Elapsed Time</span>
+                        </div>
+                        <div className="text-2xl">
+                          {formatTime(elapsedTime)}
+                        </div>
                       </div>
-                      <div className="text-2xl">
-                        {chargingSpeed}{" "}
-                        <span className="text-sm text-gray-600">kW</span>
+                    </Card>
+
+                    <Card className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <TrendingUp className="w-4 h-4" />
+                          <span className="text-sm">Charging Speed</span>
+                        </div>
+                        <div className="text-2xl">
+                          {chargingSpeed}{" "}
+                          <span className="text-sm text-gray-600">kW</span>
+                        </div>
                       </div>
                     </Card>
                   </div>
@@ -648,7 +660,7 @@ export function ChargingSession({
                 </>
               ) : (
                 <>
-                  <Card className="p-8 text-center">
+                  <Card className="p-8 text-center items-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                       <Zap className="w-8 h-8 text-gray-400" />
                     </div>
