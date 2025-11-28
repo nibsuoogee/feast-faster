@@ -16,6 +16,7 @@ export const routeResponseModel = z.array(
     lat: z.number(),
     lon: z.number(),
     time_min: z.number(),
+    distance_km: z.number(),
   })
 );
 export type RouteResponseModel = z.infer<typeof routeResponseModel>;

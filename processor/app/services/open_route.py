@@ -4,6 +4,7 @@ from app.constants import BUFFERED_ZONE
 import openrouteservice
 from openrouteservice import exceptions
 import geopandas as gpd
+from math import radians, sin, cos, sqrt, atan2
 
 
 client = openrouteservice.Client(key=settings.OPEN_ROUTE_SERVICE_API_KEY)
@@ -13,6 +14,17 @@ client = openrouteservice.Client(key=settings.OPEN_ROUTE_SERVICE_API_KEY)
 class RoutingServiceError(Exception):
     """Custom exception for routing errors."""
     pass
+
+
+def haversine(lon1, lat1, lon2, lat2):
+    R = 6371.0  # Earth radius in km
+    dlon = radians(lon2 - lon1)
+    dlat = radians(lat2 - lat1)
+
+    a = sin(dlat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return R * c
 
 
 def get_location_range(current_location, destination):
@@ -99,9 +111,11 @@ def get_route_locations(source, destination, interval_min):
     steps = route["features"][0]["properties"]["segments"][0]["steps"]
     interval_sec = interval_min * 60
     current_time = 0
+    current_dist = 0
     next_sample_time = 0
     # Expand geometry into a time-stamped polyline
-    expanded = []  # items in form (lon, lat, cumulative_time_sec)
+    expanded = []  # (lon, lat, cumulative_time_sec, cumulative_dist_km)
+
     for step in steps:
         start_idx, end_idx = step["way_points"]
         step_coords = geometry[start_idx:end_idx + 1]
@@ -113,9 +127,21 @@ def get_route_locations(source, destination, interval_min):
         else:
             per_segment_time = duration
 
-        for _, (lon, lat) in enumerate(step_coords):
-            expanded.append((lon, lat, current_time))
+        prev_lon, prev_lat = step_coords[0]
+
+        # Add first point of the step
+        expanded.append((prev_lon, prev_lat, current_time, current_dist))
+
+        # Move through the rest of the coords
+        for lon, lat in step_coords[1:]:
+            # distance from previous point
+            seg_dist = haversine(prev_lon, prev_lat, lon, lat)
+            current_dist += seg_dist
             current_time += per_segment_time
+
+            expanded.append((lon, lat, current_time, current_dist))
+
+            prev_lon, prev_lat = lon, lat
 
     # Now sample every X minutes
     samples = []
@@ -126,11 +152,12 @@ def get_route_locations(source, destination, interval_min):
         while ptr < len(expanded) - 1 and expanded[ptr][2] < next_sample_time:
             ptr += 1
 
-        lon, lat, _ = expanded[ptr]
+        lon, lat, _, dist = expanded[ptr]
         samples.append({
             "lat": lat,
             "lon": lon,
-            "time_min": round(next_sample_time / 60)
+            "time_min": round(next_sample_time / 60),
+            "distance_km": round(dist, 3)
         })
 
         next_sample_time += interval_sec
