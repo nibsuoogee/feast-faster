@@ -476,7 +476,9 @@ export function ChargingSession({
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Distance</span>
-                      <span className="font-medium">{"..."} km</span>
+                      <span className="font-medium">
+                        {route[routeStep]?.distance_km.toFixed(0)} km
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Lateness</span>
