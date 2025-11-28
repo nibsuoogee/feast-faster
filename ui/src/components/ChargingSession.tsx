@@ -1,4 +1,6 @@
 import { useStateContext } from "@/contexts/StateContext";
+import { displayTimeInHelsinki } from "@/lib/timeDisplay";
+import { orderModel, reservationModel } from "@/models";
 import { chargingService } from "@/services/charger";
 import { useUserLocation } from "@/services/geocode";
 import {
@@ -25,7 +27,6 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Slider } from "./ui/slider";
-import { orderModel, reservationModel } from "@/models";
 
 type ChargingSessionProps = {
   isJourneyActive?: boolean;
@@ -346,31 +347,20 @@ export function ChargingSession({
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Reservation Time</span>
                       <span className="font-medium">
-                        {new Date(
+                        {displayTimeInHelsinki(
                           contextReservation.reservation_start
-                        ).toLocaleTimeString("en-GB", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
+                        )}{" "}
                         -{" "}
-                        {new Date(
+                        {displayTimeInHelsinki(
                           contextReservation.reservation_end
-                        ).toLocaleTimeString("en-GB", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        )}
                       </span>
                     </div>
                     {contextOrder?.customer_eta && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">ETA</span>
                         <span className="font-medium">
-                          {new Date(
-                            contextOrder.customer_eta
-                          ).toLocaleTimeString("en-GB", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {displayTimeInHelsinki(contextOrder.customer_eta)}
                         </span>
                       </div>
                     )}

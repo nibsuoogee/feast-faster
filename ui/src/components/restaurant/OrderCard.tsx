@@ -4,18 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  displayTimeInHelsinki,
+  displayDateInHelsinki,
+} from "@/lib/timeDisplay";
 import { Order } from "@/types/restaurant";
 
 // Helper functions
-const formatTime = (date: Date): string => {
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-};
-
-const getMinutesFromNow = (date: Date): number => {
+const getMinutesFromNow = (date: Date | string): number => {
+  const eventDate = typeof date === "string" ? new Date(date) : date;
   const now = new Date();
-  return Math.floor((date.getTime() - now.getTime()) / 1000 / 60);
+  return Math.floor((eventDate.getTime() - now.getTime()) / 1000 / 60);
 };
 
 // formating the eta into more readable string like "2 hrs 15 mins" instead of minutes.
@@ -131,7 +130,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         ) : (
           <ETACountdown
             etaText={etaText}
-            etaTime={formatTime(order.customerETA)}
+            etaTime={displayTimeInHelsinki(order.customerETA)}
           />
         )}
 
@@ -165,7 +164,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
             <div className="flex items-center justify-between text-sm px-2">
               <span className="text-gray-600">Start cooking at:</span>
               <span className="text-orange-600 font-semibold">
-                {formatTime(startCookingTime)}
+                {displayTimeInHelsinki(startCookingTime)}
               </span>
             </div>
           </div>

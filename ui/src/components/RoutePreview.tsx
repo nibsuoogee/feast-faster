@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PlannedJourney, JourneyStop, RestaurantOrder } from "@/types/driver";
+import { displayTimeInHelsinki } from "@/lib/timeDisplay";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -38,13 +39,6 @@ export function RoutePreview({
     stop: JourneyStop;
     restaurant: JourneyStop["station"]["restaurants"][0];
   } | null>(null);
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -127,7 +121,8 @@ export function RoutePreview({
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3 text-gray-600" />
                       <span className="text-gray-600">
-                        Arrive {formatTime(stop.estimatedArrivalTime)}
+                        Arrive{" "}
+                        {displayTimeInHelsinki(stop.estimatedArrivalTime)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
