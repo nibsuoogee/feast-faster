@@ -37,15 +37,14 @@ export function ChargingSession({
   isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
-  // const [energyDelivered, setEnergyDelivered] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
-  // const [batteryLevel, setBatteryLevel] = useState(45);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [canExtend, setCanExtend] = useState<boolean>(false);
   const [isCheckingExtension, setIsCheckingExtension] = useState(false);
   const [isStoppingCharging, setIsStoppingCharging] = useState(false);
   const [activeView, setActiveView] = useState<"order" | "charging">("order");
   const [socAtArrival, setSocAtArrival] = useState<number>(0);
+  const [distanceToStation, setDistanceToStation] = useState<number>(0);
   const {
     contextReservation,
     contextOrder,
@@ -61,6 +60,13 @@ export function ChargingSession({
   const [lateness, setLateness] = useState<number>(0);
   const currentUserLocation = useUserLocation();
 
+  const food_status_badges = {
+    pending: { className: "bg-blue-200", text: "Order placed" },
+    cooking: { className: "bg-green-200", text: "Cooking" },
+    ready: { className: "bg-red-200", text: "Ready" },
+    picked_up: { className: "bg-gray-200", text: "Picked up" },
+  };
+
   useEffect(() => {
     if (!plannedJourney || !contextRestaurant?.station_id) return;
 
@@ -71,6 +77,7 @@ export function ChargingSession({
 
     if (matchingStop) {
       setSocAtArrival(matchingStop.station.soc_at_arrival);
+      setDistanceToStation(matchingStop.distanceFromStart);
     } else {
       console.warn(
         `No matching station found for station_id: ${contextRestaurant.station_id}`
@@ -156,7 +163,6 @@ export function ChargingSession({
   }
 
   const chargingSpeed = 45;
-  // const estimatedTimeRemaining = ((100 - batteryLevel) / 100) * 60 * 60; // seconds
 
   useEffect(() => {
     if (!contextReservation?.charge_start_time) return;
@@ -285,156 +291,139 @@ export function ChargingSession({
               {/* Journey in Progress */}
               {contextReservation && (
                 <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Route className="w-5 h-5 text-green-600" />
-                    <h3 className="font-semibold">Journey in Progress</h3>
-                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Route className="w-5 h-5 text-green-600" />
+                      <h3 className="font-semibold">Journey in Progress</h3>
+                    </div>
 
-                  {/* From/To */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-start gap-2">
-                      <Navigation className="w-4 h-4 text-gray-400 mt-1" />
-                      <div>
-                        <div className="text-xs text-gray-500">From</div>
-                        <div className="font-medium">
-                          {currentUserLocation?.address || "Current Location"}
+                    {/* From/To */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-start gap-2">
+                        <Navigation className="w-4 h-4 text-gray-400 mt-1" />
+                        <div>
+                          <div className="text-xs text-gray-500">From</div>
+                          <div className="font-medium">
+                            {currentUserLocation?.address || "Current Location"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Navigation className="w-4 h-4 text-green-600 mt-1" />
+                        <div>
+                          <div className="text-xs text-gray-500">To</div>
+                          <div className="font-medium">
+                            {contextStationName || "Station"}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <Navigation className="w-4 h-4 text-green-600 mt-1" />
-                      <div>
-                        <div className="text-xs text-gray-500">To</div>
-                        <div className="font-medium">
-                          {contextStationName || "Station"}
-                          {plannedJourney?.stops?.[0] && (
-                            <span className="text-sm text-gray-500 ml-2">
-                              (
-                              {plannedJourney.stops[0].distanceFromStart.toFixed(
-                                1
-                              )}{" "}
-                              km)
-                            </span>
+
+                    {/* Reservation Details */}
+                    <div className="space-y-2 pt-3 border-t">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Charger</span>
+                        <span className="font-medium">
+                          #{contextReservation.charger_id}
+                        </span>
+                      </div>
+                      {distanceToStation && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Distance</span>
+                          <span className="font-medium">
+                            {distanceToStation.toFixed(0)} km
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Reservation Time</span>
+                        <span className="font-medium">
+                          {displayTimeInHelsinki(
+                            contextReservation.reservation_start
+                          )}{" "}
+                          -{" "}
+                          {displayTimeInHelsinki(
+                            contextReservation.reservation_end
                           )}
+                        </span>
+                      </div>
+                      {contextOrder?.customer_eta && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">ETA</span>
+                          <span className="font-medium">
+                            {displayTimeInHelsinki(contextOrder.customer_eta)}
+                          </span>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Reservation Details */}
-                  <div className="space-y-2 pt-3 border-t">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Station</span>
-                      <span className="font-medium">
-                        {contextStationName || "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Charger</span>
-                      <span className="font-medium">
-                        #{contextReservation.charger_id}
-                      </span>
-                    </div>
-                    {plannedJourney?.stops?.[0] && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Distance</span>
-                        <span className="font-medium">
-                          {plannedJourney.stops[0].distanceFromStart.toFixed(1)}{" "}
-                          km
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Reservation Time</span>
-                      <span className="font-medium">
-                        {displayTimeInHelsinki(
-                          contextReservation.reservation_start
-                        )}{" "}
-                        -{" "}
-                        {displayTimeInHelsinki(
-                          contextReservation.reservation_end
-                        )}
-                      </span>
-                    </div>
-                    {contextOrder?.customer_eta && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">ETA</span>
-                        <span className="font-medium">
-                          {displayTimeInHelsinki(contextOrder.customer_eta)}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </Card>
               )}
-
               {/* Order Details */}
               {contextOrder && contextRestaurant && contextOrderItems && (
                 <Card className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <UtensilsCrossed className="w-5 h-5 text-green-600" />
-                      <h3 className="font-semibold">Order Details</h3>
-                    </div>
-                    <Badge
-                      variant={
-                        contextOrder.food_status === "ready"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className={
-                        contextOrder.food_status === "ready"
-                          ? "bg-green-600"
-                          : ""
-                      }
-                    >
-                      {contextOrder.food_status === "ready"
-                        ? "Ready for Pickup!"
-                        : contextOrder.food_status === "cooking"
-                        ? "Preparing..."
-                        : "Order Placed"}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Restaurant</span>
-                      <span className="font-medium">
-                        {contextRestaurant.name}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Order Number</span>
-                      <span className="font-medium">
-                        #{contextOrder.order_id}
-                      </span>
-                    </div>
-
-                    {/* Order Items */}
-                    <div className="pt-3 border-t">
-                      <div className="text-sm font-medium mb-2">Items:</div>
-                      <div className="space-y-2">
-                        {contextOrderItems.map((item) => (
-                          <div
-                            key={item.order_item_id}
-                            className="flex justify-between text-sm"
-                          >
-                            <span>
-                              {item.quantity}x {item.name}
-                            </span>
-                            <span className="font-medium">
-                              €{(item.price * item.quantity).toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <UtensilsCrossed className="w-5 h-5 text-green-600" />
+                        <h3 className="font-semibold">Order Details</h3>
                       </div>
+                      <Badge
+                        variant="outline"
+                        className={
+                          food_status_badges[contextOrder.food_status].className
+                        }
+                      >
+                        {food_status_badges[contextOrder.food_status].text}
+                      </Badge>
                     </div>
 
-                    <div className="flex justify-between text-sm pt-3 border-t font-semibold">
-                      <span>Total</span>
-                      <span className="text-green-600">
-                        €{contextOrder.total_price.toFixed(2)}
-                      </span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Restaurant</span>
+                        <span className="font-medium">
+                          {contextRestaurant.name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Address</span>
+                        <span className="font-medium">
+                          {contextRestaurant.address}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Order Number</span>
+                        <span className="font-medium">
+                          #{contextOrder.order_id}
+                        </span>
+                      </div>
+
+                      {/* Order Items */}
+                      <div className="pt-3 border-t">
+                        <div className="text-sm font-medium mb-2">Items:</div>
+                        <div className="space-y-2">
+                          {contextOrderItems.map((item) => (
+                            <div
+                              key={item.order_item_id}
+                              className="flex justify-between text-sm"
+                            >
+                              <span>
+                                {item.quantity}x {item.name}
+                              </span>
+                              <span className="font-medium">
+                                €{(item.price * item.quantity).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between text-sm pt-3 border-t font-semibold">
+                        <span>Total</span>
+                        <span className="text-green-600">
+                          €{contextOrder.total_price.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -562,9 +551,9 @@ export function ChargingSession({
                   )}
 
                   <Card className="p-6">
-                    <div className="text-center flex justify-between mb-4">
-                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 mb-3">
-                        <Battery className="w-12 h-12 text-green-600" />
+                    <div className="text-center flex justify-between mb-4 items-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100">
+                        <Battery className="w-6 h-6 text-green-600" />
                       </div>
                       <span className="text-4xl mb-1">
                         {contextReservation?.current_soc &&
@@ -575,63 +564,68 @@ export function ChargingSession({
                     </div>
                     <Progress
                       value={contextReservation?.current_soc}
-                      className="h-3"
+                      className="h-3 bg-gray-300 [&>div]:bg-green-600"
                     />
                   </Card>
 
                   <div className="grid grid-cols-2 gap-3">
                     <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <Zap className="w-4 h-4" />
-                        <span className="text-sm">Energy Delivered</span>
-                      </div>
-                      <div className="text-2xl">
-                        {contextReservation?.cumulative_power &&
-                          contextReservation?.cumulative_power.toFixed(1)}{" "}
-                        <span className="text-sm text-gray-600">kWh</span>
-                      </div>
-                    </Card>
-
-                    <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <Euro className="w-4 h-4" />
-                        <span className="text-sm">Current Cost</span>
-                      </div>
-                      <div className="text-2xl">
-                        €
-                        {contextReservation?.cumulative_price_of_charge?.toFixed(
-                          2
-                        )}{" "}
-                        <span className="text-sm text-gray-600">EUR</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Zap className="w-4 h-4" />
+                          <span className="text-sm">Energy Delivered</span>
+                        </div>
+                        <div className="text-2xl">
+                          {contextReservation?.cumulative_power &&
+                            contextReservation?.cumulative_power.toFixed(
+                              1
+                            )}{" "}
+                          <span className="text-sm text-gray-600">kWh</span>
+                        </div>
                       </div>
                     </Card>
 
                     <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">Elapsed Time</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Euro className="w-4 h-4" />
+                          <span className="text-sm">Current Cost</span>
+                        </div>
+                        <div className="text-2xl">
+                          €
+                          {contextReservation?.cumulative_price_of_charge?.toFixed(
+                            2
+                          )}{" "}
+                          <span className="text-sm text-gray-600">EUR</span>
+                        </div>
                       </div>
-                      <div className="text-2xl">{formatTime(elapsedTime)}</div>
                     </Card>
 
                     <Card className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600 mb-2">
-                        <TrendingUp className="w-4 h-4" />
-                        <span className="text-sm">Charging Speed</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm">Elapsed Time</span>
+                        </div>
+                        <div className="text-2xl">
+                          {formatTime(elapsedTime)}
+                        </div>
                       </div>
-                      <div className="text-2xl">
-                        {chargingSpeed}{" "}
-                        <span className="text-sm text-gray-600">kW</span>
+                    </Card>
+
+                    <Card className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <TrendingUp className="w-4 h-4" />
+                          <span className="text-sm">Charging Speed</span>
+                        </div>
+                        <div className="text-2xl">
+                          {chargingSpeed}{" "}
+                          <span className="text-sm text-gray-600">kW</span>
+                        </div>
                       </div>
                     </Card>
                   </div>
-
-                  {/* <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Est. Time to Full</span>
-                    <span>{Math.floor(estimatedTimeRemaining / 60)} min</span>
-                  </div>
-                </Card> */}
 
                   {contextChargingState === "active" && (
                     <Button
@@ -666,7 +660,7 @@ export function ChargingSession({
                 </>
               ) : (
                 <>
-                  <Card className="p-8 text-center">
+                  <Card className="p-8 text-center items-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                       <Zap className="w-8 h-8 text-gray-400" />
                     </div>
