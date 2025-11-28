@@ -511,7 +511,9 @@ export function ChargingSession({
                       <span className="font-medium">{lateness} minutes</span>
                     </div>
                   </div>
-
+                  <p className="text-xs text-center text-gray-500">
+                    Location updates happen continuously in actual use.
+                  </p>
                   <Button
                     variant="outline"
                     size="lg"
@@ -708,7 +710,7 @@ export function ChargingSession({
           )}
         </>
       ) : (
-        <div className="p-8 text-center">
+        <div className="p-8 text-center mt-48">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
             <Zap className="w-8 h-8 text-gray-400" />
           </div>

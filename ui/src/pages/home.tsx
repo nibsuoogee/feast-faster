@@ -37,6 +37,21 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+const fadeInStyles = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  [data-state="active"] {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+`;
+
 export const Home = () => {
   const { settings, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState("journey");
@@ -139,6 +154,7 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <style>{fadeInStyles}</style>
       <Toaster position="top-center" />
       <main className="h-full">
         {showRoutePreview && plannedJourney ? (
@@ -155,7 +171,10 @@ export const Home = () => {
             onValueChange={setCurrentTab}
             className="w-full"
           >
-            <TabsContent value="journey" className="m-0">
+            <TabsContent
+              value="journey"
+              className="m-0 animate-in fade-in duration-300"
+            >
               {/* Journey Planner Content */}
               <div className="p-4 space-y-4">
                 <Card className="p-4">
@@ -373,14 +392,20 @@ export const Home = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="session" className="m-0">
+            <TabsContent
+              value="session"
+              className="m-0 animate-in fade-in duration-300"
+            >
               <ChargingSession
                 isJourneyActive={isJourneyActive}
                 plannedJourney={plannedJourney}
               />
             </TabsContent>
 
-            <TabsContent value="profile" className="m-0">
+            <TabsContent
+              value="profile"
+              className="m-0 animate-in fade-in duration-300"
+            >
               <UserProfile onLogout={logout} />
             </TabsContent>
           </Tabs>
