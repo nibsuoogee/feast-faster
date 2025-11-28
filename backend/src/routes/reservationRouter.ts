@@ -1,15 +1,15 @@
+import { OrderDTO } from "@models/orderModel";
 import {
   etaRequestModel,
   etaResponseModel,
   ReservationDTO,
   reservationModel,
 } from "@models/reservationModel";
+import { sendToUser } from "@utils/notification";
 import { tryCatch } from "@utils/tryCatch";
 import Elysia, { t } from "elysia";
 import { jwtConfig } from "../config/jwtConfig";
 import { authorizationMiddleware } from "../middleware/authorization";
-import { sendToUser } from "@utils/notification";
-import { OrderDTO, orderModel } from "@models/orderModel";
 
 export const reservationRouter = new Elysia()
   .use(jwtConfig)
@@ -83,11 +83,15 @@ export const reservationRouter = new Elysia()
             const newEta = new Date(order.customer_eta.getTime() + latenessMs);
 
             // 4) Check whether the driver is on schedule
-            const FIFTEEN_MIN = 15 * 60 * 1000;
-            const isMoreThan15MinAfter =
+            const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+            const isLate =
               newEta.getTime() - reservation.reservation_start.getTime() >
-              FIFTEEN_MIN;
-            if (!isMoreThan15MinAfter) return "Driver on schedule";
+              FIFTEEN_MINUTES_MS;
+            if (!isLate)
+              return {
+                order: order,
+                reservation: reservation,
+              };
 
             // 5) Check conflicts
             const [isConflicted, err] = await tryCatch(
