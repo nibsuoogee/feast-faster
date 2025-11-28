@@ -1,36 +1,37 @@
-import { useState, useEffect } from 'react';
-import { DashboardHeader } from '@/components/restaurant/DashboardHeader';
-import { OrderColumn } from '@/components/restaurant/OrderColumn';
-import { Restaurant, Order } from '@/types/restaurant';
-import { Package } from 'lucide-react';
-import { orderService } from '@/services/restaurantOrdersService';
+import { useState, useEffect } from "react";
+import { DashboardHeader } from "@/components/restaurant/DashboardHeader";
+import { OrderColumn } from "@/components/restaurant/OrderColumn";
+import { Restaurant, Order } from "@/types/restaurant";
+import { Package } from "lucide-react";
+import { orderService } from "@/services/restaurantOrdersService";
 
 // Column configuration
 const ORDER_COLUMNS = [
   {
-    title: 'Pending',
-    status: 'pending' as const,
-    colorClass: 'bg-gradient-to-r from-gray-500 to-gray-600',
+    title: "Pending",
+    status: "pending" as const,
+    colorClass: "bg-gradient-to-r from-gray-500 to-gray-600",
   },
   {
-    title: 'Cooking',
-    status: 'cooking' as const,
-    colorClass: 'bg-gradient-to-r from-emerald-400 to-teal-500',
+    title: "Cooking",
+    status: "cooking" as const,
+    colorClass: "bg-gradient-to-r from-emerald-400 to-teal-500",
   },
   {
-    title: 'Ready',
-    status: 'ready' as const,
-    colorClass: 'bg-gradient-to-r from-blue-500 to-indigo-600',
+    title: "Ready",
+    status: "ready" as const,
+    colorClass: "bg-gradient-to-r from-blue-500 to-indigo-600",
   },
   {
-    title: 'Picked Up',
-    status: 'picked_up' as const,
-    colorClass: 'bg-gradient-to-r from-purple-500 to-pink-600',
+    title: "Picked Up",
+    status: "picked_up" as const,
+    colorClass: "bg-gradient-to-r from-purple-500 to-pink-600",
   },
 ];
 
 export default function RestaurantDashboard() {
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<Restaurant | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,27 +46,55 @@ export default function RestaurantDashboard() {
     loadRestaurants();
   }, []);
 
-  // Load orders when restaurant is selected
-  useEffect(() => {
-    if (selectedRestaurant) {
-      const loadOrders = async () => {
-        const data = await orderService.getOrdersByRestaurant(selectedRestaurant.id);
-        setOrders(data);
-      };
-      loadOrders();
-    } else {
+  async function checkIfShouldCook() {
+    const now = new Date();
+    orders.forEach((order) => {
+      if (order.status !== "pending") return;
+      const startCookingTime = new Date(order.start_cooking_order);
+      if (now < startCookingTime) return;
+
+      handleStatusChange(order.id, "cooking");
+    });
+  }
+
+  async function loadOrders() {
+    if (!selectedRestaurant?.id) {
       setOrders([]);
+      return;
     }
-  }, [selectedRestaurant]);
+
+    const data = await orderService.getOrdersByRestaurant(
+      selectedRestaurant.id
+    );
+    setOrders(data);
+  }
+
+  useEffect(() => {
+    if (!orders) return;
+
+    const interval = setInterval(() => {
+      checkIfShouldCook();
+      loadOrders();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [orders, selectedRestaurant]);
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
   const activeOrdersCount = orders.filter(
     (order) =>
-      order.status === 'pending' ||
-      order.status === 'cooking' ||
-      order.status === 'ready'
+      order.status === "pending" ||
+      order.status === "cooking" ||
+      order.status === "ready"
   ).length;
 
-  const handleStatusChange = async (orderId: string, newStatus: 'cooking' | 'ready' | 'picked_up') => {
+  const handleStatusChange = async (
+    orderId: string,
+    newStatus: "cooking" | "ready" | "picked_up"
+  ) => {
     // Store original status for potential revert
     const originalOrder = orders.find((order) => order.id === orderId);
     if (!originalOrder) return;
@@ -81,10 +110,12 @@ export default function RestaurantDashboard() {
     const success = await orderService.updateOrderStatus(orderId, newStatus);
     if (!success) {
       // Revert on failure using stored original status
-      console.error('Failed to update order status, reverting');
+      console.error("Failed to update order status, reverting");
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === orderId ? { ...order, status: originalOrder.status } : order
+          order.id === orderId
+            ? { ...order, status: originalOrder.status }
+            : order
         )
       );
     }
@@ -95,7 +126,9 @@ export default function RestaurantDashboard() {
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 mx-auto border-4 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
-          <div className="text-gray-600 font-medium">Loading restaurants...</div>
+          <div className="text-gray-600 font-medium">
+            Loading restaurants...
+          </div>
         </div>
       </div>
     );
@@ -120,7 +153,9 @@ export default function RestaurantDashboard() {
                 title={column.title}
                 status={column.status}
                 orders={orders}
-                onStatusChange={column.status !== 'picked_up' ? handleStatusChange : undefined}
+                onStatusChange={
+                  column.status !== "picked_up" ? handleStatusChange : undefined
+                }
                 colorClass={column.colorClass}
               />
             ))}
@@ -132,7 +167,9 @@ export default function RestaurantDashboard() {
                 <Package className="h-10 w-10 text-gray-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Restaurant Selected</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  No Restaurant Selected
+                </h3>
                 <p className="text-sm text-gray-500">
                   Please select a restaurant from the dropdown to view orders
                 </p>

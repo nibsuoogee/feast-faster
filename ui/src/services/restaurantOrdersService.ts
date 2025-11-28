@@ -38,6 +38,7 @@ const mapOrdersToUi = (orders: BackendRestaurantOrder[]): Order[] =>
         reservation && reservation.current_soc != null
           ? reservation.current_soc
           : undefined,
+      start_cooking_order: order.start_cooking_time,
     };
   });
 

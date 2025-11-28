@@ -14,6 +14,7 @@ export interface Order {
   customerETA: Date; // when customer will arrive
   items: OrderItem[];
   chargePercentage?: number; // battery charge percentage for delivery driver
+  start_cooking_order: Date;
 }
 
 export interface Restaurant {
