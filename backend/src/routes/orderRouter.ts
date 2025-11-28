@@ -32,7 +32,6 @@ import {
 import { RestaurantDTO } from "@models/restaurantModel";
 import { StationDTO } from "@models/stationModel";
 import { StationsDTO } from "@models/stationsModel";
-import { convertToHelsinki } from "../lib/timezone";
 
 const foodStatusMessage: Record<FoodStatus, string> = {
   pending: "Your meal is not being cooked yet.",
@@ -56,13 +55,9 @@ export const orderRouter = new Elysia()
         .post(
           "/orders",
           async ({ body, user, status }) => {
-            const reservationStart = convertToHelsinki(
-              new Date(body.reservation_start)
-            );
+            const reservationStart = new Date(body.reservation_start);
 
-            const reservationEnd = convertToHelsinki(
-              new Date(body.reservation_end)
-            );
+            const reservationEnd = new Date(body.reservation_end);
 
             const [availableChargerIds, err] = await tryCatch(
               StationsDTO.getAvailableChargers(
@@ -80,8 +75,8 @@ export const orderRouter = new Elysia()
               customer_id: user.user_id,
               restaurant_id: body.restaurant_id,
               total_price: body.total_price,
-              customer_eta: convertToHelsinki(body.customer_eta),
-              start_cooking_time: convertToHelsinki(body.start_cooking_time),
+              customer_eta: body.customer_eta,
+              start_cooking_time: body.start_cooking_time,
             };
 
             const [order, errOrder] = await tryCatch(

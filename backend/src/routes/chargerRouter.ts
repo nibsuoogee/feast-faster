@@ -6,7 +6,6 @@ import Elysia, { t } from "elysia";
 import { CHARGER_URL } from "../lib/urls";
 import { authorizationMiddleware } from "../middleware/authorization";
 import { jwtConfig } from "../config/jwtConfig";
-import { convertToHelsinki } from "../lib/timezone";
 
 export const chargingSessions = new Map<number, number>();
 const chargingTimeouts = new Map<number, NodeJS.Timeout>(); // charger_id -> timeout
@@ -70,7 +69,7 @@ export const chargerRouter = new Elysia()
           });
 
           // Pay for charging
-          const now = convertToHelsinki(new Date());
+          const now = new Date();
           const [updatedReservation, errUpdatedReservation] = await tryCatch(
             ChargingDTO.updateReservationTimeOfPayment(
               reservation.reservation_id,
@@ -150,7 +149,7 @@ export const chargerRouter = new Elysia()
       }
 
       // 2) Update payment time
-      const now = convertToHelsinki(new Date());
+      const now = new Date();
       const [reservation, errReservation] = await tryCatch(
         ChargingDTO.updateReservationTimeOfPayment(body.reservation_id, now)
       );
