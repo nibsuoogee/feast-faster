@@ -60,6 +60,13 @@ export function ChargingSession({
   const [lateness, setLateness] = useState<number>(0);
   const currentUserLocation = useUserLocation();
 
+  const food_status_badges = {
+    pending: { className: "bg-blue-200", text: "Order placed" },
+    cooking: { className: "bg-green-200", text: "Cooking" },
+    ready: { className: "bg-red-200", text: "Ready" },
+    picked_up: { className: "bg-gray-200", text: "Picked up" },
+  };
+
   useEffect(() => {
     if (!plannedJourney || !contextRestaurant?.station_id) return;
 
@@ -284,145 +291,139 @@ export function ChargingSession({
               {/* Journey in Progress */}
               {contextReservation && (
                 <Card className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Route className="w-5 h-5 text-green-600" />
-                    <h3 className="font-semibold">Journey in Progress</h3>
-                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Route className="w-5 h-5 text-green-600" />
+                      <h3 className="font-semibold">Journey in Progress</h3>
+                    </div>
 
-                  {/* From/To */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-start gap-2">
-                      <Navigation className="w-4 h-4 text-gray-400 mt-1" />
-                      <div>
-                        <div className="text-xs text-gray-500">From</div>
-                        <div className="font-medium">
-                          {currentUserLocation?.address || "Current Location"}
+                    {/* From/To */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-start gap-2">
+                        <Navigation className="w-4 h-4 text-gray-400 mt-1" />
+                        <div>
+                          <div className="text-xs text-gray-500">From</div>
+                          <div className="font-medium">
+                            {currentUserLocation?.address || "Current Location"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Navigation className="w-4 h-4 text-green-600 mt-1" />
+                        <div>
+                          <div className="text-xs text-gray-500">To</div>
+                          <div className="font-medium">
+                            {contextStationName || "Station"}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <Navigation className="w-4 h-4 text-green-600 mt-1" />
-                      <div>
-                        <div className="text-xs text-gray-500">To</div>
-                        <div className="font-medium">
-                          {contextStationName || "Station"}
-                          {distanceToStation && (
-                            <span className="text-sm text-gray-500 ml-2">
-                              ({distanceToStation.toFixed(1)} km)
-                            </span>
+
+                    {/* Reservation Details */}
+                    <div className="space-y-2 pt-3 border-t">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Charger</span>
+                        <span className="font-medium">
+                          #{contextReservation.charger_id}
+                        </span>
+                      </div>
+                      {distanceToStation && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Distance</span>
+                          <span className="font-medium">
+                            {distanceToStation.toFixed(1)} km
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Reservation Time</span>
+                        <span className="font-medium">
+                          {displayTimeInHelsinki(
+                            contextReservation.reservation_start
+                          )}{" "}
+                          -{" "}
+                          {displayTimeInHelsinki(
+                            contextReservation.reservation_end
                           )}
+                        </span>
+                      </div>
+                      {contextOrder?.customer_eta && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">ETA</span>
+                          <span className="font-medium">
+                            {displayTimeInHelsinki(contextOrder.customer_eta)}
+                          </span>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Reservation Details */}
-                  <div className="space-y-2 pt-3 border-t">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Charger</span>
-                      <span className="font-medium">
-                        #{contextReservation.charger_id}
-                      </span>
-                    </div>
-                    {distanceToStation && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Distance</span>
-                        <span className="font-medium">
-                          {distanceToStation.toFixed(1)} km
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Reservation Time</span>
-                      <span className="font-medium">
-                        {displayTimeInHelsinki(
-                          contextReservation.reservation_start
-                        )}{" "}
-                        -{" "}
-                        {displayTimeInHelsinki(
-                          contextReservation.reservation_end
-                        )}
-                      </span>
-                    </div>
-                    {contextOrder?.customer_eta && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">ETA</span>
-                        <span className="font-medium">
-                          {displayTimeInHelsinki(contextOrder.customer_eta)}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </Card>
               )}
-
               {/* Order Details */}
               {contextOrder && contextRestaurant && contextOrderItems && (
                 <Card className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <UtensilsCrossed className="w-5 h-5 text-green-600" />
-                      <h3 className="font-semibold">Order Details</h3>
-                    </div>
-                    <Badge
-                      variant={
-                        contextOrder.food_status === "ready"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className={
-                        contextOrder.food_status === "ready"
-                          ? "bg-green-600"
-                          : ""
-                      }
-                    >
-                      {contextOrder.food_status === "ready"
-                        ? "Ready for Pickup!"
-                        : contextOrder.food_status === "cooking"
-                        ? "Preparing..."
-                        : "Order Placed"}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Restaurant</span>
-                      <span className="font-medium">
-                        {contextRestaurant.name}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Order Number</span>
-                      <span className="font-medium">
-                        #{contextOrder.order_id}
-                      </span>
-                    </div>
-
-                    {/* Order Items */}
-                    <div className="pt-3 border-t">
-                      <div className="text-sm font-medium mb-2">Items:</div>
-                      <div className="space-y-2">
-                        {contextOrderItems.map((item) => (
-                          <div
-                            key={item.order_item_id}
-                            className="flex justify-between text-sm"
-                          >
-                            <span>
-                              {item.quantity}x {item.name}
-                            </span>
-                            <span className="font-medium">
-                              €{(item.price * item.quantity).toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <UtensilsCrossed className="w-5 h-5 text-green-600" />
+                        <h3 className="font-semibold">Order Details</h3>
                       </div>
+                      <Badge
+                        variant="outline"
+                        className={
+                          food_status_badges[contextOrder.food_status].className
+                        }
+                      >
+                        {food_status_badges[contextOrder.food_status].text}
+                      </Badge>
                     </div>
 
-                    <div className="flex justify-between text-sm pt-3 border-t font-semibold">
-                      <span>Total</span>
-                      <span className="text-green-600">
-                        €{contextOrder.total_price.toFixed(2)}
-                      </span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Restaurant</span>
+                        <span className="font-medium">
+                          {contextRestaurant.name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Address</span>
+                        <span className="font-medium">
+                          {contextRestaurant.address}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Order Number</span>
+                        <span className="font-medium">
+                          #{contextOrder.order_id}
+                        </span>
+                      </div>
+
+                      {/* Order Items */}
+                      <div className="pt-3 border-t">
+                        <div className="text-sm font-medium mb-2">Items:</div>
+                        <div className="space-y-2">
+                          {contextOrderItems.map((item) => (
+                            <div
+                              key={item.order_item_id}
+                              className="flex justify-between text-sm"
+                            >
+                              <span>
+                                {item.quantity}x {item.name}
+                              </span>
+                              <span className="font-medium">
+                                €{(item.price * item.quantity).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between text-sm pt-3 border-t font-semibold">
+                        <span>Total</span>
+                        <span className="text-green-600">
+                          €{contextOrder.total_price.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>
