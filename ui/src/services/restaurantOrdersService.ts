@@ -30,10 +30,7 @@ const mapOrdersToUi = (orders: BackendRestaurantOrder[]): Order[] =>
       status: order.food_status,
       customerETA: new Date(etaSource),
       items: mapOrderItems(items),
-      chargePercentage:
-        reservation && reservation.current_soc != null
-          ? reservation.current_soc
-          : undefined,
+      chargePercentage: reservation?.current_soc ?? 0,
       start_cooking_order: order.start_cooking_time,
     };
   });

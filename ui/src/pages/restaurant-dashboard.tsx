@@ -66,6 +66,9 @@ export default function RestaurantDashboard() {
     const data = await orderService.getOrdersByRestaurant(
       selectedRestaurant.id
     );
+
+    console.log("data: ", data);
+
     setOrders(data);
   }
 

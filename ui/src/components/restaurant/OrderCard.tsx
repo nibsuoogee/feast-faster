@@ -1,14 +1,11 @@
-import { useState, useEffect } from "react";
-import { Clock, Battery } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  displayTimeInHelsinki,
-  displayDateInHelsinki,
-} from "@/lib/timeDisplay";
+import { displayTimeInHelsinki } from "@/lib/timeDisplay";
 import { Order } from "@/types/restaurant";
+import { Battery, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Helper functions
 const getMinutesFromNow = (date: Date | string): number => {
