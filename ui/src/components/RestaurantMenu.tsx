@@ -83,6 +83,8 @@ export function RestaurantMenu({
     0
   );
 
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   const categories = [...new Set(restaurant.menu.map((item) => item.category))];
 
   // The charger will be reserve starting 10 min before ETA
@@ -156,29 +158,31 @@ export function RestaurantMenu({
           <div className="p-4 space-y-4">
             {/* Order Summary */}
             <Card className="p-4">
-              <h3 className="mb-3">Order Summary</h3>
               <div className="space-y-2">
-                {cart.map((item) => (
-                  <div
-                    key={item.menuItem.menu_item_id}
-                    className="flex justify-between items-start"
-                  >
-                    <div className="flex-1">
-                      <div>{item.menuItem.name}</div>
-                      <div className="text-sm text-gray-600">
-                        €{item.menuItem.price.toFixed(2)} × {item.quantity}
+                <h3 className="mb-3">Order Summary</h3>
+                <div className="space-y-2">
+                  {cart.map((item) => (
+                    <div
+                      key={item.menuItem.menu_item_id}
+                      className="flex justify-between items-start"
+                    >
+                      <div className="flex-1">
+                        <div>{item.menuItem.name}</div>
+                        <div className="text-sm text-gray-600">
+                          €{item.menuItem.price.toFixed(2)} × {item.quantity}
+                        </div>
+                      </div>
+                      <div>
+                        €{(item.menuItem.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
-                    <div>
-                      €{(item.menuItem.price * item.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Separator className="my-3" />
-              <div className="flex justify-between items-center">
-                <span>Total</span>
-                <span className="text-xl">€{totalCost.toFixed(2)}</span>
+                  ))}
+                </div>
+                <Separator className="my-3 bg-gray-300" />
+                <div className="flex justify-between items-end">
+                  <span>Total</span>
+                  <span className="text-xl">€{totalCost.toFixed(2)}</span>
+                </div>
               </div>
             </Card>
 
@@ -198,25 +202,25 @@ export function RestaurantMenu({
 
             {/* Pickup Info */}
             <Card className="p-4">
-              <h3 className="mb-2">Pickup Location</h3>
-              <p className="text-gray-600">{restaurant.name}</p>
-              <p className="text-sm text-gray-600">{stationName}</p>
-              {/* <div className="flex items-center gap-2 mt-2 text-sm">
-                <Clock className="w-4 h-4 text-gray-600" />
-                <span>Ready in {restaurant.prepTime}</span>
-              </div> */}
+              <div className="space-y-2">
+                <h3 className="mb-2">Pickup Location</h3>
+                <p>{restaurant.name}</p>
+                <p className="text-sm text-gray-600">at {stationName}</p>
+              </div>
             </Card>
 
             {/* Payment Method */}
             <Card className="p-4">
-              <h3 className="mb-3">Payment Method</h3>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-green-600 rounded flex items-center justify-center">
-                  <Check className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div>Visa •••• 4242</div>
-                  <div className="text-sm text-gray-600">Default payment</div>
+              <div className="space-y-2">
+                <h3 className="mb-3">Payment Method</h3>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 bg-green-600 rounded flex items-center justify-center">
+                    <Check className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div>Visa •••• 4242</div>
+                    <div className="text-sm text-gray-600">Default payment</div>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -248,14 +252,9 @@ export function RestaurantMenu({
           <div className="flex-1">
             <h2 className="mb-1">{restaurant.name}</h2>
             <div className="flex items-center gap-3 text-sm text-gray-600">
-              {restaurant.cuisines.map((cuisine, index) => (
-                <span key={index}>{cuisine}</span>
-              ))}
-
-              {/* <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {restaurant.prepTime}
-              </div> */}
+              {restaurant.cuisines
+                .map((c) => c[0].toUpperCase() + c.slice(1))
+                .join(", ")}
             </div>
           </div>
           <button
@@ -348,8 +347,7 @@ export function RestaurantMenu({
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-sm text-gray-600">
-                  {cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-                  {cart.length === 1 ? "item" : "items"}
+                  {totalItems} {totalItems === 1 ? "item" : "items"}
                 </div>
                 <div className="text-xl">€{totalCost.toFixed(2)}</div>
               </div>

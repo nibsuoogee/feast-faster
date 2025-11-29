@@ -366,7 +366,7 @@ export function ChargingSession({
                       </div>
                       {contextOrder?.customer_eta && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">ETA</span>
+                          <span className="text-gray-600">Arrives at</span>
                           <span className="font-medium">
                             {displayTimeInHelsinki(contextOrder.customer_eta)}
                           </span>

@@ -122,7 +122,7 @@ export function RoutePreview({
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3 text-gray-600" />
                       <span className="text-gray-600">
-                        Arrive{" "}
+                        Arrives at{" "}
                         {displayTimeInHelsinki(stop.estimatedArrivalTime)}
                       </span>
                     </div>
