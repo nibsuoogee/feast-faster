@@ -67,7 +67,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gray-50 pb-4">
       <Card className="m-4 p-6">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             <AvatarFallback className="bg-green-600 text-white text-xl">
               {(userInfo?.username || "Guest")
@@ -133,15 +133,13 @@ export function UserProfile({ onLogout }: UserProfileProps) {
       </Card>
 
       <Card className="mx-4 mb-4 p-4">
-        <div className="mb-3">
-          <div className="flex items-center gap-2">
-            <UtensilsCrossed className="w-5 h-5 text-gray-600" />
-            <h3>Your preferences</h3>
-          </div>
-          <div className="space-y-4">
-            <Label className="text-sm">Cuisine Preference</Label>
-            <CuisineMultiSelect value={cuisinePref} onChange={setCuisinePref} />
-          </div>
+        <div className="flex items-center gap-2">
+          <UtensilsCrossed className="w-5 h-5 text-gray-600" />
+          <h3>Your preferences</h3>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-sm">Cuisine Preference</Label>
+          <CuisineMultiSelect value={cuisinePref} onChange={setCuisinePref} />
         </div>
       </Card>
 
@@ -171,13 +169,13 @@ export function UserProfile({ onLogout }: UserProfileProps) {
             }
           }}
           disabled={isSaving}
-          className={`w-full bg-green-600 hover:bg-green-700 text-white ${
+          className={`w-full bg-green-600 hover:bg-green-700 ${
             isSaving ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
           {isSaving ? (
             <span className="flex items-center justify-center w-full">
-              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              <span className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
               Saving...
             </span>
           ) : (
@@ -185,8 +183,6 @@ export function UserProfile({ onLogout }: UserProfileProps) {
           )}
         </Button>
       </div>
-
-      {/* Payment Methods removed per request */}
 
       <div className="mx-4">
         <Button
