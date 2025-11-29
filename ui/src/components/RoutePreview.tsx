@@ -100,24 +100,23 @@ export function RoutePreview({
                     </div>
 
                     <Badge variant="outline" className="text-xs">
-                      {stop.distanceFromStart} km
+                      {stop.distanceFromStart.toFixed(0)} km
                     </Badge>
                   </div>
 
-                  <Card className="p-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Available chargers</span>
-                      <Badge
-                        className={
-                          stop.station.chargers.length > 0
-                            ? "bg-green-600"
-                            : "bg-gray-400"
-                        }
-                      >
-                        {stop.station.chargers.length}
-                      </Badge>
-                    </div>
-                  </Card>
+                  {stop.station.chargers.length > 0 && (
+                    <Card className="p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {stop.station.chargers[0].type} chargers: up to{" "}
+                          {stop.station.chargers[0].max_power}kW
+                        </span>
+                        <Badge className="bg-green-600">
+                          {stop.station.chargers.length}
+                        </Badge>
+                      </div>
+                    </Card>
+                  )}
 
                   <div className="flex items-center gap-4 text-sm mb-2">
                     <div className="flex items-center gap-1">
