@@ -63,6 +63,7 @@ export function ChargingSession({
   const [routeStep, setRouteStep] = useState<number>(0);
   const [lateness, setLateness] = useState<number>(0);
   const currentUserLocation = useUserLocation();
+  const chargingCoverCharge = 50;
 
   const food_status_badges = {
     pending: { className: "bg-blue-200", text: "Order placed" },
@@ -448,6 +449,12 @@ export function ChargingSession({
                               </span>
                             </div>
                           ))}
+                          <div className="flex justify-between text-sm">
+                            <span>Charging cover charge</span>
+                            <span className="font-medium">
+                              €{chargingCoverCharge.toFixed(2)}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -520,7 +527,9 @@ export function ChargingSession({
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Distance</span>
-                      <span className="font-medium">{"..."} km</span>
+                      <span className="font-medium">
+                        {route[routeStep]?.distance_km.toFixed(0)} km
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Lateness</span>

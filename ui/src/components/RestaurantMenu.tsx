@@ -45,6 +45,7 @@ export function RestaurantMenu({
     []
   );
   const [showCheckout, setShowCheckout] = useState(false);
+  const chargingCoverCharge = 50;
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -102,7 +103,7 @@ export function RestaurantMenu({
       restaurant_id: restaurant.restaurant_id,
       station_id: stationId,
       items: cart,
-      total_price: totalCost,
+      total_price: totalCost + chargingCoverCharge,
       customer_eta: customerEta,
       reservation_start: new Date(customerEta.getTime() - TEN_MIN),
       reservation_end: new Date(
@@ -162,14 +163,19 @@ export function RestaurantMenu({
                 <h3 className="mb-3">Order Summary</h3>
                 <div className="space-y-2">
                   {cart.map((item) => (
-                    <div
-                      key={item.menuItem.menu_item_id}
-                      className="flex justify-between items-start"
-                    >
-                      <div className="flex-1">
-                        <div>{item.menuItem.name}</div>
-                        <div className="text-sm text-gray-600">
-                          €{item.menuItem.price.toFixed(2)} × {item.quantity}
+                    <div>
+                      <div
+                        key={item.menuItem.menu_item_id}
+                        className="flex justify-between items-start"
+                      >
+                        <div className="flex-1">
+                          <div>{item.menuItem.name}</div>
+                          <div className="text-sm text-gray-600">
+                            €{item.menuItem.price.toFixed(2)} × {item.quantity}
+                          </div>
+                        </div>
+                        <div>
+                          €{(item.menuItem.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
                       <div>
@@ -178,11 +184,23 @@ export function RestaurantMenu({
                     </div>
                   ))}
                 </div>
-                <Separator className="my-3 bg-gray-300" />
-                <div className="flex justify-between items-end">
-                  <span>Total</span>
-                  <span className="text-xl">€{totalCost.toFixed(2)}</span>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div>Charging cover charge</div>
+                    <div className="text-sm text-gray-600">
+                      The difference between the actually charged amount and the
+                      cover charge is refunded after charging.
+                    </div>
+                  </div>
+                  <div>€{chargingCoverCharge.toFixed(2)}</div>
                 </div>
+              </div>
+              <Separator className="my-3" />
+              <div className="flex justify-between items-center">
+                <span>Total</span>
+                <span className="text-xl">
+                  €{(totalCost + chargingCoverCharge).toFixed(2)}
+                </span>
               </div>
             </Card>
 
@@ -231,7 +249,7 @@ export function RestaurantMenu({
               onClick={handlePlaceOrder}
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Place Order & Pay €{totalCost.toFixed(2)}
+              Place Order & Pay €{(totalCost + chargingCoverCharge).toFixed(2)}
             </Button>
 
             <p className="text-xs text-center text-gray-500">
