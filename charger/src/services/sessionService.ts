@@ -53,8 +53,8 @@ export async function startSession(
     if (!sessionStillExists) return;
 
     update.current_soc += rate_of_charge;
-    update.cumulative_power += 10;
-    update.cumulative_price_of_charge += 1;
+    update.cumulative_power += 1;
+    update.cumulative_price_of_charge += 0.2;
 
     console.log("Sending charge update: ", { update });
 

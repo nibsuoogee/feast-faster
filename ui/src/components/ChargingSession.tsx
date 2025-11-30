@@ -32,12 +32,10 @@ import { orderService } from "@/services/order";
 import { toast } from "sonner";
 
 type ChargingSessionProps = {
-  isJourneyActive?: boolean;
   plannedJourney?: PlannedJourney | null;
 };
 
 export function ChargingSession({
-  isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -191,6 +189,8 @@ export function ChargingSession({
     return () => clearInterval(interval);
   }, [contextReservation?.charge_start_time, contextChargingState]);
 
+  const LOW_TIME_REMAINING = 10;
+
   // Calculate time remaining until reservation ends
   useEffect(() => {
     if (!contextReservation?.reservation_end) {
@@ -219,7 +219,7 @@ export function ChargingSession({
       if (
         !contextReservation?.reservation_id ||
         timeRemaining === null ||
-        timeRemaining > 10
+        timeRemaining > LOW_TIME_REMAINING
       ) {
         setCanExtend(false);
         return;
@@ -230,7 +230,7 @@ export function ChargingSession({
         const response = await reservationService.canExtendReservation(
           contextReservation.reservation_id
         );
-        setCanExtend(response?.can_extend ?? false);
+        setCanExtend(response?.extension_allowed ?? false);
       } catch (error) {
         console.error("Failed to check extension eligibility:", error);
         setCanExtend(false);
@@ -257,6 +257,20 @@ export function ChargingSession({
       console.error("Failed to stop charging:", error);
     } finally {
       setIsStoppingCharging(false);
+    }
+  };
+
+  const handleExtendReservation = async () => {
+    if (!contextReservation?.reservation_id) return;
+
+    try {
+      const response = await reservationService.extendReservation(
+        contextReservation.reservation_id
+      );
+
+      setContextReservation(response?.reservation);
+    } catch (error) {
+      console.error("Failed to extend reservation:", error);
     }
   };
 
@@ -367,7 +381,7 @@ export function ChargingSession({
                       </div>
                       {contextOrder?.customer_eta && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">ETA</span>
+                          <span className="text-gray-600">Arrives at</span>
                           <span className="font-medium">
                             {displayTimeInHelsinki(contextOrder.customer_eta)}
                           </span>
@@ -546,7 +560,7 @@ export function ChargingSession({
                 contextReservation.charge_start_time !== null) ? (
                 <>
                   <Card className="p-4 bg-green-50 border-green-200">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
                           <Zap className="w-5 h-5 text-white fill-white" />
@@ -555,7 +569,7 @@ export function ChargingSession({
                           <h3>{contextStationName}</h3>
                           {contextChargingState === "active" && (
                             <Badge className="bg-green-600 mt-1">
-                              Charging in Progress
+                              Charging in progress
                             </Badge>
                           )}
                           {contextChargingState === "finished" && (
@@ -565,7 +579,9 @@ export function ChargingSession({
                           )}
                         </div>
                       </div>
-                      <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse" />
+                      {contextChargingState === "active" && (
+                        <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse" />
+                      )}
                     </div>
                   </Card>
 
@@ -678,19 +694,22 @@ export function ChargingSession({
                       {isStoppingCharging ? "Stopping..." : "Stop Charging"}
                     </Button>
                   )}
-                  {timeRemaining !== null && timeRemaining < 10 && (
-                    <Button
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      size="lg"
-                      disabled={!canExtend || isCheckingExtension}
-                    >
-                      {isCheckingExtension
-                        ? "Checking availability..."
-                        : !canExtend
-                        ? "Extension unavailable"
-                        : `Add 10 minutes to Reservation (${timeRemaining} min left)`}
-                    </Button>
-                  )}
+                  {contextChargingState === "active" &&
+                    timeRemaining !== null &&
+                    timeRemaining < LOW_TIME_REMAINING && (
+                      <Button
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        size="lg"
+                        onClick={handleExtendReservation}
+                        disabled={!canExtend || isCheckingExtension}
+                      >
+                        {isCheckingExtension
+                          ? "Checking availability..."
+                          : !canExtend
+                          ? "Extension unavailable"
+                          : `Add 10 minutes to Reservation (${timeRemaining} min left)`}
+                      </Button>
+                    )}
 
                   <p className="text-xs text-center text-gray-500">
                     You will be charged for the energy delivered up to this

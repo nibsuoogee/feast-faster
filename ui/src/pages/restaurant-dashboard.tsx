@@ -109,7 +109,6 @@ export default function RestaurantDashboard() {
       )
     );
 
-    // Update mock data (persists in memory via module caching)
     const success = await orderService.updateOrderStatus(orderId, newStatus);
     if (!success) {
       // Revert on failure using stored original status

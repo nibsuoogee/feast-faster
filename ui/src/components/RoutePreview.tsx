@@ -24,7 +24,6 @@ const randomFromArray = (arr: string[]) => {
 
 type RoutePreviewProps = {
   journey: PlannedJourney;
-  onStartJourney: () => void;
   onBack: () => void;
   setCurrentTab: (value: string) => void;
   setShowRoutePreview: (value: boolean) => void;
@@ -32,7 +31,6 @@ type RoutePreviewProps = {
 
 export function RoutePreview({
   journey,
-  onStartJourney,
   onBack,
   setCurrentTab,
   setShowRoutePreview,
@@ -100,30 +98,29 @@ export function RoutePreview({
                     </div>
 
                     <Badge variant="outline" className="text-xs">
-                      {stop.distanceFromStart} km
+                      {stop.distanceFromStart.toFixed(0)} km
                     </Badge>
                   </div>
 
-                  <Card className="p-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Available chargers</span>
-                      <Badge
-                        className={
-                          stop.station.chargers.length > 0
-                            ? "bg-green-600"
-                            : "bg-gray-400"
-                        }
-                      >
-                        {stop.station.chargers.length}
-                      </Badge>
-                    </div>
-                  </Card>
+                  {stop.station.chargers.length > 0 && (
+                    <Card className="p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {stop.station.chargers[0].type} chargers: up to{" "}
+                          {stop.station.chargers[0].max_power}kW
+                        </span>
+                        <Badge className="bg-green-600">
+                          {stop.station.chargers.length}
+                        </Badge>
+                      </div>
+                    </Card>
+                  )}
 
                   <div className="flex items-center gap-4 text-sm mb-2">
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3 text-gray-600" />
                       <span className="text-gray-600">
-                        Arrive{" "}
+                        Arrives at{" "}
                         {displayTimeInHelsinki(stop.estimatedArrivalTime)}
                       </span>
                     </div>
@@ -174,12 +171,6 @@ export function RoutePreview({
                       </div>
                     </>
                   )}
-
-                  {stop.selectedRestaurantId && (
-                    <Badge className="mt-2 bg-orange-600">
-                      Food pre-ordered
-                    </Badge>
-                  )}
                 </Card>
               </div>
             ))}
@@ -207,27 +198,6 @@ export function RoutePreview({
           customerEta={selectedRestaurant.stop.estimatedArrivalTime}
           chargingDuration={selectedRestaurant.stop.chargingDuration}
           onClose={() => setSelectedRestaurant(null)}
-          onPlaceOrder={() => {
-            const stopIndex = journey.stops.findIndex(
-              (s) =>
-                s.station.station_id ===
-                selectedRestaurant.stop.station.station_id
-            );
-            if (stopIndex !== -1) {
-              journey.stops.forEach((stop, index) => {
-                if (index !== stopIndex) {
-                  stop.isSelected = false;
-                }
-              });
-              journey.stops[stopIndex].selectedRestaurantId =
-                selectedRestaurant.restaurant.restaurant_id;
-              journey.stops[stopIndex].isSelected = true;
-            }
-            setSelectedRestaurant(null);
-            setTimeout(() => {
-              onStartJourney();
-            }, 500);
-          }}
           setCurrentTab={setCurrentTab}
           setShowRoutePreview={setShowRoutePreview}
         />
