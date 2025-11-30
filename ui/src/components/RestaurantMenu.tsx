@@ -163,19 +163,14 @@ export function RestaurantMenu({
                 <h3 className="mb-3">Order Summary</h3>
                 <div className="space-y-2">
                   {cart.map((item) => (
-                    <div>
-                      <div
-                        key={item.menuItem.menu_item_id}
-                        className="flex justify-between items-start"
-                      >
-                        <div className="flex-1">
-                          <div>{item.menuItem.name}</div>
-                          <div className="text-sm text-gray-600">
-                            €{item.menuItem.price.toFixed(2)} × {item.quantity}
-                          </div>
-                        </div>
-                        <div>
-                          €{(item.menuItem.price * item.quantity).toFixed(2)}
+                    <div
+                      key={item.menuItem.menu_item_id}
+                      className="flex justify-between items-start"
+                    >
+                      <div className="flex-1">
+                        <div>{item.menuItem.name}</div>
+                        <div className="text-sm text-gray-600">
+                          €{item.menuItem.price.toFixed(2)} × {item.quantity}
                         </div>
                       </div>
                       <div>
@@ -194,13 +189,14 @@ export function RestaurantMenu({
                   </div>
                   <div>€{chargingCoverCharge.toFixed(2)}</div>
                 </div>
-              </div>
-              <Separator className="my-3" />
-              <div className="flex justify-between items-center">
-                <span>Total</span>
-                <span className="text-xl">
-                  €{(totalCost + chargingCoverCharge).toFixed(2)}
-                </span>
+
+                <Separator className="my-3 bg-gray-300" />
+                <div className="flex justify-between items-center">
+                  <span>Total</span>
+                  <span className="text-xl">
+                    €{(totalCost + chargingCoverCharge).toFixed(2)}
+                  </span>
+                </div>
               </div>
             </Card>
 
