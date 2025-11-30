@@ -32,12 +32,10 @@ import { orderService } from "@/services/order";
 import { toast } from "sonner";
 
 type ChargingSessionProps = {
-  isJourneyActive?: boolean;
   plannedJourney?: PlannedJourney | null;
 };
 
 export function ChargingSession({
-  isJourneyActive = false,
   plannedJourney = null,
 }: ChargingSessionProps) {
   const [elapsedTime, setElapsedTime] = useState(0);

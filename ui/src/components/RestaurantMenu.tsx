@@ -1,5 +1,5 @@
 import { CreateOrderBody } from "@types";
-import { RestaurantOrder, RestaurantWithMenu } from "@/types/driver";
+import { RestaurantWithMenu } from "@/types/driver";
 import { orderService } from "@/services/order";
 import { useState } from "react";
 import { Button } from "./ui/button";
@@ -18,7 +18,6 @@ type RestaurantMenuProps = {
   customerEta: Date;
   chargingDuration: number;
   onClose: () => void;
-  onPlaceOrder: (order: RestaurantOrder) => void;
   setCurrentTab: (value: string) => void;
   setShowRoutePreview: (value: boolean) => void;
 };
@@ -30,7 +29,6 @@ export function RestaurantMenu({
   customerEta,
   chargingDuration,
   onClose,
-  onPlaceOrder,
   setCurrentTab,
   setShowRoutePreview,
 }: RestaurantMenuProps) {
@@ -130,8 +128,6 @@ export function RestaurantMenu({
 
         setShowRoutePreview(false);
         setCurrentTab("session");
-
-        //onPlaceOrder(response.order); // update UI state if needed // TODO Check after monitoring view is ready
         onClose();
       } else {
         toast.success("Failed to place order.");

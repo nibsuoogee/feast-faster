@@ -24,7 +24,6 @@ const randomFromArray = (arr: string[]) => {
 
 type RoutePreviewProps = {
   journey: PlannedJourney;
-  onStartJourney: () => void;
   onBack: () => void;
   setCurrentTab: (value: string) => void;
   setShowRoutePreview: (value: boolean) => void;
@@ -32,7 +31,6 @@ type RoutePreviewProps = {
 
 export function RoutePreview({
   journey,
-  onStartJourney,
   onBack,
   setCurrentTab,
   setShowRoutePreview,
@@ -173,12 +171,6 @@ export function RoutePreview({
                       </div>
                     </>
                   )}
-
-                  {stop.selectedRestaurantId && (
-                    <Badge className="mt-2 bg-orange-600">
-                      Food pre-ordered
-                    </Badge>
-                  )}
                 </Card>
               </div>
             ))}
@@ -206,27 +198,6 @@ export function RoutePreview({
           customerEta={selectedRestaurant.stop.estimatedArrivalTime}
           chargingDuration={selectedRestaurant.stop.chargingDuration}
           onClose={() => setSelectedRestaurant(null)}
-          onPlaceOrder={() => {
-            const stopIndex = journey.stops.findIndex(
-              (s) =>
-                s.station.station_id ===
-                selectedRestaurant.stop.station.station_id
-            );
-            if (stopIndex !== -1) {
-              journey.stops.forEach((stop, index) => {
-                if (index !== stopIndex) {
-                  stop.isSelected = false;
-                }
-              });
-              journey.stops[stopIndex].selectedRestaurantId =
-                selectedRestaurant.restaurant.restaurant_id;
-              journey.stops[stopIndex].isSelected = true;
-            }
-            setSelectedRestaurant(null);
-            setTimeout(() => {
-              onStartJourney();
-            }, 500);
-          }}
           setCurrentTab={setCurrentTab}
           setShowRoutePreview={setShowRoutePreview}
         />
