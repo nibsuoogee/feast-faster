@@ -255,8 +255,6 @@ export function ChargingSession({
       // The charging_paid event from SSE will update the UI
     } catch (error) {
       console.error("Failed to stop charging:", error);
-    } finally {
-      setIsStoppingCharging(false);
     }
   };
 
