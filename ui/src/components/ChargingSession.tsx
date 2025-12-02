@@ -366,7 +366,9 @@ export function ChargingSession({
                         </div>
                       )}
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Reservation Time</span>
+                        <span className="text-gray-600">
+                          Charger reserved for
+                        </span>
                         <span className="font-medium">
                           {displayTimeInHelsinki(
                             contextReservation.reservation_start
